@@ -1,0 +1,24 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+MainNetParams	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com.matthewmitchell.peercoinj/params/MainNetParams.java	/^    public MainNetParams() {$/;"	m	language:Java	class:MainNetParams
+MainNetParams	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com.matthewmitchell.peercoinj/params/MainNetParams.java	/^public class MainNetParams extends NetworkParameters {$/;"	c	language:Java
+MainNetParams	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/matthewmitchell/peercoinj/params/MainNetParams.java	/^    public MainNetParams() {$/;"	m	language:Java	class:MainNetParams
+MainNetParams	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/matthewmitchell/peercoinj/params/MainNetParams.java	/^public class MainNetParams extends NetworkParameters {$/;"	c	language:Java
+MainNetParams	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/peercoin/peercoin/params/MainNetParams.java	/^    public MainNetParams() {$/;"	m	language:Java	class:MainNetParams
+MainNetParams	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/peercoin/peercoin/params/MainNetParams.java	/^public class MainNetParams extends NetworkParameters {$/;"	c	language:Java
+com.matthewmitchell.peercoinj.params	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com.matthewmitchell.peercoinj/params/MainNetParams.java	/^package com.matthewmitchell.peercoinj.params;$/;"	p	language:Java
+com.matthewmitchell.peercoinj.params	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/matthewmitchell/peercoinj/params/MainNetParams.java	/^package com.matthewmitchell.peercoinj.params;$/;"	p	language:Java
+com.matthewmitchell.peercoinj.params	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/peercoin/peercoin/params/MainNetParams.java	/^package com.matthewmitchell.peercoinj.params;$/;"	p	language:Java
+get	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com.matthewmitchell.peercoinj/params/MainNetParams.java	/^    public static synchronized MainNetParams get() {$/;"	m	language:Java	class:MainNetParams
+get	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/matthewmitchell/peercoinj/params/MainNetParams.java	/^    public static synchronized MainNetParams get() {$/;"	m	language:Java	class:MainNetParams
+get	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/peercoin/peercoin/params/MainNetParams.java	/^    public static synchronized MainNetParams get() {$/;"	m	language:Java	class:MainNetParams
+getPaymentProtocolId	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com.matthewmitchell.peercoinj/params/MainNetParams.java	/^    public String getPaymentProtocolId() {$/;"	m	language:Java	class:MainNetParams
+getPaymentProtocolId	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/matthewmitchell/peercoinj/params/MainNetParams.java	/^    public String getPaymentProtocolId() {$/;"	m	language:Java	class:MainNetParams
+getPaymentProtocolId	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/peercoin/peercoin/params/MainNetParams.java	/^    public String getPaymentProtocolId() {$/;"	m	language:Java	class:MainNetParams
+instance	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com.matthewmitchell.peercoinj/params/MainNetParams.java	/^    private static MainNetParams instance;$/;"	f	language:Java	class:MainNetParams	file:
+instance	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/matthewmitchell/peercoinj/params/MainNetParams.java	/^    private static MainNetParams instance;$/;"	f	language:Java	class:MainNetParams	file:
+instance	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/peercoin/peercoin/params/MainNetParams.java	/^    private static MainNetParams instance;$/;"	f	language:Java	class:MainNetParams	file:

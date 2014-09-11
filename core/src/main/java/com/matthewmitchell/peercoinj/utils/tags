@@ -1,0 +1,28 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+DEFAULT_INITIAL_MILLIS	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/matthewmitchell/peercoinj/utils/ExponentialBackoff.java	/^    public static final int DEFAULT_INITIAL_MILLIS = 100;$/;"	f	language:Java	class:ExponentialBackoff
+DEFAULT_MAXIMUM_MILLIS	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/matthewmitchell/peercoinj/utils/ExponentialBackoff.java	/^    public static final int DEFAULT_MAXIMUM_MILLIS = 30 * 1000;$/;"	f	language:Java	class:ExponentialBackoff
+DEFAULT_MULTIPLIER	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/matthewmitchell/peercoinj/utils/ExponentialBackoff.java	/^    public static final float DEFAULT_MULTIPLIER = 1.1f;$/;"	f	language:Java	class:ExponentialBackoff
+ExponentialBackoff	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/matthewmitchell/peercoinj/utils/ExponentialBackoff.java	/^    public ExponentialBackoff(Params params) {$/;"	m	language:Java	class:ExponentialBackoff
+ExponentialBackoff	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/matthewmitchell/peercoinj/utils/ExponentialBackoff.java	/^public class ExponentialBackoff implements Comparable<ExponentialBackoff> {$/;"	c	language:Java
+Params	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/matthewmitchell/peercoinj/utils/ExponentialBackoff.java	/^        public Params() {$/;"	m	language:Java	class:ExponentialBackoff.Params
+Params	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/matthewmitchell/peercoinj/utils/ExponentialBackoff.java	/^        public Params(long initialMillis, float multiplier, long maximumMillis) {$/;"	m	language:Java	class:ExponentialBackoff.Params
+Params	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/matthewmitchell/peercoinj/utils/ExponentialBackoff.java	/^    public static class Params {$/;"	c	language:Java	class:ExponentialBackoff
+atMaximum	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/matthewmitchell/peercoinj/utils/ExponentialBackoff.java	/^	private boolean atMaximum = false;$/;"	f	language:Java	class:ExponentialBackoff	file:
+backoff	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/matthewmitchell/peercoinj/utils/ExponentialBackoff.java	/^    private float backoff;$/;"	f	language:Java	class:ExponentialBackoff	file:
+com.matthewmitchell.peercoinj.utils	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/matthewmitchell/peercoinj/utils/ExponentialBackoff.java	/^package com.matthewmitchell.peercoinj.utils;$/;"	p	language:Java
+compareTo	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/matthewmitchell/peercoinj/utils/ExponentialBackoff.java	/^    public int compareTo(ExponentialBackoff other) {$/;"	m	language:Java	class:ExponentialBackoff
+getRetryTime	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/matthewmitchell/peercoinj/utils/ExponentialBackoff.java	/^    public long getRetryTime() {$/;"	m	language:Java	class:ExponentialBackoff
+initial	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/matthewmitchell/peercoinj/utils/ExponentialBackoff.java	/^        private final float initial;$/;"	f	language:Java	class:ExponentialBackoff.Params	file:
+isMaxmimum	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/matthewmitchell/peercoinj/utils/ExponentialBackoff.java	/^	public boolean isMaxmimum() {$/;"	m	language:Java	class:ExponentialBackoff
+maximum	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/matthewmitchell/peercoinj/utils/ExponentialBackoff.java	/^        private final float maximum;$/;"	f	language:Java	class:ExponentialBackoff.Params	file:
+multiplier	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/matthewmitchell/peercoinj/utils/ExponentialBackoff.java	/^        private final float multiplier;$/;"	f	language:Java	class:ExponentialBackoff.Params	file:
+params	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/matthewmitchell/peercoinj/utils/ExponentialBackoff.java	/^    private final Params params;$/;"	f	language:Java	class:ExponentialBackoff	file:
+retryTime	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/matthewmitchell/peercoinj/utils/ExponentialBackoff.java	/^    private long retryTime;$/;"	f	language:Java	class:ExponentialBackoff	file:
+toString	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/matthewmitchell/peercoinj/utils/ExponentialBackoff.java	/^    public String toString() {$/;"	m	language:Java	class:ExponentialBackoff
+trackFailure	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/matthewmitchell/peercoinj/utils/ExponentialBackoff.java	/^    public void trackFailure() {$/;"	m	language:Java	class:ExponentialBackoff
+trackSuccess	/home/matt/Programming/ADT/workspace/peercoinj/core/src/main/java/com/matthewmitchell/peercoinj/utils/ExponentialBackoff.java	/^    public void trackSuccess() {$/;"	m	language:Java	class:ExponentialBackoff
