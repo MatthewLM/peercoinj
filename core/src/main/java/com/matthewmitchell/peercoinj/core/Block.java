@@ -375,7 +375,6 @@ public class Block extends Message {
         // try for cached write first
         if (headerBytesValid && payload != null && payload.length >= offset + HEADER_SIZE) {
             stream.write(payload, offset, HEADER_SIZE);
-            stream.write(bytes, offset, HEADER_SIZE);
             return;
         }
         // fall back to manual write
