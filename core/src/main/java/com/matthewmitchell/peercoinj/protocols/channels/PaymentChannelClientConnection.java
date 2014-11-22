@@ -16,18 +16,21 @@
 
 package com.matthewmitchell.peercoinj.protocols.channels;
 
+import com.matthewmitchell.peercoinj.core.Coin;
 import com.matthewmitchell.peercoinj.core.ECKey;
 import com.matthewmitchell.peercoinj.core.InsufficientMoneyException;
 import com.matthewmitchell.peercoinj.core.Sha256Hash;
+import com.matthewmitchell.peercoinj.core.Utils;
 import com.matthewmitchell.peercoinj.core.Wallet;
 import com.matthewmitchell.peercoinj.net.NioClient;
 import com.matthewmitchell.peercoinj.net.ProtobufParser;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
-import org.peercoin.paymentchannel.Protos;
+
+import com.google.protobuf.ByteString;
+import org.bitcoin.paymentchannel.Protos;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.net.InetSocketAddress;
 
 /**
@@ -42,7 +45,8 @@ public class PaymentChannelClientConnection {
 
     /**
      * Attempts to open a new connection to and open a payment channel with the given host and port, blocking until the
-     * connection is open
+     * connection is open. The server is requested to keep the channel open for {@link com.matthewmitchell.peercoinj.protocols.channels.PaymentChannelClient#DEFAULT_TIME_WINDOW}
+     * seconds. If the server proposes a longer time the channel will be closed.
      *
      * @param server The host/port pair where the server is listening.
      * @param timeoutSeconds The connection timeout and read timeout during initialization. This should be large enough
@@ -60,10 +64,36 @@ public class PaymentChannelClientConnection {
      * @throws ValueOutOfRangeException if the balance of wallet is lower than maxValue.
      */
     public PaymentChannelClientConnection(InetSocketAddress server, int timeoutSeconds, Wallet wallet, ECKey myKey,
-                                          BigInteger maxValue, String serverId) throws IOException, ValueOutOfRangeException {
+                                          Coin maxValue, String serverId) throws IOException, ValueOutOfRangeException {
+        this(server, timeoutSeconds, wallet, myKey, maxValue, serverId, PaymentChannelClient.DEFAULT_TIME_WINDOW);
+    }
+
+    /**
+     * Attempts to open a new connection to and open a payment channel with the given host and port, blocking until the
+     * connection is open.  The server is requested to keep the channel open for {@param timeWindow}
+     * seconds. If the server proposes a longer time the channel will be closed.
+     *
+     * @param server The host/port pair where the server is listening.
+     * @param timeoutSeconds The connection timeout and read timeout during initialization. This should be large enough
+     *                       to accommodate ECDSA signature operations and network latency.
+     * @param wallet The wallet which will be paid from, and where completed transactions will be committed.
+     *               Must already have a {@link StoredPaymentChannelClientStates} object in its extensions set.
+     * @param myKey A freshly generated keypair used for the multisig contract and refund output.
+     * @param maxValue The maximum value this channel is allowed to request
+     * @param serverId A unique ID which is used to attempt reopening of an existing channel.
+     *                 This must be unique to the server, and, if your application is exposing payment channels to some
+     *                 API, this should also probably encompass some caller UID to avoid applications opening channels
+     *                 which were created by others.
+     * @param timeWindow The time in seconds, relative to now, on how long this channel should be kept open.
+     *
+     * @throws IOException if there's an issue using the network.
+     * @throws ValueOutOfRangeException if the balance of wallet is lower than maxValue.
+     */
+    public PaymentChannelClientConnection(InetSocketAddress server, int timeoutSeconds, Wallet wallet, ECKey myKey,
+                                          Coin maxValue, String serverId, final long timeWindow) throws IOException, ValueOutOfRangeException {
         // Glue the object which vends/ingests protobuf messages in order to manage state to the network object which
         // reads/writes them to the wire in length prefixed form.
-        channelClient = new PaymentChannelClient(wallet, myKey, maxValue, Sha256Hash.create(serverId.getBytes()),
+        channelClient = new PaymentChannelClient(wallet, myKey, maxValue, Sha256Hash.create(serverId.getBytes()), timeWindow,
               new PaymentChannelClient.ClientConnection() {
             @Override
             public void sendToServer(Protos.TwoWayChannelMessage msg) {
@@ -77,6 +107,11 @@ public class PaymentChannelClientConnection {
             }
 
             @Override
+            public boolean acceptExpireTime(long expireTime) {
+                return expireTime <= (timeWindow + Utils.currentTimeSeconds() + 60);  // One extra minute to compensate for time skew and latency
+            }
+
+            @Override
             public void channelOpen(boolean wasInitiated) {
                 wireParser.setSocketTimeout(0);
                 // Inform the API user that we're done and ready to roll.
@@ -87,7 +122,7 @@ public class PaymentChannelClientConnection {
         // And glue back in the opposite direction - network to the channelClient.
         wireParser = new ProtobufParser<Protos.TwoWayChannelMessage>(new ProtobufParser.Listener<Protos.TwoWayChannelMessage>() {
             @Override
-            public void messageReceived(ProtobufParser handler, Protos.TwoWayChannelMessage msg) {
+            public void messageReceived(ProtobufParser<Protos.TwoWayChannelMessage> handler, Protos.TwoWayChannelMessage msg) {
                 try {
                     channelClient.receiveMessage(msg);
                 } catch (InsufficientMoneyException e) {
@@ -97,12 +132,12 @@ public class PaymentChannelClientConnection {
             }
 
             @Override
-            public void connectionOpen(ProtobufParser handler) {
+            public void connectionOpen(ProtobufParser<Protos.TwoWayChannelMessage> handler) {
                 channelClient.connectionOpen();
             }
 
             @Override
-            public void connectionClosed(ProtobufParser handler) {
+            public void connectionClosed(ProtobufParser<Protos.TwoWayChannelMessage> handler) {
                 channelClient.connectionClosed();
                 channelOpenFuture.setException(new PaymentChannelCloseException("The TCP socket died",
                         PaymentChannelCloseException.CloseReason.CONNECTION_CLOSED));
@@ -119,7 +154,7 @@ public class PaymentChannelClientConnection {
      * an error before the channel has reached the open state.</p>
      *
      * <p>After this future completes successfully, you may call
-     * {@link PaymentChannelClientConnection#incrementPayment(java.math.BigInteger)} to begin paying the server.</p>
+     * {@link PaymentChannelClientConnection#incrementPayment(Coin)} or {@link PaymentChannelClientConnection#incrementPayment(Coin, com.google.protobuf.ByteString)} to begin paying the server.</p>
      */
     public ListenableFuture<PaymentChannelClientConnection> getChannelOpenFuture() {
         return channelOpenFuture;
@@ -134,8 +169,21 @@ public class PaymentChannelClientConnection {
      * @throws IllegalStateException If the channel has been closed or is not yet open
      *                               (see {@link PaymentChannelClientConnection#getChannelOpenFuture()} for the second)
      */
-    public ListenableFuture<BigInteger> incrementPayment(BigInteger size) throws ValueOutOfRangeException, IllegalStateException {
-        return channelClient.incrementPayment(size);
+    public ListenableFuture<PaymentIncrementAck> incrementPayment(Coin size) throws ValueOutOfRangeException, IllegalStateException {
+        return channelClient.incrementPayment(size, null);
+    }
+    /**
+     * Increments the total value which we pay the server.
+     *
+     * @param size How many satoshis to increment the payment by (note: not the new total).
+     * @param info Information about this payment increment, used to extend this protocol.
+     * @throws ValueOutOfRangeException If the size is negative or would pay more than this channel's total value
+     *                                  ({@link PaymentChannelClientConnection#state()}.getTotalValue())
+     * @throws IllegalStateException If the channel has been closed or is not yet open
+     *                               (see {@link PaymentChannelClientConnection#getChannelOpenFuture()} for the second)
+     */
+    public ListenableFuture<PaymentIncrementAck> incrementPayment(Coin size, ByteString info) throws ValueOutOfRangeException, IllegalStateException {
+        return channelClient.incrementPayment(size, info);
     }
 
     /**

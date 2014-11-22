@@ -16,7 +16,7 @@
 
 package com.matthewmitchell.peercoinj.core;
 
-import com.matthewmitchell.peercoinj.params.MainNetParams;
+import com.matthewmitchell.peercoinj.params.Networks;
 import com.matthewmitchell.peercoinj.script.Script;
 
 import javax.annotation.Nullable;
@@ -41,6 +41,8 @@ public class Address extends VersionedChecksummedBytes {
      */
     public static final int LENGTH = 20;
 
+    transient final NetworkParameters params;
+
     /**
      * Construct an address from parameters, the address version, and the hash160 form. Example:<p>
      *
@@ -52,6 +54,7 @@ public class Address extends VersionedChecksummedBytes {
         checkArgument(hash160.length == 20, "Addresses are 160-bit hashes, so you must provide 20 bytes");
         if (!isAcceptableVersion(params, version))
             throw new WrongNetworkException(version, params.getAcceptableAddressCodes());
+        this.params = params;
     }
 
     /** Returns an Address that represents the given P2SH script hash. */
@@ -77,6 +80,7 @@ public class Address extends VersionedChecksummedBytes {
     public Address(NetworkParameters params, byte[] hash160) {
         super(params.getAddressHeader(), hash160);
         checkArgument(hash160.length == 20, "Addresses are 160-bit hashes, so you must provide 20 bytes");
+        this.params = params;
     }
 
     /**
@@ -95,6 +99,19 @@ public class Address extends VersionedChecksummedBytes {
             if (!isAcceptableVersion(params, version)) {
                 throw new WrongNetworkException(version, params.getAcceptableAddressCodes());
             }
+            this.params = params;
+        } else {
+            NetworkParameters paramsFound = null;
+            for (NetworkParameters p : Networks.get()) {
+                if (isAcceptableVersion(p, version)) {
+                    paramsFound = p;
+                    break;
+                }
+            }
+            if (paramsFound == null)
+                throw new AddressFormatException("No network found for " + address);
+
+            this.params = paramsFound;
         }
     }
 
@@ -120,16 +137,8 @@ public class Address extends VersionedChecksummedBytes {
      *
      * @return a NetworkParameters representing the network the address is intended for, or null if unknown.
      */
-    @Nullable
     public NetworkParameters getParameters() {
-        // TODO: There should be a more generic way to get all supported networks.
-        NetworkParameters[] networks = { MainNetParams.get() };
-        for (NetworkParameters params : networks) {
-            if (isAcceptableVersion(params, version)) {
-                return params;
-            }
-        }
-        return null;
+	    return params;
     }
 
     /**

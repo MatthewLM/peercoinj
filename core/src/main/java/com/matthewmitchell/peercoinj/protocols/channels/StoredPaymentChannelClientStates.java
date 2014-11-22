@@ -20,17 +20,20 @@ import com.matthewmitchell.peercoinj.core.*;
 import com.matthewmitchell.peercoinj.utils.Threading;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultimap;
+import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.ByteString;
 import net.jcip.annotations.GuardedBy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.math.BigInteger;
 import java.util.Date;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -43,12 +46,13 @@ import static com.google.common.base.Preconditions.checkState;
 public class StoredPaymentChannelClientStates implements WalletExtension {
     private static final Logger log = LoggerFactory.getLogger(StoredPaymentChannelClientStates.class);
     static final String EXTENSION_ID = StoredPaymentChannelClientStates.class.getName();
+    static final int MAX_SECONDS_TO_WAIT_FOR_BROADCASTER_TO_BE_SET = 10;
 
     @GuardedBy("lock") @VisibleForTesting final HashMultimap<Sha256Hash, StoredClientChannel> mapChannels = HashMultimap.create();
     @VisibleForTesting final Timer channelTimeoutHandler = new Timer(true);
 
     private Wallet containingWallet;
-    private final TransactionBroadcaster announcePeerGroup;
+    private final SettableFuture<TransactionBroadcaster> announcePeerGroupFuture = SettableFuture.create();
 
     protected final ReentrantLock lock = Threading.lock("StoredPaymentChannelClientStates");
 
@@ -57,9 +61,28 @@ public class StoredPaymentChannelClientStates implements WalletExtension {
      * {@link TransactionBroadcaster} which are used to complete and announce contract and refund
      * transactions.
      */
-    public StoredPaymentChannelClientStates(Wallet containingWallet, TransactionBroadcaster announcePeerGroup) {
-        this.announcePeerGroup = checkNotNull(announcePeerGroup);
-        this.containingWallet = checkNotNull(containingWallet);
+    public StoredPaymentChannelClientStates(@Nullable Wallet containingWallet, TransactionBroadcaster announcePeerGroup) {
+        setTransactionBroadcaster(announcePeerGroup);
+        this.containingWallet = containingWallet;
+    }
+
+    /**
+     * Creates a new StoredPaymentChannelClientStates and associates it with the given {@link Wallet}
+     *
+     * Use this constructor if you use WalletAppKit, it will provide the broadcaster for you (no need to call the setter)
+     */
+    public StoredPaymentChannelClientStates(@Nullable Wallet containingWallet) {
+        this.containingWallet = containingWallet;
+    }
+
+    /**
+     * Use this setter if the broadcaster is not available during instantiation and you're not using WalletAppKit.
+     * This setter will let you delay the setting of the broadcaster until the Bitcoin network is ready.
+     *
+     * @param transactionBroadcaster which is used to complete and announce contract and refund transactions.
+     */
+    public void setTransactionBroadcaster(TransactionBroadcaster transactionBroadcaster) {
+        this.announcePeerGroupFuture.set(checkNotNull(transactionBroadcaster));
     }
 
     /** Returns this extension from the given wallet, or null if no such extension was added. */
@@ -69,8 +92,8 @@ public class StoredPaymentChannelClientStates implements WalletExtension {
     }
 
     /** Returns the outstanding amount of money sent back to us for all channels to this server added together. */
-    public BigInteger getBalanceForServer(Sha256Hash id) {
-        BigInteger balance = BigInteger.ZERO;
+    public Coin getBalanceForServer(Sha256Hash id) {
+        Coin balance = Coin.ZERO;
         lock.lock();
         try {
             Set<StoredClientChannel> setChannels = mapChannels.get(id);
@@ -94,7 +117,7 @@ public class StoredPaymentChannelClientStates implements WalletExtension {
         lock.lock();
         try {
             final Set<StoredClientChannel> setChannels = mapChannels.get(id);
-            final long nowSeconds = Utils.currentTimeMillis() / 1000;
+            final long nowSeconds = Utils.currentTimeSeconds();
             int earliestTime = Integer.MAX_VALUE;
             for (StoredClientChannel channel : setChannels) {
                 synchronized (channel) {
@@ -120,7 +143,7 @@ public class StoredPaymentChannelClientStates implements WalletExtension {
                 synchronized (channel) {
                     // Check if the channel is usable (has money, inactive) and if so, activate it.
                     log.info("Considering channel {} contract {}", channel.hashCode(), channel.contract.getHash());
-                    if (channel.close != null || channel.valueToMe.equals(BigInteger.ZERO)) {
+                    if (channel.close != null || channel.valueToMe.equals(Coin.ZERO)) {
                         log.info("  ... but is closed or empty");
                         continue;
                     }
@@ -172,6 +195,7 @@ public class StoredPaymentChannelClientStates implements WalletExtension {
             channelTimeoutHandler.schedule(new TimerTask() {
                 @Override
                 public void run() {
+                    TransactionBroadcaster announcePeerGroup = getAnnouncePeerGroup();
                     removeChannel(channel);
                     announcePeerGroup.broadcastTransaction(channel.contract);
                     announcePeerGroup.broadcastTransaction(channel.refund);
@@ -183,6 +207,24 @@ public class StoredPaymentChannelClientStates implements WalletExtension {
         }
         if (updateWallet)
             containingWallet.addOrUpdateExtension(this);
+    }
+
+    /**
+     * If the peer group has not been set for MAX_SECONDS_TO_WAIT_FOR_BROADCASTER_TO_BE_SET seconds, then
+     * the programmer probably forgot to set it and we should throw exception.
+     */
+    private TransactionBroadcaster getAnnouncePeerGroup() {
+        try {
+            return announcePeerGroupFuture.get(MAX_SECONDS_TO_WAIT_FOR_BROADCASTER_TO_BE_SET, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        } catch (TimeoutException e) {
+            String err = "Transaction broadcaster not set";
+            log.error(err);
+            throw new RuntimeException(err, e);
+        }
     }
 
     /**
@@ -220,17 +262,17 @@ public class StoredPaymentChannelClientStates implements WalletExtension {
             ClientState.StoredClientPaymentChannels.Builder builder = ClientState.StoredClientPaymentChannels.newBuilder();
             for (StoredClientChannel channel : mapChannels.values()) {
                 // First a few asserts to make sure things won't break
-                checkState(channel.valueToMe.compareTo(BigInteger.ZERO) >= 0 && channel.valueToMe.compareTo(NetworkParameters.MAX_MONEY) < 0);
-                checkState(channel.refundFees.compareTo(BigInteger.ZERO) >= 0 && channel.refundFees.compareTo(NetworkParameters.MAX_MONEY) < 0);
+                checkState(channel.valueToMe.signum() >= 0 && channel.valueToMe.compareTo(NetworkParameters.MAX_MONEY) < 0);
+                checkState(channel.refundFees.signum() >= 0 && channel.refundFees.compareTo(NetworkParameters.MAX_MONEY) < 0);
                 checkNotNull(channel.myKey.getPrivKeyBytes());
                 checkState(channel.refund.getConfidence().getSource() == TransactionConfidence.Source.SELF);
                 final ClientState.StoredClientPaymentChannel.Builder value = ClientState.StoredClientPaymentChannel.newBuilder()
                         .setId(ByteString.copyFrom(channel.id.getBytes()))
-                        .setContractTransaction(ByteString.copyFrom(channel.contract.peercoinSerialize()))
-                        .setRefundTransaction(ByteString.copyFrom(channel.refund.peercoinSerialize()))
+                        .setContractTransaction(ByteString.copyFrom(channel.contract.bitcoinSerialize()))
+                        .setRefundTransaction(ByteString.copyFrom(channel.refund.bitcoinSerialize()))
                         .setMyKey(ByteString.copyFrom(channel.myKey.getPrivKeyBytes()))
-                        .setValueToMe(channel.valueToMe.longValue())
-                        .setRefundFees(channel.refundFees.longValue());
+                        .setValueToMe(channel.valueToMe.value)
+                        .setRefundFees(channel.refundFees.value);
                 if (channel.close != null)
                     value.setCloseTransactionHash(ByteString.copyFrom(channel.close.getHash().getBytes()));
                 builder.addChannels(value);
@@ -255,11 +297,13 @@ public class StoredPaymentChannelClientStates implements WalletExtension {
                 StoredClientChannel channel = new StoredClientChannel(new Sha256Hash(storedState.getId().toByteArray()),
                         new Transaction(params, storedState.getContractTransaction().toByteArray()),
                         refundTransaction,
-                        new ECKey(new BigInteger(1, storedState.getMyKey().toByteArray()), null, true),
-                        BigInteger.valueOf(storedState.getValueToMe()),
-                        BigInteger.valueOf(storedState.getRefundFees()), false);
-                if (storedState.hasCloseTransactionHash())
-                    channel.close = containingWallet.getTransaction(new Sha256Hash(storedState.toByteArray()));
+                        ECKey.fromPrivate(storedState.getMyKey().toByteArray()),
+                        Coin.valueOf(storedState.getValueToMe()),
+                        Coin.valueOf(storedState.getRefundFees()), false);
+                if (storedState.hasCloseTransactionHash()) {
+                    Sha256Hash closeTxHash = new Sha256Hash(storedState.getCloseTransactionHash().toByteArray());
+                    channel.close = containingWallet.getTransaction(closeTxHash);
+                }
                 putChannel(channel, false);
             }
         } finally {
@@ -292,13 +336,13 @@ class StoredClientChannel {
     // The transaction that closed the channel (generated by the server)
     Transaction close;
     ECKey myKey;
-    BigInteger valueToMe, refundFees;
+    Coin valueToMe, refundFees;
 
     // In-memory flag to indicate intent to resume this channel (or that the channel is already in use)
     boolean active = false;
 
-    StoredClientChannel(Sha256Hash id, Transaction contract, Transaction refund, ECKey myKey, BigInteger valueToMe,
-                        BigInteger refundFees, boolean active) {
+    StoredClientChannel(Sha256Hash id, Transaction contract, Transaction refund, ECKey myKey, Coin valueToMe,
+                        Coin refundFees, boolean active) {
         this.id = id;
         this.contract = contract;
         this.refund = refund;
@@ -318,8 +362,8 @@ class StoredClientChannel {
         final String closeStr = close == null ? "still open" : close.toString().replaceAll(newline, newline + "   ");
         return String.format("Stored client channel for server ID %s (%s)%n" +
                 "    Key:         %s%n" +
-                "    Value left:  %d%n" +
-                "    Refund fees: %d%n" +
+                "    Value left:  %s%n" +
+                "    Refund fees: %s%n" +
                 "    Contract:  %s" +
                 "Refund:    %s" +
                 "Close:     %s",

@@ -26,17 +26,15 @@ import java.net.UnknownHostException;
  * A VersionMessage holds information exchanged during connection setup with another peer. Most of the fields are not
  * particularly interesting. The subVer field, since BIP 14, acts as a User-Agent string would. You can and should 
  * append to or change the subVer for your own software so other implementations can identify it, and you can look at
- * the subVer field received from other nodes to see what they are running. If blank, it means the Satoshi client.<p>
- *     
+ * the subVer field received from other nodes to see what they are running. <p>
+ *
  * After creating yourself a VersionMessage, you can pass it to {@link PeerGroup#setVersionMessage(VersionMessage)}
  * to ensure it will be used for each new connection.
  */
 public class VersionMessage extends Message {
     private static final long serialVersionUID = 7313594258967483180L;
 
-    /**
-     * A services flag that denotes whether the peer has a copy of the block chain or not.
-     */
+    /** A services flag that denotes whether the peer has a copy of the block chain or not. */
     public static final int NODE_NETWORK = 1;
 
     /**
@@ -44,7 +42,7 @@ public class VersionMessage extends Message {
      */
     public int clientVersion;
     /**
-     * Flags defining what is supported. Right now {@link #NODE_NETWORK} is the only flag defined.
+     * Flags defining what optional services are supported.
      */
     public long localServices;
     /**
@@ -60,8 +58,8 @@ public class VersionMessage extends Message {
      */
     public PeerAddress theirAddr;
     /**
-     * An additional string that today the official client sets to the empty string. We treat it as something like an
-     * HTTP User-Agent header.
+     * User-Agent as defined in <a href="https://github.com/bitcoin/bips/blob/master/bip-0014.mediawiki">BIP 14</a>.
+     * The official client sets it to something like "/Satoshi:0.9.1/".
      */
     public String subVer;
     /**
@@ -69,29 +67,25 @@ public class VersionMessage extends Message {
      */
     public long bestHeight;
     /**
-     * Whether or not to relay tx invs before a filter is received
+     * Whether or not to relay tx invs before a filter is received.
+     * See <a href="https://github.com/bitcoin/bips/blob/master/bip-0037.mediawiki#extensions-to-existing-messages">BIP 37</a>.
      */
     public boolean relayTxesBeforeFilter;
 
     /** The version of this library release, as a string. */
-    public static final String PeercoinJ_VERSION = "0.11.3";
+    public static final String PeercoinJ_VERSION = "0.12.2";
     /** The value that is prepended to the subVer field of this application. */
     public static final String LIBRARY_SUBVER = "/PeercoinJ:" + PeercoinJ_VERSION + "/";
 
-    public VersionMessage(NetworkParameters params, byte[] msg) throws ProtocolException {
-        super(params, msg, 0);
+    public VersionMessage(NetworkParameters params, byte[] payload) throws ProtocolException {
+        super(params, payload, 0);
     }
 
     // It doesn't really make sense to ever lazily parse a version message or to retain the backing bytes.
     // If you're receiving this on the wire you need to check the protocol version and it will never need to be sent
     // back down the wire.
     
-    /** Equivalent to VersionMessage(params, newBestHeight, true) */
     public VersionMessage(NetworkParameters params, int newBestHeight) {
-        this(params, newBestHeight, true);
-    }
-
-    public VersionMessage(NetworkParameters params, int newBestHeight, boolean relayTxesBeforeFilter) {
         super(params);
         clientVersion = NetworkParameters.PROTOCOL_VERSION;
         localServices = 0;
@@ -109,7 +103,6 @@ public class VersionMessage extends Message {
         }
         subVer = LIBRARY_SUBVER;
         bestHeight = newBestHeight;
-        this.relayTxesBeforeFilter = relayTxesBeforeFilter;
 
         length = 85;
         if (protocolVersion > 31402)
@@ -131,9 +124,9 @@ public class VersionMessage extends Message {
         clientVersion = (int) readUint32();
         localServices = readUint64().longValue();
         time = readUint64().longValue();
-        myAddr = new PeerAddress(params, bytes, cursor, 0);
+        myAddr = new PeerAddress(params, payload, cursor, 0);
         cursor += myAddr.getMessageSize();
-        theirAddr = new PeerAddress(params, bytes, cursor, 0);
+        theirAddr = new PeerAddress(params, payload, cursor, 0);
         cursor += theirAddr.getMessageSize();
         // uint64 localHostNonce  (random data)
         // We don't care about the localhost nonce. It's used to detect connecting back to yourself in cases where
@@ -201,7 +194,8 @@ public class VersionMessage extends Message {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof VersionMessage)) return false;
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         VersionMessage other = (VersionMessage) o;
         return other.bestHeight == bestHeight &&
                 other.clientVersion == clientVersion &&
@@ -211,6 +205,12 @@ public class VersionMessage extends Message {
                 other.myAddr.equals(myAddr) &&
                 other.theirAddr.equals(theirAddr) &&
                 other.relayTxesBeforeFilter == relayTxesBeforeFilter;
+    }
+
+    @Override
+    public int hashCode() {
+        return (int) bestHeight ^ clientVersion ^ (int) localServices ^ (int) time ^ subVer.hashCode() ^ myAddr.hashCode()
+            ^ theirAddr.hashCode() * (relayTxesBeforeFilter ? 1 : 2);
     }
 
     /**
@@ -229,12 +229,6 @@ public class VersionMessage extends Message {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public int hashCode() {
-        return (int) bestHeight ^ clientVersion ^ (int) localServices ^ (int) time ^ subVer.hashCode() ^ myAddr.hashCode()
-                ^ theirAddr.hashCode() * (relayTxesBeforeFilter ? 1 : 2);
-    }
-
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("\n");
@@ -245,18 +239,19 @@ public class VersionMessage extends Message {
         sb.append("their addr:     ").append(theirAddr).append("\n");
         sb.append("sub version:    ").append(subVer).append("\n");
         sb.append("best height:    ").append(bestHeight).append("\n");
-        sb.append("delay tx relay: ").append(relayTxesBeforeFilter).append("\n");
+        sb.append("delay tx relay: ").append(!relayTxesBeforeFilter).append("\n");
         return sb.toString();
     }
 
     public VersionMessage duplicate() {
-        VersionMessage v = new VersionMessage(params, (int) bestHeight, relayTxesBeforeFilter);
+        VersionMessage v = new VersionMessage(params, (int) bestHeight);
         v.clientVersion = clientVersion;
         v.localServices = localServices;
         v.time = time;
         v.myAddr = myAddr;
         v.theirAddr = theirAddr;
         v.subVer = subVer;
+        v.relayTxesBeforeFilter = relayTxesBeforeFilter;
         return v;
     }
 

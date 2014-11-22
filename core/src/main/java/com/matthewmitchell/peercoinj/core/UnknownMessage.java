@@ -1,5 +1,6 @@
 /**
  * Copyright 2011 Google Inc.
+ * Copyright 2014 Andreas Schildbach
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,8 +26,10 @@ public class UnknownMessage extends EmptyMessage {
         this.name = name;
     }
 
+    @Override
     public String toString() {
-        return "Unknown message [" + name + "]: " + (bytes == null ? "" : Utils.bytesToHexString(bytes));
+        return "Unknown message [" + name + "]: " + (payload == null ? "" : Utils.HEX.encode(payload));
     }
 
 }
+

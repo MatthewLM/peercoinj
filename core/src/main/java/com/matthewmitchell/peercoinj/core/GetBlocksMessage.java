@@ -38,10 +38,11 @@ public class GetBlocksMessage extends Message {
         this.stopHash = stopHash;
     }
 
-    public GetBlocksMessage(NetworkParameters params, byte[] msg) throws ProtocolException {
-        super(params, msg, 0);
+    public GetBlocksMessage(NetworkParameters params, byte[] payload) throws ProtocolException {
+        super(params, payload, 0);
     }
 
+    @Override
     protected void parseLite() throws ProtocolException {
         cursor = offset;
         version = readUint32();
@@ -51,6 +52,7 @@ public class GetBlocksMessage extends Message {
         length = (int) (cursor - offset + ((startCount + 1) * 32));
     }
 
+    @Override
     public void parse() throws ProtocolException {
         cursor = offset;
         version = readUint32();
@@ -72,6 +74,7 @@ public class GetBlocksMessage extends Message {
         return stopHash;
     }
 
+    @Override
     public String toString() {
         StringBuffer b = new StringBuffer();
         b.append("getblocks: ");
@@ -82,6 +85,7 @@ public class GetBlocksMessage extends Message {
         return b.toString();
     }
 
+    @Override
     protected void peercoinSerializeToStream(OutputStream stream) throws IOException {
         // Version, for some reason.
         Utils.uint32ToByteStreamLE(NetworkParameters.PROTOCOL_VERSION, stream);
@@ -99,11 +103,13 @@ public class GetBlocksMessage extends Message {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || o.getClass() != getClass()) return false;
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         GetBlocksMessage other = (GetBlocksMessage) o;
-        return (other.version == version &&
-                locator.size() == other.locator.size() && locator.containsAll(other.locator) &&
-                stopHash.equals(other.stopHash));
+        return version == other.version &&
+               locator.size() == other.locator.size() &&
+               locator.containsAll(other.locator) &&
+               stopHash.equals(other.stopHash);
     }
 
     @Override

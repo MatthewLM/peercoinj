@@ -61,18 +61,23 @@ class StoredTransactionOutPoint implements Serializable {
         return index;
     }
     
+    @Override
     public int hashCode() {
         return this.hash.hashCode() + (int)index;
     }
     
+    @Override
     public String toString() {
         return "Stored transaction out point: " + hash.toString() + ":" + index;
     }
     
+    @Override
     public boolean equals(Object o) {
-        if (!(o instanceof StoredTransactionOutPoint)) return false;
-        return ((StoredTransactionOutPoint)o).getIndex() == this.index &&
-                Objects.equal(this.getHash(), ((StoredTransactionOutPoint)o).getHash());
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        StoredTransactionOutPoint other = (StoredTransactionOutPoint) o;
+        return getIndex() == other.getIndex() &&
+               Objects.equal(getHash(), other.getHash());
     }
 }
 
@@ -262,12 +267,14 @@ public class MemoryFullPrunedBlockStore implements FullPrunedBlockStore {
         }
     }
 
+    @Override
     public synchronized void put(StoredBlock block) throws BlockStoreException {
         Preconditions.checkNotNull(blockMap, "MemoryFullPrunedBlockStore is closed");
         Sha256Hash hash = block.getHeader().getHash();
         blockMap.put(hash, new StoredBlockAndWasUndoableFlag(block, false));
     }
     
+    @Override
     public synchronized void put(StoredBlock storedBlock, StoredUndoableBlock undoableBlock) throws BlockStoreException {
         Preconditions.checkNotNull(blockMap, "MemoryFullPrunedBlockStore is closed");
         Sha256Hash hash = storedBlock.getHeader().getHash();
@@ -275,6 +282,7 @@ public class MemoryFullPrunedBlockStore implements FullPrunedBlockStore {
         blockMap.put(hash, new StoredBlockAndWasUndoableFlag(storedBlock, true));
     }
 
+    @Override
     @Nullable
     public synchronized StoredBlock get(Sha256Hash hash) throws BlockStoreException {
         Preconditions.checkNotNull(blockMap, "MemoryFullPrunedBlockStore is closed");
@@ -282,6 +290,7 @@ public class MemoryFullPrunedBlockStore implements FullPrunedBlockStore {
         return storedBlock == null ? null : storedBlock.block;
     }
     
+    @Override
     @Nullable
     public synchronized StoredBlock getOnceUndoableStoredBlock(Sha256Hash hash) throws BlockStoreException {
         Preconditions.checkNotNull(blockMap, "MemoryFullPrunedBlockStore is closed");
@@ -289,27 +298,32 @@ public class MemoryFullPrunedBlockStore implements FullPrunedBlockStore {
         return (storedBlock != null && storedBlock.wasUndoable) ? storedBlock.block : null;
     }
     
+    @Override
     @Nullable
     public synchronized StoredUndoableBlock getUndoBlock(Sha256Hash hash) throws BlockStoreException {
         Preconditions.checkNotNull(fullBlockMap, "MemoryFullPrunedBlockStore is closed");
         return fullBlockMap.get(hash);
     }
 
+    @Override
     public synchronized StoredBlock getChainHead() throws BlockStoreException {
         Preconditions.checkNotNull(blockMap, "MemoryFullPrunedBlockStore is closed");
         return chainHead;
     }
 
+    @Override
     public synchronized void setChainHead(StoredBlock chainHead) throws BlockStoreException {
         Preconditions.checkNotNull(blockMap, "MemoryFullPrunedBlockStore is closed");
         this.chainHead = chainHead;
     }
     
+    @Override
     public synchronized StoredBlock getVerifiedChainHead() throws BlockStoreException {
         Preconditions.checkNotNull(blockMap, "MemoryFullPrunedBlockStore is closed");
         return verifiedChainHead;
     }
 
+    @Override
     public synchronized void setVerifiedChainHead(StoredBlock chainHead) throws BlockStoreException {
         Preconditions.checkNotNull(blockMap, "MemoryFullPrunedBlockStore is closed");
         this.verifiedChainHead = chainHead;
@@ -320,47 +334,55 @@ public class MemoryFullPrunedBlockStore implements FullPrunedBlockStore {
         fullBlockMap.removeByMultiKey(chainHead.getHeight() - fullStoreDepth);
     }
     
+    @Override
     public void close() {
         blockMap = null;
         fullBlockMap = null;
         transactionOutputMap = null;
     }
     
+    @Override
     @Nullable
     public synchronized StoredTransactionOutput getTransactionOutput(Sha256Hash hash, long index) throws BlockStoreException {
         Preconditions.checkNotNull(transactionOutputMap, "MemoryFullPrunedBlockStore is closed");
         return transactionOutputMap.get(new StoredTransactionOutPoint(hash, index));
     }
 
+    @Override
     public synchronized void addUnspentTransactionOutput(StoredTransactionOutput out) throws BlockStoreException {
         Preconditions.checkNotNull(transactionOutputMap, "MemoryFullPrunedBlockStore is closed");
         transactionOutputMap.put(new StoredTransactionOutPoint(out), out);
     }
 
+    @Override
     public synchronized void removeUnspentTransactionOutput(StoredTransactionOutput out) throws BlockStoreException {
         Preconditions.checkNotNull(transactionOutputMap, "MemoryFullPrunedBlockStore is closed");
         if (transactionOutputMap.remove(new StoredTransactionOutPoint(out)) == null)
             throw new BlockStoreException("Tried to remove a StoredTransactionOutput from MemoryFullPrunedBlockStore that it didn't have!");
     }
 
+    @Override
     public synchronized void beginDatabaseBatchWrite() throws BlockStoreException {
         blockMap.beginDatabaseBatchWrite();
         fullBlockMap.BeginTransaction();
         transactionOutputMap.beginDatabaseBatchWrite();
     }
 
+    @Override
     public synchronized void commitDatabaseBatchWrite() throws BlockStoreException {
         blockMap.commitDatabaseBatchWrite();
         fullBlockMap.CommitTransaction();
         transactionOutputMap.commitDatabaseBatchWrite();
     }
 
+    @Override
     public synchronized void abortDatabaseBatchWrite() throws BlockStoreException {
         blockMap.abortDatabaseBatchWrite();
         fullBlockMap.AbortTransaction();
         transactionOutputMap.abortDatabaseBatchWrite();
     }
 
+    @Override
     public synchronized boolean hasUnspentOutputs(Sha256Hash hash, int numOutputs) throws BlockStoreException {
         for (int i = 0; i < numOutputs; i++)
             if (getTransactionOutput(hash, i) != null)

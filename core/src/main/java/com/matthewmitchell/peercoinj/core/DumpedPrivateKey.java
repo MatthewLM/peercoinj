@@ -19,7 +19,6 @@ package com.matthewmitchell.peercoinj.core;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
-import java.math.BigInteger;
 import java.util.Arrays;
 
 /**
@@ -75,23 +74,18 @@ public class DumpedPrivateKey extends VersionedChecksummedBytes {
      * Returns an ECKey created from this encoded private key.
      */
     public ECKey getKey() {
-        return new ECKey(new BigInteger(1, bytes), null, compressed);
+        final ECKey key = ECKey.fromPrivate(bytes);
+        return compressed ? key : key.decompress();
     }
 
     @Override
-    public boolean equals(Object other) {
-        // This odd construction is to avoid anti-symmetry of equality: where a.equals(b) != b.equals(a).
-        boolean result = false;
-        if (other instanceof VersionedChecksummedBytes) {
-            result = Arrays.equals(bytes, ((VersionedChecksummedBytes)other).bytes);
-        }
-        if (other instanceof DumpedPrivateKey) {
-            DumpedPrivateKey o = (DumpedPrivateKey) other;
-            result = Arrays.equals(bytes, o.bytes) &&
-                     version == o.version &&
-                     compressed == o.compressed;
-        }
-        return result;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DumpedPrivateKey other = (DumpedPrivateKey) o;
+        return Arrays.equals(bytes, other.bytes) &&
+               version == other.version &&
+               compressed == other.compressed;
     }
 
     @Override

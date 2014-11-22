@@ -29,7 +29,6 @@ public class FilteredBlock extends Message {
     public static final int MIN_PROTOCOL_VERSION = 70000;
     private Block header;
 
-    // The PartialMerkleTree of transactions
     private PartialMerkleTree merkleTree;
     private List<Sha256Hash> cachedTransactionHashes = null;
     
@@ -40,7 +39,14 @@ public class FilteredBlock extends Message {
     public FilteredBlock(NetworkParameters params, byte[] payloadBytes) throws ProtocolException {
         super(params, payloadBytes, 0);
     }
-    
+
+    public FilteredBlock(NetworkParameters params, Block header, PartialMerkleTree pmt) {
+        super(params);
+        this.header = header;
+        this.merkleTree = pmt;
+    }
+
+    @Override
     public void peercoinSerializeToStream(OutputStream stream) throws IOException {
         if (header.transactions == null)
             header.peercoinSerializeToStream(stream);
@@ -52,10 +58,10 @@ public class FilteredBlock extends Message {
     @Override
     void parse() throws ProtocolException {
         byte[] headerBytes = new byte[Block.HEADER_SIZE];
-        System.arraycopy(bytes, 0, headerBytes, 0, Block.HEADER_SIZE);
+        System.arraycopy(payload, 0, headerBytes, 0, Block.HEADER_SIZE);
         header = new Block(params, headerBytes);
         
-        merkleTree = new PartialMerkleTree(params, bytes, Block.HEADER_SIZE);
+        merkleTree = new PartialMerkleTree(params, payload, Block.HEADER_SIZE);
         
         length = Block.HEADER_SIZE + merkleTree.getMessageSize();
     }
@@ -89,6 +95,7 @@ public class FilteredBlock extends Message {
     }
     
     /** Gets the hash of the block represented in this Filtered Block */
+    @Override
     public Sha256Hash getHash() {
         return header.getHash();
     }
@@ -113,6 +120,36 @@ public class FilteredBlock extends Message {
 
     /** Number of transactions in this block, before it was filtered */
     public int getTransactionCount() {
-        return merkleTree.transactionCount;
+        return merkleTree.getTransactionCount();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        FilteredBlock block = (FilteredBlock) o;
+
+        if (!associatedTransactions.equals(block.associatedTransactions)) return false;
+        if (!header.equals(block.header)) return false;
+        if (!merkleTree.equals(block.merkleTree)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = header.hashCode();
+        result = 31 * result + merkleTree.hashCode();
+        result = 31 * result + associatedTransactions.hashCode();
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "FilteredBlock{" +
+                "merkleTree=" + merkleTree +
+                ", header=" + header +
+                '}';
     }
 }

@@ -18,7 +18,6 @@ package com.matthewmitchell.peercoinj.core;
 
 import com.matthewmitchell.peercoinj.utils.ListenerRegistration;
 import com.matthewmitchell.peercoinj.utils.Threading;
-import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 
@@ -28,6 +27,8 @@ import java.math.BigInteger;
 import java.util.ListIterator;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
+
+import static com.google.common.base.Preconditions.*;
 
 /**
  * <p>A TransactionConfidence object tracks data you can use to make a confidence decision about a transaction.
@@ -73,8 +74,6 @@ public class TransactionConfidence implements Serializable {
 
     // The depth of the transaction on the best chain in blocks. An unconfirmed block has depth 0.
     private int depth;
-    // The cumulative work done for the blocks that bury this transaction.
-    private BigInteger workDone = BigInteger.ZERO;
 
     /** Describes the state of the transaction in general terms. Properties can be read to learn specifics. */
     public enum ConfidenceType {
@@ -187,7 +186,7 @@ public class TransactionConfidence implements Serializable {
      * a future from {@link #getDepthFuture(int)}.</p>
      */
     public void addEventListener(Listener listener, Executor executor) {
-        Preconditions.checkNotNull(listener);
+        checkNotNull(listener);
         listeners.addIfAbsent(new ListenerRegistration<Listener>(listener, executor));
     }
 
@@ -206,7 +205,7 @@ public class TransactionConfidence implements Serializable {
     }
 
     public boolean removeEventListener(Listener listener) {
-        Preconditions.checkNotNull(listener);
+        checkNotNull(listener);
         return ListenerRegistration.removeFromList(listener, listeners);
     }
 
@@ -244,14 +243,15 @@ public class TransactionConfidence implements Serializable {
      * transaction becomes available.
      */
     public synchronized void setConfidenceType(ConfidenceType confidenceType) {
-        // Don't inform the event listeners if the confidence didn't really change.
         if (confidenceType == this.confidenceType)
             return;
         this.confidenceType = confidenceType;
+        if (confidenceType != ConfidenceType.DEAD) {
+            overridingTransaction = null;
+        }
         if (confidenceType == ConfidenceType.PENDING) {
             depth = 0;
             appearedAtChainHeight = -1;
-            workDone = BigInteger.ZERO;
         }
     }
 
@@ -315,25 +315,19 @@ public class TransactionConfidence implements Serializable {
                 builder.append("Pending/unconfirmed.");
                 break;
             case BUILDING:
-                builder.append(String.format("Appeared in best chain at height %d, depth %d, work done %s.",
-                        getAppearedAtChainHeight(), getDepthInBlocks(), getWorkDone()));
+                builder.append(String.format("Appeared in best chain at height %d, depth %d.",
+                        getAppearedAtChainHeight(), getDepthInBlocks()));
                 break;
         }
         return builder.toString();
     }
 
     /**
-     * Called by the wallet when the tx appears on the best chain and a new block is added to the top.
-     * Updates the internal counter that tracks how deeply buried the block is.
-     * Work is the value of block.getWork().
+     * Called by the wallet when the tx appears on the best chain and a new block is added to the top. Updates the
+     * internal counter that tracks how deeply buried the block is.
      */
-    public synchronized boolean notifyWorkDone(Block block) throws VerificationException {
-        if (getConfidenceType() != ConfidenceType.BUILDING)
-            return false;   // Should this be an assert?
-
+    public synchronized void incrementDepthInBlocks() {
         this.depth++;
-        this.workDone = this.workDone.add(block.getWork());
-        return true;
     }
 
     /**
@@ -358,21 +352,6 @@ public class TransactionConfidence implements Serializable {
     }
 
     /**
-     * Returns the estimated amount of work (number of hashes performed) on this transaction. Work done is a measure of
-     * security that is related to depth in blocks, but more predictable: the network will always attempt to produce six
-     * blocks per hour by adjusting the difficulty target. So to know how much real computation effort is needed to
-     * reverse a transaction, counting blocks is not enough. If a transaction has not confirmed, the result is zero.
-     * @return estimated number of hashes needed to reverse the transaction.
-     */
-    public synchronized BigInteger getWorkDone() {
-        return workDone;
-    }
-
-    public synchronized void setWorkDone(BigInteger workDone) {
-        this.workDone = workDone;
-    }
-
-    /**
      * If this transaction has been overridden by a double spend (is dead), this call returns the overriding transaction.
      * Note that this call <b>can return null</b> if you have migrated an old wallet, as pre-Jan 2012 wallets did not
      * store this information.
@@ -390,7 +369,8 @@ public class TransactionConfidence implements Serializable {
     /**
      * Called when the transaction becomes newly dead, that is, we learn that one of its inputs has already been spent
      * in such a way that the double-spending transaction takes precedence over this one. It will not become valid now
-     * unless there is a re-org. Automatically sets the confidence type to DEAD.
+     * unless there is a re-org. Automatically sets the confidence type to DEAD. The overriding transaction may not
+     * directly double spend this one, but could also have double spent a dependency of this tx.
      */
     public synchronized void setOverridingTransaction(@Nullable Transaction overridingTransaction) {
         this.overridingTransaction = overridingTransaction;

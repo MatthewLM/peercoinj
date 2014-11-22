@@ -1,5 +1,6 @@
 /**
  * Copyright 2013 Jim Burton.
+ * Copyright 2014 Andreas Schildbach
  *
  * Licensed under the MIT license (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +16,12 @@
  */
 package com.matthewmitchell.peercoinj.crypto;
 
+import com.google.common.base.Objects;
 import com.google.protobuf.ByteString;
 import com.lambdaworks.crypto.SCrypt;
-import org.peercoinj.wallet.Protos;
-import org.peercoinj.wallet.Protos.ScryptParameters;
-import org.peercoinj.wallet.Protos.Wallet.EncryptionType;
+import com.matthewmitchell.peercoinj.wallet.Protos;
+import com.matthewmitchell.peercoinj.wallet.Protos.ScryptParameters;
+import com.matthewmitchell.peercoinj.wallet.Protos.Wallet.EncryptionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.BufferedBlockCipher;
@@ -71,16 +73,34 @@ public class KeyCrypterScrypt implements KeyCrypter, Serializable {
 
     private static final transient SecureRandom secureRandom = new SecureRandom();
 
+    private static byte[] randomSalt() {
+        byte[] salt = new byte[SALT_LENGTH];
+        secureRandom.nextBytes(salt);
+        return salt;
+    }
+
     // Scrypt parameters.
     private final transient ScryptParameters scryptParameters;
 
     /**
-     * Encryption/ Decryption using default parameters and a random salt
+     * Encryption/Decryption using default parameters and a random salt.
      */
     public KeyCrypterScrypt() {
-        byte[] salt = new byte[SALT_LENGTH];
-        secureRandom.nextBytes(salt);
-        Protos.ScryptParameters.Builder scryptParametersBuilder = Protos.ScryptParameters.newBuilder().setSalt(ByteString.copyFrom(salt));
+        Protos.ScryptParameters.Builder scryptParametersBuilder = Protos.ScryptParameters.newBuilder().setSalt(
+                ByteString.copyFrom(randomSalt()));
+        this.scryptParameters = scryptParametersBuilder.build();
+    }
+
+    /**
+     * Encryption/Decryption using custom number of iterations parameters and a random salt. A useful value for mobile
+     * devices is 512 (~500 ms).
+     *
+     * @param iterations
+     *            number of scrypt iterations
+     */
+    public KeyCrypterScrypt(int iterations) {
+        Protos.ScryptParameters.Builder scryptParametersBuilder = Protos.ScryptParameters.newBuilder()
+                .setSalt(ByteString.copyFrom(randomSalt())).setN(iterations);
         this.scryptParameters = scryptParametersBuilder.build();
     }
 
@@ -140,7 +160,7 @@ public class KeyCrypterScrypt implements KeyCrypter, Serializable {
      * Password based encryption using AES - CBC 256 bits.
      */
     @Override
-    public EncryptedPrivateKey encrypt(byte[] plainBytes, KeyParameter aesKey) throws KeyCrypterException {
+    public EncryptedData encrypt(byte[] plainBytes, KeyParameter aesKey) throws KeyCrypterException {
         checkNotNull(plainBytes);
         checkNotNull(aesKey);
 
@@ -158,7 +178,7 @@ public class KeyCrypterScrypt implements KeyCrypter, Serializable {
             final int length1 = cipher.processBytes(plainBytes, 0, plainBytes.length, encryptedBytes, 0);
             final int length2 = cipher.doFinal(encryptedBytes, length1);
 
-            return new EncryptedPrivateKey(iv, Arrays.copyOf(encryptedBytes, length1 + length2));
+            return new EncryptedData(iv, Arrays.copyOf(encryptedBytes, length1 + length2));
         } catch (Exception e) {
             throw new KeyCrypterException("Could not encrypt bytes.", e);
         }
@@ -173,18 +193,18 @@ public class KeyCrypterScrypt implements KeyCrypter, Serializable {
      * @throws                 KeyCrypterException if bytes could not be decoded to a valid key
      */
     @Override
-    public byte[] decrypt(EncryptedPrivateKey privateKeyToDecode, KeyParameter aesKey) throws KeyCrypterException {
+    public byte[] decrypt(EncryptedData privateKeyToDecode, KeyParameter aesKey) throws KeyCrypterException {
         checkNotNull(privateKeyToDecode);
         checkNotNull(aesKey);
 
         try {
-            ParametersWithIV keyWithIv = new ParametersWithIV(new KeyParameter(aesKey.getKey()), privateKeyToDecode.getInitialisationVector());
+            ParametersWithIV keyWithIv = new ParametersWithIV(new KeyParameter(aesKey.getKey()), privateKeyToDecode.initialisationVector);
 
             // Decrypt the message.
             BufferedBlockCipher cipher = new PaddedBufferedBlockCipher(new CBCBlockCipher(new AESFastEngine()));
             cipher.init(false, keyWithIv);
 
-            byte[] cipherBytes = privateKeyToDecode.getEncryptedBytes();
+            byte[] cipherBytes = privateKeyToDecode.encryptedBytes;
             byte[] decryptedBytes = new byte[cipher.getOutputSize(cipherBytes.length)];
             final int length1 = cipher.processBytes(cipherBytes, 0, cipherBytes.length, decryptedBytes, 0);
             final int length2 = cipher.doFinal(decryptedBytes, length1);
@@ -236,15 +256,10 @@ public class KeyCrypterScrypt implements KeyCrypter, Serializable {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final KeyCrypterScrypt other = (KeyCrypterScrypt) obj;
-
-        return com.google.common.base.Objects.equal(this.scryptParameters, other.scryptParameters);
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        KeyCrypterScrypt other = (KeyCrypterScrypt) o;
+        return Objects.equal(scryptParameters, other.scryptParameters);
     }
 }

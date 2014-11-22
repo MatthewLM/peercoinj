@@ -17,23 +17,22 @@
 package com.matthewmitchell.peercoinj.core;
 
 import com.matthewmitchell.peercoinj.script.Script;
+import org.bitcoinj.wallet.AbstractKeyChainEventListener;
 
-import java.math.BigInteger;
 import java.util.List;
 
 /**
  * Convenience implementation of {@link WalletEventListener}.
  */
-public abstract class AbstractWalletEventListener implements WalletEventListener {
+public abstract class AbstractWalletEventListener extends AbstractKeyChainEventListener implements WalletEventListener {
     @Override
-    public void onCoinsReceived(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance) {
+    public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
         onChange();
     }
 
     @Override
-    public void onCoinsSent(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance) {
+    public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
         onChange();
-    }
 
     @Override
     public void onReorganize(Wallet wallet) {
@@ -46,7 +45,7 @@ public abstract class AbstractWalletEventListener implements WalletEventListener
     }
 
     @Override
-    public void onKeysAdded(Wallet wallet, List<ECKey> keys) {
+    public void onKeysAdded(List<ECKey> keys) {
         onChange();
     }
 

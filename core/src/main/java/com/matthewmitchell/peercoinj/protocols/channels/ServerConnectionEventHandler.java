@@ -16,11 +16,13 @@
 
 package com.matthewmitchell.peercoinj.protocols.channels;
 
-import java.math.BigInteger;
-
+import com.matthewmitchell.peercoinj.core.Coin;
 import com.matthewmitchell.peercoinj.core.Sha256Hash;
 import com.matthewmitchell.peercoinj.net.ProtobufParser;
-import org.peercoin.paymentchannel.Protos;
+
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.protobuf.ByteString;
+import org.bitcoin.paymentchannel.Protos;
 
 import javax.annotation.Nullable;
 
@@ -29,10 +31,10 @@ import javax.annotation.Nullable;
  * {@link PaymentChannelServerListener}
 */
 public abstract class ServerConnectionEventHandler {
-    private ProtobufParser connectionChannel;
+    private ProtobufParser<Protos.TwoWayChannelMessage> connectionChannel;
     // Called by ServerListener before channelOpen to set connectionChannel when it is ready to received application messages
     // Also called with null to clear connectionChannel after channelClosed()
-    synchronized void setConnectionChannel(@Nullable ProtobufParser connectionChannel) { this.connectionChannel = connectionChannel; }
+    synchronized void setConnectionChannel(@Nullable ProtobufParser<Protos.TwoWayChannelMessage> connectionChannel) { this.connectionChannel = connectionChannel; }
 
     /**
      * <p>Closes the channel with the client (will generate a
@@ -44,10 +46,13 @@ public abstract class ServerConnectionEventHandler {
      * {@link StoredPaymentChannelServerStates#getChannel(com.matthewmitchell.peercoinj.core.Sha256Hash)} with the id provided in
      * {@link ServerConnectionEventHandler#channelOpen(com.matthewmitchell.peercoinj.core.Sha256Hash)}</p>
      */
+    @SuppressWarnings("unchecked")
+    // The warning 'unchecked call to write(MessageType)' being suppressed here comes from the build()
+    // formally returning MessageLite-derived class that cannot be statically guaranteed to be the same MessageType
+    // that is used in connectionChannel.
     protected final synchronized void closeChannel() {
         if (connectionChannel == null)
             throw new IllegalStateException("Channel is not fully initialized/has already been closed");
-
         connectionChannel.write(Protos.TwoWayChannelMessage.newBuilder()
                 .setType(Protos.TwoWayChannelMessage.MessageType.CLOSE)
                 .build());
@@ -66,8 +71,11 @@ public abstract class ServerConnectionEventHandler {
      *
      * @param by The increase in total payment
      * @param to The new total payment to us (not including fees which may be required to claim the payment)
+     * @param info Information about this payment increase, used to extend this protocol.
+     * @return acknowledgment information to be sent to the client.
      */
-    public abstract void paymentIncrease(BigInteger by, BigInteger to);
+    @Nullable
+    public abstract ListenableFuture<ByteString> paymentIncrease(Coin by, Coin to, ByteString info);
 
     /**
      * <p>Called when the channel was closed for some reason. May be called without a call to

@@ -16,11 +16,16 @@
 
 package com.matthewmitchell.peercoinj.core;
 
+import com.matthewmitchell.peercoinj.script.Script;
+import com.matthewmitchell.peercoinj.script.ScriptChunk;
 import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.Math.*;
@@ -140,6 +145,7 @@ public class BloomFilter extends Message {
     /**
      * Serializes this message to the provided stream. If you just want the raw bytes use peercoinSerialize().
      */
+    @Override
     void peercoinSerializeToStream(OutputStream stream) throws IOException {
         stream.write(new VarInt(data.length).encode());
         stream.write(data);
@@ -156,8 +162,12 @@ public class BloomFilter extends Message {
     private static int rotateLeft32(int x, int r) {
         return (x << r) | (x >>> (32 - r));
     }
-    
-    private int hash(int hashNum, byte[] object) {
+
+    /**
+     * Applies the MurmurHash3 (x86_32) algorithm to the given data.
+     * See this <a href="http://code.google.com/p/smhasher/source/browse/trunk/MurmurHash3.cpp">C++ code for the original.</a>
+     */
+    public static int murmurHash3(byte[] data, long nTweak, int hashNum, byte[] object) {
         // The following is MurmurHash3 (x86_32), see http://code.google.com/p/smhasher/source/browse/trunk/MurmurHash3.cpp
         int h1 = (int)(hashNum * 0xFBA4C795L + nTweak);
         final int c1 = 0xcc9e2d51;
@@ -213,18 +223,24 @@ public class BloomFilter extends Message {
      * Returns true if the given object matches the filter either because it was inserted, or because we have a
      * false-positive.
      */
-    public boolean contains(byte[] object) {
+    public synchronized boolean contains(byte[] object) {
         for (int i = 0; i < hashFuncs; i++) {
-            if (!Utils.checkBitLE(data, hash(i, object)))
+            if (!Utils.checkBitLE(data, murmurHash3(data, nTweak, i, object)))
                 return false;
         }
         return true;
     }
-    
+
     /** Insert the given arbitrary data into the filter */
-    public void insert(byte[] object) {
+    public synchronized void insert(byte[] object) {
         for (int i = 0; i < hashFuncs; i++)
-            Utils.setBitLE(data, hash(i, object));
+            Utils.setBitLE(data, murmurHash3(data, nTweak, i, object));
+    }
+
+    /** Inserts the given key and equivalent hashed form (for the address). */
+    public synchronized void insert(ECKey key) {
+        insert(key.getPubKey());
+        insert(key.getPubKeyHash());
     }
 
     /**
@@ -234,7 +250,7 @@ public class BloomFilter extends Message {
      * Solved blocks will then be send just as Merkle trees of tx hashes, meaning a constant 32 bytes of data for each
      * transaction instead of 100-300 bytes as per usual.
      */
-    public void setMatchAll() {
+    public synchronized void setMatchAll() {
         data = new byte[] {(byte) 0xff};
     }
 
@@ -242,7 +258,7 @@ public class BloomFilter extends Message {
      * Copies filter into this. Filter must have the same size, hash function count and nTweak or an
      * IllegalArgumentException will be thrown.
      */
-    public void merge(BloomFilter filter) {
+    public synchronized void merge(BloomFilter filter) {
         if (!this.matchesAll() && !filter.matchesAll()) {
             checkArgument(filter.data.length == this.data.length &&
                           filter.hashFuncs == this.hashFuncs &&
@@ -258,23 +274,87 @@ public class BloomFilter extends Message {
      * Returns true if this filter will match anything. See {@link com.matthewmitchell.peercoinj.core.BloomFilter#setMatchAll()}
      * for when this can be a useful thing to do.
      */
-    public boolean matchesAll() {
+    public synchronized boolean matchesAll() {
         for (byte b : data)
             if (b != (byte) 0xff)
                 return false;
         return true;
     }
+
+    /**
+     * The update flag controls how application of the filter to a block modifies the filter. See the enum javadocs
+     * for information on what occurs and when.
+     */
+    public synchronized BloomUpdate getUpdateFlag() {
+        if (nFlags == 0)
+            return BloomUpdate.UPDATE_NONE;
+        else if (nFlags == 1)
+            return BloomUpdate.UPDATE_ALL;
+        else if (nFlags == 2)
+            return BloomUpdate.UPDATE_P2PUBKEY_ONLY;
+        else
+            throw new IllegalStateException("Unknown flag combination");
+    }
+
+    /**
+     * Creates a new FilteredBlock from the given Block, using this filter to select transactions. Matches can cause the
+     * filter to be updated with the matched element, this ensures that when a filter is applied to a block, spends of
+     * matched transactions are also matched. However it means this filter can be mutated by the operation. The returned
+     * filtered block already has the matched transactions associated with it.
+     */
+    public synchronized FilteredBlock applyAndUpdate(Block block) {
+        List<Transaction> txns = block.getTransactions();
+        List<Sha256Hash> txHashes = new ArrayList<Sha256Hash>(txns.size());
+        List<Transaction> matched = Lists.newArrayList();
+        byte[] bits = new byte[(int) Math.ceil(txns.size() / 8.0)];
+        for (int i = 0; i < txns.size(); i++) {
+            Transaction tx = txns.get(i);
+            txHashes.add(tx.getHash());
+            if (applyAndUpdate(tx)) {
+                Utils.setBitLE(bits, i);
+                matched.add(tx);
+            }
+        }
+        PartialMerkleTree pmt = PartialMerkleTree.buildFromLeaves(block.getParams(), bits, txHashes);
+        FilteredBlock filteredBlock = new FilteredBlock(block.getParams(), block.cloneAsHeader(), pmt);
+        for (Transaction transaction : matched)
+            filteredBlock.provideTransaction(transaction);
+        return filteredBlock;
+    }
+
+    public synchronized boolean applyAndUpdate(Transaction tx) {
+        if (contains(tx.getHash().getBytes()))
+            return true;
+        boolean found = false;
+        BloomUpdate flag = getUpdateFlag();
+        for (TransactionOutput output : tx.getOutputs()) {
+            Script script = output.getScriptPubKey();
+            for (ScriptChunk chunk : script.getChunks()) {
+                if (!chunk.isPushData())
+                    continue;
+                if (contains(chunk.data)) {
+                    boolean isSendingToPubKeys = script.isSentToRawPubKey() || script.isSentToMultiSig();
+                    if (flag == BloomUpdate.UPDATE_ALL || (flag == BloomUpdate.UPDATE_P2PUBKEY_ONLY && isSendingToPubKeys))
+                        insert(output.getOutPointFor().bitcoinSerialize());
+                    found = true;
+                }
+            }
+        }
+        return found;
+    }
     
     @Override
-    public boolean equals(Object other) {
-        return other instanceof BloomFilter &&
-                ((BloomFilter) other).hashFuncs == this.hashFuncs &&
-                ((BloomFilter) other).nTweak == this.nTweak &&
-                Arrays.equals(((BloomFilter) other).data, this.data);
+    public synchronized boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        BloomFilter other = (BloomFilter) o;
+        return hashFuncs == other.hashFuncs &&
+               nTweak == other.nTweak &&
+               Arrays.equals(data, other.data);
     }
 
     @Override
-    public int hashCode() {
+    public synchronized int hashCode() {
         return Objects.hashCode(hashFuncs, nTweak, Arrays.hashCode(data));
     }
 }

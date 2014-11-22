@@ -1,5 +1,6 @@
 /**
  * Copyright 2011 Google Inc.
+ * Copyright 2014 Andreas Schildbach
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,18 +22,15 @@ import com.matthewmitchell.peercoinj.script.Script;
 import com.matthewmitchell.peercoinj.script.ScriptOpCodes;
 import com.google.common.base.Objects;
 
-import org.spongycastle.util.encoders.Hex;
-
 import javax.annotation.Nullable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Serializable;
 import java.math.BigInteger;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.matthewmitchell.peercoinj.core.Utils.COIN;
+import static com.matthewmitchell.peercoinj.core.Coin.*;
 
 /**
  * <p>NetworkParameters contains the data needed for working with an instantiation of a Peercoin chain.</p>
@@ -51,7 +49,7 @@ public abstract class NetworkParameters implements Serializable {
     /**
      * The alert signing key.
      */
-    public static final byte[] SATOSHI_KEY = Hex.decode("04a0a849dd49b113d3179a332dd77715c43be4d0076e2f19e66de23dd707e56630f792f298dfd209bf042bb3561f4af6983f3d81e439737ab0bf7f898fecd21aab");
+    public static final byte[] SATOSHI_KEY = Utils.HEX.decode("04a0a849dd49b113d3179a332dd77715c43be4d0076e2f19e66de23dd707e56630f792f298dfd209bf042bb3561f4af6983f3d81e439737ab0bf7f898fecd21aab");
 
     /** The string returned by getId() for the main, production network where people trade things. */
     public static final String ID_MAINNET = "org.peercoin.production";
@@ -62,7 +60,7 @@ public abstract class NetworkParameters implements Serializable {
     public static final String PAYMENT_PROTOCOL_ID_MAINNET = "main";
 
     protected Block genesisBlock;
-    protected BigInteger proofOfWorkLimit;
+    protected BigInteger maxTarget;
     protected int port;
     protected long packetMagic;
     protected int addressHeader;
@@ -82,7 +80,6 @@ public abstract class NetworkParameters implements Serializable {
      * The depth of blocks required for a coinbase transaction to be spendable.
      */
     protected int spendableCoinbaseDepth;
-    protected int subsidyDecreaseBlockCount;
     
     protected int[] acceptableAddressCodes;
     protected String[] dnsSeeds;
@@ -101,11 +98,11 @@ public abstract class NetworkParameters implements Serializable {
             // A script containing the difficulty bits and the following message:
             //
             //   "Matonis 07-AUG-2012 Parallel Currencies And The Roadmap To Monetary Freedom"
-            byte[] bytes = Hex.decode
+            byte[] bytes = Utils.HEX.decode
                     ("04ffff001d020f274b4d61746f6e69732030372d4155472d3230313220506172616c6c656c2043757272656e6369657320416e642054686520526f61646d617020546f204d6f6e65746172792046726565646f6d");
             t.addInput(new TransactionInput(n, t, bytes));
             ByteArrayOutputStream scriptPubKeyBytes = new ByteArrayOutputStream();
-            t.addOutput(new TransactionOutput(n, t, Utils.toNanoCoins(0, 0), scriptPubKeyBytes.toByteArray()));
+            t.addOutput(new TransactionOutput(n, t, ZERO, scriptPubKeyBytes.toByteArray()));
         } catch (Exception e) {
             // Cannot happen.
             throw new RuntimeException(e);
@@ -128,10 +125,9 @@ public abstract class NetworkParameters implements Serializable {
      * mined upon and thus will be quickly re-orged out as long as the majority are enforcing the rule.
      */
     public static final int BIP16_ENFORCE_TIME = 1333238400;
-    
-    public static final BigInteger MAX_MONEY = new BigInteger("2000000000", 10).multiply(COIN);
-    public static final BigInteger PREMINE = new BigInteger("380000000", 10).multiply(COIN);
 
+    public static final long MAX_COINS = 2000000000;
+    public static final Coin MAX_MONEY = COIN.multiply(MAX_COINS);
 
     /** Alias for MainNetParams.get(), use that instead */
     @Deprecated
@@ -155,10 +151,11 @@ public abstract class NetworkParameters implements Serializable {
     public abstract String getPaymentProtocolId();
 
     @Override
-    public boolean equals(Object other) {
-        if (!(other instanceof NetworkParameters)) return false;
-        NetworkParameters o = (NetworkParameters) other;
-        return o.getId().equals(getId());
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        NetworkParameters other = (NetworkParameters) o;
+        return getId().equals(other.getId());
     }
 
     @Override
@@ -206,10 +203,6 @@ public abstract class NetworkParameters implements Serializable {
     public boolean isCheckpoint(int height) {
         Sha256Hash checkpointHash = checkpoints.get(height);
         return checkpointHash != null;
-    }
-
-    public int getSubsidyDecreaseBlockCount() {
-        return subsidyDecreaseBlockCount;
     }
 
     /** Returns DNS names that when resolved, give IP addresses of active peers. */
@@ -293,9 +286,9 @@ public abstract class NetworkParameters implements Serializable {
         return interval;
     }
 
-    /** What the easiest allowable proof of work should be. */
-    public BigInteger getProofOfWorkLimit() {
-        return proofOfWorkLimit;
+    /** Maximum target represents the easiest allowable proof of work. */
+    public BigInteger getMaxTarget() {
+        return maxTarget;
     }
 
     /**

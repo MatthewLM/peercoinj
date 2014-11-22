@@ -44,6 +44,7 @@ public class Ping extends Message {
         this.hasNonce = false;
     }
     
+    @Override
     public void peercoinSerializeToStream(OutputStream stream) throws IOException {
         if (hasNonce)
             Utils.int64ToByteStreamLE(nonce, stream);
@@ -65,11 +66,13 @@ public class Ping extends Message {
         
     }
     
-    boolean hasNonce() {
+    public boolean hasNonce() {
         return hasNonce;
     }
     
-    long getNonce() {
+    public long getNonce() {
         return nonce;
     }
+
 }
+

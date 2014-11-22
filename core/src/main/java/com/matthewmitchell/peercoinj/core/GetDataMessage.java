@@ -39,9 +39,9 @@ public class GetDataMessage extends ListMessage {
      * as the length will be provided as part of the header.  If unknown then set to Message.UNKNOWN_LENGTH
      * @throws ProtocolException
      */
-    public GetDataMessage(NetworkParameters params, byte[] msg, boolean parseLazy, boolean parseRetain, int length)
+    public GetDataMessage(NetworkParameters params, byte[] payload, boolean parseLazy, boolean parseRetain, int length)
             throws ProtocolException {
-        super(params, msg, parseLazy, parseRetain, length);
+        super(params, payload, parseLazy, parseRetain, length);
     }
 
     public GetDataMessage(NetworkParameters params) {
@@ -55,4 +55,13 @@ public class GetDataMessage extends ListMessage {
     public void addBlock(Sha256Hash hash) {
         addItem(new InventoryItem(InventoryItem.Type.Block, hash));
     }
+
+    public void addFilteredBlock(Sha256Hash hash) {
+        addItem(new InventoryItem(InventoryItem.Type.FilteredBlock, hash));
+    }
+
+    public Sha256Hash getHashOf(int i) {
+        return getItems().get(i).hash;
+    }
+
 }

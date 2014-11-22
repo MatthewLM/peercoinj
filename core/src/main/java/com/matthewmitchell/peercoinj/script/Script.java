@@ -1,6 +1,7 @@
 /**
  * Copyright 2011 Google Inc.
  * Copyright 2012 Matt Corallo.
+ * Copyright 2014 Andreas Schildbach
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +20,12 @@ package com.matthewmitchell.peercoinj.script;
 
 import com.matthewmitchell.peercoinj.core.*;
 import com.matthewmitchell.peercoinj.crypto.TransactionSignature;
-import com.matthewmitchell.peercoinj.params.MainNetParams;
 import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.digests.RIPEMD160Digest;
 
+import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -35,11 +36,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 import static com.matthewmitchell.peercoinj.script.ScriptOpCodes.*;
-import static com.matthewmitchell.peercoinj.core.Utils.bytesToHexString;
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
-
-// TODO: Make this class a superclass with derived classes giving accessor methods for the various common templates.
+import static com.google.common.base.Preconditions.*;
 
 /**
  * <p>Programs embedded inside transactions that control redemption of payments.</p>
@@ -53,8 +50,19 @@ import static com.google.common.base.Preconditions.checkState;
  * static methods for building scripts.</p>
  */
 public class Script {
+
+    /** Flags to pass to {@link Script#correctlySpends(Transaction, long, Script, Set)}. */
+    public enum VerifyFlag {
+        P2SH, // Enable BIP16-style subscript evaluation.
+        NULLDUMMY // Verify dummy stack item consumed by CHECKMULTISIG is of zero-length.
+    }
+    public static final EnumSet<VerifyFlag> ALL_VERIFY_FLAGS = EnumSet.allOf(VerifyFlag.class);
+
     private static final Logger log = LoggerFactory.getLogger(Script.class);
     public static final long MAX_SCRIPT_ELEMENT_SIZE = 520;  // bytes
+    public static final int SIG_SIZE = 75;
+    /** Max number of sigops allowed in a standard p2sh redeem script */
+    public static final int MAX_P2SH_SIGOPS = 15;
 
     // The program is a set of chunks where each element is either [opcode] or [data, data, data ...]
     protected List<ScriptChunk> chunks;
@@ -73,7 +81,7 @@ public class Script {
     // Used from ScriptBuilder.
     Script(List<ScriptChunk> chunks) {
         this.chunks = Collections.unmodifiableList(new ArrayList<ScriptChunk>(chunks));
-        creationTimeSeconds = Utils.currentTimeMillis() / 1000;
+        creationTimeSeconds = Utils.currentTimeSeconds();
     }
 
     /**
@@ -84,7 +92,7 @@ public class Script {
     public Script(byte[] programBytes) throws ScriptException {
         program = programBytes;
         parse(programBytes);
-        creationTimeSeconds = Utils.currentTimeMillis() / 1000;
+        creationTimeSeconds = Utils.currentTimeSeconds();
     }
 
     public Script(byte[] programBytes, long creationTimeSeconds) throws ScriptException {
@@ -104,20 +112,14 @@ public class Script {
     /**
      * Returns the program opcodes as a string, for example "[1234] DUP HASH160"
      */
+    @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
-        for (ScriptChunk chunk : chunks) {
-            if (chunk.isOpCode()) {
-                buf.append(getOpCodeName(chunk.data[0]));
-                buf.append(" ");
-            } else {
-                // Data chunk
-                buf.append("[");
-                buf.append(bytesToHexString(chunk.data));
-                buf.append("] ");
-            }
-        }
-        return buf.toString().trim();
+        for (ScriptChunk chunk : chunks)
+            buf.append(chunk).append(' ');
+        if (buf.length() > 0)
+            buf.setLength(buf.length() - 1);
+        return buf.toString();
     }
 
     /** Returns the serialized program as a newly created byte array. */
@@ -137,21 +139,19 @@ public class Script {
         }
     }
 
-    /** Returns an immutable list of the scripts parsed form. */
+    /** Returns an immutable list of the scripts parsed form. Each chunk is either an opcode or data element. */
     public List<ScriptChunk> getChunks() {
         return Collections.unmodifiableList(chunks);
     }
 
-    private static final ScriptChunk INTERN_TABLE[];
+    private static final ScriptChunk STANDARD_TRANSACTION_SCRIPT_CHUNKS[];
 
     static {
-        Script examplePayToAddress = ScriptBuilder.createOutputScript(new Address(MainNetParams.get(), new byte[20]));
-        examplePayToAddress = new Script(examplePayToAddress.getProgram());
-        INTERN_TABLE = new ScriptChunk[] {
-                examplePayToAddress.chunks.get(0),  // DUP
-                examplePayToAddress.chunks.get(1),  // HASH160
-                examplePayToAddress.chunks.get(3),  // EQUALVERIFY
-                examplePayToAddress.chunks.get(4),  // CHECKSIG
+        STANDARD_TRANSACTION_SCRIPT_CHUNKS = new ScriptChunk[] {
+            new ScriptChunk(ScriptOpCodes.OP_DUP, null, 0),
+            new ScriptChunk(ScriptOpCodes.OP_HASH160, null, 1),
+            new ScriptChunk(ScriptOpCodes.OP_EQUALVERIFY, null, 23),
+            new ScriptChunk(ScriptOpCodes.OP_CHECKSIG, null, 24),
         };
     }
 
@@ -192,27 +192,24 @@ public class Script {
 
             ScriptChunk chunk;
             if (dataToRead == -1) {
-                chunk = new ScriptChunk(true, new byte[]{(byte) opcode}, startLocationInProgram);
+                chunk = new ScriptChunk(opcode, null, startLocationInProgram);
             } else {
                 if (dataToRead > bis.available())
                     throw new ScriptException("Push of data element that is larger than remaining data");
                 byte[] data = new byte[(int)dataToRead];
                 checkState(dataToRead == 0 || bis.read(data, 0, (int)dataToRead) == dataToRead);
-                chunk = new ScriptChunk(false, data, startLocationInProgram);
+                chunk = new ScriptChunk(opcode, data, startLocationInProgram);
             }
-            // Save some memory by eliminating redundant copies of the same chunk objects. INTERN_TABLE can be null
-            // here because this method is called whilst setting it up.
-            if (INTERN_TABLE != null) {
-                for (ScriptChunk c : INTERN_TABLE) {
-                    if (c.equals(chunk)) chunk = c;
-                }
+            // Save some memory by eliminating redundant copies of the same chunk objects.
+            for (ScriptChunk c : STANDARD_TRANSACTION_SCRIPT_CHUNKS) {
+                if (c.equals(chunk)) chunk = c;
             }
             chunks.add(chunk);
         }
     }
 
     /**
-     * Returns true if this script is of the form <sig> OP_CHECKSIG. This form was originally intended for transactions
+     * Returns true if this script is of the form <pubkey> OP_CHECKSIG. This form was originally intended for transactions
      * where the peers talked to each other directly via TCP/IP, but has fallen out of favor with time due to that mode
      * of operation being susceptible to man-in-the-middle attacks. It is still used in coinbase outputs and can be
      * useful more exotic types of transaction, but today most payments are to addresses.
@@ -238,15 +235,11 @@ public class Script {
     }
 
     /**
-     * Returns true if this script is of the form OP_HASH160 <scriptHash> OP_EQUAL, ie, payment to an
-     * address like 35b9vsyH1KoFT5a5KtrKusaCcPLkiSo1tU. This form was codified as part of BIP13 and BIP16,
-     * for pay to script hash type addresses.
+     * An alias for isPayToScriptHash.
      */
+    @Deprecated
     public boolean isSentToP2SH() {
-        return chunks.size() == 3 &&
-               chunks.get(0).equalsOpCode(OP_HASH160) &&
-               chunks.get(1).data.length == Address.LENGTH &&
-               chunks.get(2).equalsOpCode(OP_EQUAL);
+        return isPayToScriptHash();
     }
 
     /**
@@ -258,7 +251,7 @@ public class Script {
     public byte[] getPubKeyHash() throws ScriptException {
         if (isSentToAddress())
             return chunks.get(2).data;
-        else if (isSentToP2SH())
+        else if (isPayToScriptHash())
             return chunks.get(1).data;
         else
             throw new ScriptException("Script not in the standard scriptPubKey form");
@@ -276,12 +269,16 @@ public class Script {
         if (chunks.size() != 2) {
             throw new ScriptException("Script not of right size, expecting 2 but got " + chunks.size());
         }
-        if (chunks.get(0).data.length > 2 && chunks.get(1).data.length > 2) {
+        final ScriptChunk chunk0 = chunks.get(0);
+        final byte[] chunk0data = chunk0.data;
+        final ScriptChunk chunk1 = chunks.get(1);
+        final byte[] chunk1data = chunk1.data;
+        if (chunk0data != null && chunk0data.length > 2 && chunk1data != null && chunk1data.length > 2) {
             // If we have two large constants assume the input to a pay-to-address output.
-            return chunks.get(1).data;
-        } else if (chunks.get(1).data.length == 1 && chunks.get(1).equalsOpCode(OP_CHECKSIG) && chunks.get(0).data.length > 2) {
+            return chunk1data;
+        } else if (chunk1.equalsOpCode(OP_CHECKSIG) && chunk0data != null && chunk0data.length > 2) {
             // A large constant followed by an OP_CHECKSIG is the key.
-            return chunks.get(0).data;
+            return chunk0data;
         } else {
             throw new ScriptException("Script did not match expected form: " + toString());
         }
@@ -301,10 +298,23 @@ public class Script {
      * Gets the destination address from this script, if it's in the required form (see getPubKey).
      */
     public Address getToAddress(NetworkParameters params) throws ScriptException {
+        return getToAddress(params, false);
+    }
+
+    /**
+     * Gets the destination address from this script, if it's in the required form (see getPubKey).
+     * 
+     * @param forcePayToPubKey
+     *            If true, allow payToPubKey to be casted to the corresponding address. This is useful if you prefer
+     *            showing addresses rather than pubkeys.
+     */
+    public Address getToAddress(NetworkParameters params, boolean forcePayToPubKey) throws ScriptException {
         if (isSentToAddress())
             return new Address(params, getPubKeyHash());
-        else if (isSentToP2SH())
+        else if (isPayToScriptHash())
             return Address.fromP2SHScript(params, this);
+        else if (forcePayToPubKey && isSentToRawPubKey())
+            return ECKey.fromPublicOnly(getPubKey()).toAddress(params);
         else
             throw new ScriptException("Cannot cast this script to a pay-to-address type");
     }
@@ -377,16 +387,107 @@ public class Script {
             throw new RuntimeException(e);
         }
     }
-    
+
+    /**
+     * Creates an incomplete scriptSig that, once filled with signatures, can redeem output containing this scriptPubKey.
+     * Instead of the signatures resulting script has OP_0.
+     * Having incomplete input script allows to pass around partially signed tx.
+     * It is expected that this program later on will be updated with proper signatures.
+     */
+    public Script createEmptyInputScript(@Nullable ECKey key, @Nullable Script redeemScript) {
+        if (isSentToAddress()) {
+            checkArgument(key != null, "Key required to create pay-to-address input script");
+            return ScriptBuilder.createInputScript(null, key);
+        } else if (isSentToRawPubKey()) {
+            return ScriptBuilder.createInputScript(null);
+        } else if (isPayToScriptHash()) {
+            checkArgument(redeemScript != null, "Redeem script required to create P2SH input script");
+            return ScriptBuilder.createP2SHMultiSigInputScript(null, redeemScript);
+        } else {
+            throw new ScriptException("Do not understand script type: " + this);
+        }
+    }
+
+    /**
+     * Returns a copy of the given scriptSig with the signature inserted in the given position.
+     */
+    public Script getScriptSigWithSignature(Script scriptSig, byte[] sigBytes, int index) {
+        int sigsPrefixCount = 0;
+        int sigsSuffixCount = 0;
+        if (isPayToScriptHash()) {
+            sigsPrefixCount = 1; // OP_0 <sig>* <redeemScript>
+            sigsSuffixCount = 1;
+        } else if (isSentToMultiSig()) {
+            sigsPrefixCount = 1; // OP_0 <sig>*
+        } else if (isSentToAddress()) {
+            sigsSuffixCount = 1; // <sig> <pubkey>
+        }
+        return ScriptBuilder.updateScriptWithSignature(scriptSig, sigBytes, index, sigsPrefixCount, sigsSuffixCount);
+    }
+
+
+    /**
+     * Returns the index where a signature by the key should be inserted.  Only applicable to
+     * a P2SH scriptSig.
+     */
+    public int getSigInsertionIndex(Sha256Hash hash, ECKey signingKey) {
+        // Iterate over existing signatures, skipping the initial OP_0, the final redeem script
+        // and any placeholder OP_0 sigs.
+        List<ScriptChunk> existingChunks = chunks.subList(1, chunks.size() - 1);
+        ScriptChunk redeemScriptChunk = chunks.get(chunks.size() - 1);
+        checkNotNull(redeemScriptChunk.data);
+        Script redeemScript = new Script(redeemScriptChunk.data);
+
+        int sigCount = 0;
+        int myIndex = redeemScript.findKeyInRedeem(signingKey);
+        for (ScriptChunk chunk : existingChunks) {
+            if (chunk.opcode == OP_0) {
+                // OP_0, skip
+            } else {
+                checkNotNull(chunk.data);
+                if (myIndex < redeemScript.findSigInRedeem(chunk.data, hash))
+                    return sigCount;
+                sigCount++;
+            }
+        }
+        return sigCount;
+    }
+
+    private int findKeyInRedeem(ECKey key) {
+        checkArgument(chunks.get(0).isOpCode()); // P2SH scriptSig
+        int numKeys = Script.decodeFromOpN(chunks.get(chunks.size() - 2).opcode);
+        for (int i = 0 ; i < numKeys ; i++) {
+            if (Arrays.equals(chunks.get(1 + i).data, key.getPubKey())) {
+                return i;
+            }
+        }
+
+        throw new IllegalStateException("Could not find matching key " + key.toString() + " in script " + this);
+    }
+
+    private int findSigInRedeem(byte[] signatureBytes, Sha256Hash hash) {
+        checkArgument(chunks.get(0).isOpCode()); // P2SH scriptSig
+        int numKeys = Script.decodeFromOpN(chunks.get(chunks.size() - 2).opcode);
+        TransactionSignature signature = TransactionSignature.decodeFromPeercoin(signatureBytes, true);
+        for (int i = 0 ; i < numKeys ; i++) {
+            if (ECKey.fromPublicOnly(chunks.get(i + 1).data).verify(hash, signature)) {
+                return i;
+            }
+        }
+
+        throw new IllegalStateException("Could not find matching key for signature on " + hash.toString() + " sig " + Utils.HEX.encode(signatureBytes));
+    }
+
+
+
     ////////////////////// Interface used during verification of transactions/blocks ////////////////////////////////
-    
+
     private static int getSigOpCount(List<ScriptChunk> chunks, boolean accurate) throws ScriptException {
         int sigOps = 0;
         int lastOpCode = OP_INVALIDOPCODE;
         for (ScriptChunk chunk : chunks) {
             if (chunk.isOpCode()) {
-                int opcode = 0xFF & chunk.data[0];
-                switch (opcode) {
+                switch (chunk.opcode) {
                 case OP_CHECKSIG:
                 case OP_CHECKSIGVERIFY:
                     sigOps++;
@@ -401,19 +502,12 @@ public class Script {
                 default:
                     break;
                 }
-                lastOpCode = opcode;
+                lastOpCode = chunk.opcode;
             }
         }
         return sigOps;
     }
 
-    /**
-     * Converts an opcode to its int representation (including OP_1NEGATE and OP_0/OP_FALSE)
-     * @throws IllegalArgumentException If the opcode is not an OP_N opcode
-     */
-    public static int decodeFromOpN(byte opcode) throws IllegalArgumentException {
-        return decodeFromOpN((int)opcode);
-    }
     static int decodeFromOpN(int opcode) {
         checkArgument((opcode == OP_0 || opcode == OP_1NEGATE) || (opcode >= OP_1 && opcode <= OP_16), "decodeFromOpN called on non OP_N opcode");
         if (opcode == OP_0)
@@ -467,12 +561,54 @@ public class Script {
     }
 
     /**
+     * Returns number of signatures required to satisfy this script.
+     */
+    public int getNumberOfSignaturesRequiredToSpend() {
+        if (isSentToMultiSig()) {
+            // for N of M CHECKMULTISIG script we will need N signatures to spend
+            ScriptChunk nChunk = chunks.get(0);
+            return Script.decodeFromOpN(nChunk.opcode);
+        } else if (isSentToAddress() || isSentToRawPubKey()) {
+            // pay-to-address and pay-to-pubkey require single sig
+            return 1;
+        } else if (isPayToScriptHash()) {
+            throw new IllegalStateException("For P2SH number of signatures depends on redeem script");
+        } else {
+            throw new IllegalStateException("Unsupported script type");
+        }
+    }
+
+    /**
+     * Returns number of bytes required to spend this script. It accepts optional ECKey and redeemScript that may
+     * be required for certain types of script to estimate target size.
+     */
+    public int getNumberOfBytesRequiredToSpend(@Nullable ECKey pubKey, @Nullable Script redeemScript) {
+        if (isPayToScriptHash()) {
+            // scriptSig: <sig> [sig] [sig...] <redeemscript>
+            checkArgument(redeemScript != null, "P2SH script requires redeemScript to be spent");
+            return redeemScript.getNumberOfSignaturesRequiredToSpend() * SIG_SIZE + redeemScript.getProgram().length;
+        } else if (isSentToMultiSig()) {
+            // scriptSig: OP_0 <sig> [sig] [sig...]
+            return getNumberOfSignaturesRequiredToSpend() * SIG_SIZE + 1;
+        } else if (isSentToRawPubKey()) {
+            // scriptSig: <sig>
+            return SIG_SIZE;
+        } else if (isSentToAddress()) {
+            // scriptSig: <sig> <pubkey>
+            int uncompressedPubKeySize = 65;
+            return SIG_SIZE + (pubKey != null ? pubKey.getPubKey().length : uncompressedPubKeySize);
+        } else {
+            throw new IllegalStateException("Unsupported script type");
+        }
+    }
+
+    /**
      * <p>Whether or not this is a scriptPubKey representing a pay-to-script-hash output. In such outputs, the logic that
      * controls reclamation is not actually in the output at all. Instead there's just a hash, and it's up to the
      * spending input to provide a program matching that hash. This rule is "soft enforced" by the network as it does
      * not exist in Satoshis original implementation. It means blocks containing P2SH transactions that don't match
      * correctly are considered valid, but won't be mined upon, so they'll be rapidly re-orgd out of the chain. This
-     * logic is defined by <a href="https://github.com.matthewmitchell/bips/blob/master/bip-0016.mediawiki">BIP 16</a>.</p>
+     * logic is defined by <a href="https://github.com/peercoin/bips/blob/master/bip-0016.mediawiki">BIP 16</a>.</p>
      *
      * <p>peercoinj does not support creation of P2SH transactions today. The goal of P2SH is to allow short addresses
      * even for complex scripts (eg, multi-sig outputs) so they are convenient to work with in things like QRcodes or
@@ -503,13 +639,13 @@ public class Script {
             // Second to last chunk must be an OP_N opcode and there should be that many data chunks (keys).
             ScriptChunk m = chunks.get(chunks.size() - 2);
             if (!m.isOpCode()) return false;
-            int numKeys = decodeFromOpN(m.data[0]);
+            int numKeys = decodeFromOpN(m.opcode);
             if (numKeys < 1 || chunks.size() != 3 + numKeys) return false;
             for (int i = 1; i < chunks.size() - 2; i++) {
                 if (chunks.get(i).isOpCode()) return false;
             }
             // First chunk must be an OP_N opcode too.
-            if (decodeFromOpN(chunks.get(0).data[0]) < 1) return false;
+            if (decodeFromOpN(chunks.get(0).opcode) < 1) return false;
         } catch (IllegalStateException e) {
             return false;   // Not an OP_N opcode.
         }
@@ -588,9 +724,20 @@ public class Script {
             throw new ScriptException("Script attempted to use an integer larger than 4 bytes");
         return Utils.decodeMPI(Utils.reverseBytes(chunk), false);
     }
-    
-    private static void executeScript(Transaction txContainingThis, long index,
-                                      Script script, LinkedList<byte[]> stack) throws ScriptException {
+
+    public boolean isOpReturn() {
+        return chunks.size() == 2 && chunks.get(0).equalsOpCode(OP_RETURN);
+    }
+
+    /**
+     * Exposes the script interpreter. Normally you should not use this directly, instead use
+     * {@link com.matthewmitchell.peercoinj.core.TransactionInput#verify(com.matthewmitchell.peercoinj.core.TransactionOutput)} or
+     * {@link com.matthewmitchell.peercoinj.script.Script#correctlySpends(com.matthewmitchell.peercoinj.core.Transaction, long, Script)}. This method
+     * is useful if you need more precise control or access to the final state of the stack. This interface is very
+     * likely to change in future.
+     */
+    public static void executeScript(@Nullable Transaction txContainingThis, long index,
+                                     Script script, LinkedList<byte[]> stack, boolean enforceNullDummy) throws ScriptException {
         int opCount = 0;
         int lastCodeSepLocation = 0;
         
@@ -609,7 +756,7 @@ public class Script {
                 
                 stack.add(chunk.data);
             } else {
-                int opcode = 0xFF & chunk.data[0];
+                int opcode = chunk.opcode;
                 if (opcode > OP_16) {
                     opCount++;
                     if (opCount > 201)
@@ -880,7 +1027,7 @@ public class Script {
                         numericOPnum = numericOPnum.negate();
                         break;
                     case OP_ABS:
-                        if (numericOPnum.compareTo(BigInteger.ZERO) < 0)
+                        if (numericOPnum.signum() < 0)
                             numericOPnum = numericOPnum.negate();
                         break;
                     case OP_NOT:
@@ -1064,11 +1211,15 @@ public class Script {
                     break;
                 case OP_CHECKSIG:
                 case OP_CHECKSIGVERIFY:
+                    if (txContainingThis == null)
+                        throw new IllegalStateException("Script attempted signature check but no tx was provided");
                     executeCheckSig(txContainingThis, (int) index, script, stack, lastCodeSepLocation, opcode);
                     break;
                 case OP_CHECKMULTISIG:
                 case OP_CHECKMULTISIGVERIFY:
-                    opCount = executeMultiSig(txContainingThis, (int) index, script, stack, opCount, lastCodeSepLocation, opcode);
+                    if (txContainingThis == null)
+                        throw new IllegalStateException("Script attempted signature check but no tx was provided");
+                    opCount = executeMultiSig(txContainingThis, (int) index, script, stack, opCount, lastCodeSepLocation, opcode, enforceNullDummy);
                     break;
                 case OP_NOP1:
                 case OP_NOP2:
@@ -1122,7 +1273,11 @@ public class Script {
         } catch (Exception e1) {
             // There is (at least) one exception that could be hit here (EOFException, if the sig is too short)
             // Because I can't verify there aren't more, we use a very generic Exception catch
-            log.warn(e1.toString());
+
+            // This RuntimeException occurs when signing as we run partial/invalid scripts to see if they need more
+            // signing work to be done inside LocalTransactionSigner.signInputs.
+            if (!e1.getMessage().contains("Reached past end of ASN.1 stream"))
+                log.warn("Signature checking failed! {}", e1.toString());
         }
 
         if (opcode == OP_CHECKSIG)
@@ -1133,7 +1288,7 @@ public class Script {
     }
 
     private static int executeMultiSig(Transaction txContainingThis, int index, Script script, LinkedList<byte[]> stack,
-                                       int opCount, int lastCodeSepLocation, int opcode) throws ScriptException {
+                                       int opCount, int lastCodeSepLocation, int opcode, boolean enforceNullDummy) throws ScriptException {
         if (stack.size() < 2)
             throw new ScriptException("Attempted OP_CHECKMULTISIG(VERIFY) on a stack with size < 2");
         int pubKeyCount = castToBigInteger(stack.pollLast()).intValue();
@@ -1198,7 +1353,9 @@ public class Script {
         }
 
         // We uselessly remove a stack object to emulate a reference client bug.
-        stack.pollLast();
+        byte[] nullDummy = stack.pollLast();
+        if (enforceNullDummy && nullDummy.length > 0)
+            throw new ScriptException("OP_CHECKMULTISIG(VERIFY) with non-null nulldummy: " + Arrays.toString(nullDummy));
 
         if (opcode == OP_CHECKMULTISIG) {
             stack.add(valid ? new byte[] {1} : new byte[] {0});
@@ -1210,15 +1367,29 @@ public class Script {
     }
 
     /**
+     * Verifies that this script (interpreted as a scriptSig) correctly spends the given scriptPubKey, enabling all
+     * validation rules.
+     * @param txContainingThis The transaction in which this input scriptSig resides.
+     *                         Accessing txContainingThis from another thread while this method runs results in undefined behavior.
+     * @param scriptSigIndex The index in txContainingThis of the scriptSig (note: NOT the index of the scriptPubKey).
+     * @param scriptPubKey The connected scriptPubKey containing the conditions needed to claim the value.
+     */
+    public void correctlySpends(Transaction txContainingThis, long scriptSigIndex, Script scriptPubKey)
+            throws ScriptException {
+        correctlySpends(txContainingThis, scriptSigIndex, scriptPubKey, ALL_VERIFY_FLAGS);
+    }
+
+    /**
      * Verifies that this script (interpreted as a scriptSig) correctly spends the given scriptPubKey.
      * @param txContainingThis The transaction in which this input scriptSig resides.
      *                         Accessing txContainingThis from another thread while this method runs results in undefined behavior.
      * @param scriptSigIndex The index in txContainingThis of the scriptSig (note: NOT the index of the scriptPubKey).
      * @param scriptPubKey The connected scriptPubKey containing the conditions needed to claim the value.
-     * @param enforceP2SH Whether "pay to script hash" rules should be enforced. If in doubt, set to true.
+     * @param verifyFlags Each flag enables one validation rule. If in doubt, use {@link #correctlySpends(Transaction, long, Script)}
+     *                    which sets all flags.
      */
     public void correctlySpends(Transaction txContainingThis, long scriptSigIndex, Script scriptPubKey,
-                                boolean enforceP2SH) throws ScriptException {
+                                Set<VerifyFlag> verifyFlags) throws ScriptException {
         // Clone the transaction because executing the script involves editing it, and if we die, we'll leave
         // the tx half broken (also it's not so thread safe to work on it directly.
         try {
@@ -1232,10 +1403,10 @@ public class Script {
         LinkedList<byte[]> stack = new LinkedList<byte[]>();
         LinkedList<byte[]> p2shStack = null;
         
-        executeScript(txContainingThis, scriptSigIndex, this, stack);
-        if (enforceP2SH)
+        executeScript(txContainingThis, scriptSigIndex, this, stack, verifyFlags.contains(VerifyFlag.NULLDUMMY));
+        if (verifyFlags.contains(VerifyFlag.P2SH))
             p2shStack = new LinkedList<byte[]>(stack);
-        executeScript(txContainingThis, scriptSigIndex, scriptPubKey, stack);
+        executeScript(txContainingThis, scriptSigIndex, scriptPubKey, stack, verifyFlags.contains(VerifyFlag.NULLDUMMY));
         
         if (stack.size() == 0)
             throw new ScriptException("Stack empty at end of script execution.");
@@ -1256,15 +1427,15 @@ public class Script {
         //     overall scalability and performance.
 
         // TODO: Check if we can take out enforceP2SH if there's a checkpoint at the enforcement block.
-        if (enforceP2SH && scriptPubKey.isPayToScriptHash()) {
+        if (verifyFlags.contains(VerifyFlag.P2SH) && scriptPubKey.isPayToScriptHash()) {
             for (ScriptChunk chunk : chunks)
-                if (chunk.isOpCode() && (chunk.data[0] & 0xff) > OP_16)
+                if (chunk.isOpCode() && chunk.opcode > OP_16)
                     throw new ScriptException("Attempted to spend a P2SH scriptPubKey with a script that contained script ops");
             
             byte[] scriptPubKeyBytes = p2shStack.pollLast();
             Script scriptPubKeyP2SH = new Script(scriptPubKeyBytes);
             
-            executeScript(txContainingThis, scriptSigIndex, scriptPubKeyP2SH, p2shStack);
+            executeScript(txContainingThis, scriptSigIndex, scriptPubKeyP2SH, p2shStack, verifyFlags.contains(VerifyFlag.NULLDUMMY));
             
             if (p2shStack.size() == 0)
                 throw new ScriptException("P2SH stack empty at end of script execution.");
@@ -1282,11 +1453,11 @@ public class Script {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof Script))
-            return false;
-        Script s = (Script)obj;
-        return Arrays.equals(getQuickProgram(), s.getQuickProgram());
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Script other = (Script) o;
+        return Arrays.equals(getQuickProgram(), other.getQuickProgram());
     }
 
     @Override

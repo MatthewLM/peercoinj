@@ -35,17 +35,23 @@ public class TransactionSignature extends ECKey.ECDSASignature {
      * Because Satoshi's code works via bit testing, we must not lose the exact value when round-tripping
      * otherwise we'll fail to verify signature hashes.
      */
-    public int sighashFlags = Transaction.SigHash.ALL.ordinal() + 1;
+    public final int sighashFlags;
 
     /** Constructs a signature with the given components and SIGHASH_ALL. */
     public TransactionSignature(BigInteger r, BigInteger s) {
+        this(r, s, Transaction.SigHash.ALL.ordinal() + 1);
+    }
+
+    /** Constructs a signature with the given components and raw sighash flag bytes (needed for rule compatibility). */
+    public TransactionSignature(BigInteger r, BigInteger s, int sighashFlags) {
         super(r, s);
+        this.sighashFlags = sighashFlags;
     }
 
     /** Constructs a transaction signature based on the ECDSA signature. */
     public TransactionSignature(ECKey.ECDSASignature signature, Transaction.SigHash mode, boolean anyoneCanPay) {
         super(signature.r, signature.s);
-        setSigHash(mode, anyoneCanPay);
+        sighashFlags = calcSigHashValue(mode, anyoneCanPay);
     }
 
     /**
@@ -72,11 +78,11 @@ public class TransactionSignature extends ECKey.ECDSASignature {
      * the reference client. DER and the SIGHASH encoding allow for quite some flexibility in how the same structures
      * are encoded, and this can open up novel attacks in which a man in the middle takes a transaction and then
      * changes its signature such that the transaction hash is different but it's still valid. This can confuse wallets
-     * and generally violates people's mental model of how Peercoin should work, thus, non-canonical signatures are now
+     * and generally violates people's mental model of how Bitcoin should work, thus, non-canonical signatures are now
      * not relayed by default.
      */
     public static boolean isEncodingCanonical(byte[] signature) {
-        // See reference client's IsCanonicalSignature, https://peercointalk.org/index.php?topic=8392.msg127623#msg127623
+        // See reference client's IsCanonicalSignature, https://bitcointalk.org/index.php?topic=8392.msg127623#msg127623
         // A canonical signature exists of: <30> <total len> <02> <len R> <R> <02> <len S> <S> <hashtype>
         // Where R and S are not negative (their first byte has its highest bit not set), and not
         // excessively padded (do not start with a 0 byte, unless an otherwise negative number follows,
@@ -114,11 +120,6 @@ public class TransactionSignature extends ECKey.ECDSASignature {
         return true;
     }
 
-    /** Configures the sighashFlags field as appropriate. */
-    public void setSigHash(Transaction.SigHash mode, boolean anyoneCanPay) {
-        sighashFlags = calcSigHashValue(mode, anyoneCanPay);
-    }
-
     public boolean anyoneCanPay() {
         return (sighashFlags & Transaction.SIGHASH_ANYONECANPAY_VALUE) != 0;
     }
@@ -135,10 +136,10 @@ public class TransactionSignature extends ECKey.ECDSASignature {
 
     /**
      * What we get back from the signer are the two components of a signature, r and s. To get a flat byte stream
-     * of the type used by Peercoin we have to encode them using DER encoding, which is just a way to pack the two
+     * of the type used by Bitcoin we have to encode them using DER encoding, which is just a way to pack the two
      * components into a structure, and then we append a byte to the end for the sighash flags.
      */
-    public byte[] encodeToPeercoin() {
+    public byte[] encodeToBitcoin() {
         try {
             ByteArrayOutputStream bos = derByteStream();
             bos.write(sighashFlags);
@@ -148,12 +149,17 @@ public class TransactionSignature extends ECKey.ECDSASignature {
         }
     }
 
+    @Override
+    public ECKey.ECDSASignature toCanonicalised() {
+        return new TransactionSignature(super.toCanonicalised(), sigHashMode(), anyoneCanPay());
+    }
+
     /**
      * Returns a decoded signature.
      * @throws RuntimeException if the signature is invalid or unparseable in some way.
      */
-    public static TransactionSignature decodeFromPeercoin(byte[] bytes, boolean requireCanonical) throws VerificationException {
-        // Peercoin encoding is DER signature + sighash byte.
+    public static TransactionSignature decodeFromBitcoin(byte[] bytes, boolean requireCanonical) throws VerificationException {
+        // Bitcoin encoding is DER signature + sighash byte.
         if (requireCanonical && !isEncodingCanonical(bytes))
             throw new VerificationException("Signature encoding is not canonical.");
         ECKey.ECDSASignature sig;
@@ -162,10 +168,8 @@ public class TransactionSignature extends ECKey.ECDSASignature {
         } catch (IllegalArgumentException e) {
             throw new VerificationException("Could not decode DER", e);
         }
-        TransactionSignature tsig = new TransactionSignature(sig.r, sig.s);
-        // In Peercoin, any value of the final byte is valid, but not necessarily canonical. See javadocs for
-        // isEncodingCanonical to learn more about this.
-        tsig.sighashFlags = bytes[bytes.length - 1];
-        return tsig;
+        // In Bitcoin, any value of the final byte is valid, but not necessarily canonical. See javadocs for
+        // isEncodingCanonical to learn more about this. So we must store the exact byte found.
+        return new TransactionSignature(sig.r, sig.s, bytes[bytes.length - 1]);
     }
 }

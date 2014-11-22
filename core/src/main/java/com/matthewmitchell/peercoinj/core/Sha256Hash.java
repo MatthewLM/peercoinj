@@ -17,7 +17,6 @@
 package com.matthewmitchell.peercoinj.core;
 
 import com.google.common.io.ByteStreams;
-import org.spongycastle.util.encoders.Hex;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -34,7 +33,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * A Sha256Hash just wraps a byte[] so that equals and hashcode work correctly, allowing it to be used as keys in a
  * map. It also checks that the length is correct and provides a bit more type safety.
  */
-public class Sha256Hash implements Serializable, Comparable {
+public class Sha256Hash implements Serializable, Comparable<Sha256Hash> {
     private byte[] bytes;
     public static final Sha256Hash ZERO_HASH = new Sha256Hash(new byte[32]);
 
@@ -52,7 +51,7 @@ public class Sha256Hash implements Serializable, Comparable {
      */
     public Sha256Hash(String hexString) {
         checkArgument(hexString.length() == 64);
-        this.bytes = Hex.decode(hexString);
+        this.bytes = Utils.HEX.decode(hexString);
     }
 
     /**
@@ -88,13 +87,12 @@ public class Sha256Hash implements Serializable, Comparable {
         }
     }
 
-    /**
-     * Returns true if the hashes are equal.
-     */
     @Override
-    public boolean equals(Object other) {
-        if (!(other instanceof Sha256Hash)) return false;
-        return Arrays.equals(bytes, ((Sha256Hash) other).bytes);
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Sha256Hash other = (Sha256Hash) o;
+        return Arrays.equals(bytes, other.bytes);
     }
 
     /**
@@ -110,7 +108,7 @@ public class Sha256Hash implements Serializable, Comparable {
 
     @Override
     public String toString() {
-        return Utils.bytesToHexString(bytes);
+        return Utils.HEX.encode(bytes);
     }
 
     /**
@@ -129,10 +127,11 @@ public class Sha256Hash implements Serializable, Comparable {
     }
 
     @Override
-    public int compareTo(Object o) {
-        checkArgument(o instanceof Sha256Hash);
+    public int compareTo(Sha256Hash o) {
         int thisCode = this.hashCode();
         int oCode = ((Sha256Hash)o).hashCode();
         return thisCode > oCode ? 1 : (thisCode == oCode ? 0 : -1);
     }
+
 }
+

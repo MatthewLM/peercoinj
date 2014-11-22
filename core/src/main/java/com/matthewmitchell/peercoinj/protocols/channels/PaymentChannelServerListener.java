@@ -1,5 +1,6 @@
 /*
  * Copyright 2013 Google Inc.
+ * Copyright 2014 Andreas Schildbach
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +17,21 @@
 
 package com.matthewmitchell.peercoinj.protocols.channels;
 
+import com.matthewmitchell.peercoinj.core.Coin;
 import com.matthewmitchell.peercoinj.core.Sha256Hash;
 import com.matthewmitchell.peercoinj.core.TransactionBroadcaster;
 import com.matthewmitchell.peercoinj.core.Wallet;
 import com.matthewmitchell.peercoinj.net.NioServer;
 import com.matthewmitchell.peercoinj.net.ProtobufParser;
 import com.matthewmitchell.peercoinj.net.StreamParserFactory;
-import org.peercoin.paymentchannel.Protos;
+
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.protobuf.ByteString;
+import org.bitcoin.paymentchannel.Protos;
 
 import javax.annotation.Nullable;
+
 import java.io.IOException;
-import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -45,7 +50,7 @@ public class PaymentChannelServerListener {
 
     // The event handler factory which creates new ServerConnectionEventHandler per connection
     private final HandlerFactory eventHandlerFactory;
-    private final BigInteger minAcceptedChannelSize;
+    private final Coin minAcceptedChannelSize;
 
     private NioServer server;
     private final int timeoutSeconds;
@@ -79,19 +84,19 @@ public class PaymentChannelServerListener {
                     eventHandler.channelOpen(contractHash);
                 }
 
-                @Override public void paymentIncrease(BigInteger by, BigInteger to) {
-                    eventHandler.paymentIncrease(by, to);
+                @Override public ListenableFuture<ByteString> paymentIncrease(Coin by, Coin to, @Nullable ByteString info) {
+                    return eventHandler.paymentIncrease(by, to, info);
                 }
             });
 
             protobufHandlerListener = new ProtobufParser.Listener<Protos.TwoWayChannelMessage>() {
                 @Override
-                public synchronized void messageReceived(ProtobufParser handler, Protos.TwoWayChannelMessage msg) {
+                public synchronized void messageReceived(ProtobufParser<Protos.TwoWayChannelMessage> handler, Protos.TwoWayChannelMessage msg) {
                     paymentChannelManager.receiveMessage(msg);
                 }
 
                 @Override
-                public synchronized void connectionClosed(ProtobufParser handler) {
+                public synchronized void connectionClosed(ProtobufParser<Protos.TwoWayChannelMessage> handler) {
                     paymentChannelManager.connectionClosed();
                     if (closeReason != null)
                         eventHandler.channelClosed(closeReason);
@@ -101,7 +106,7 @@ public class PaymentChannelServerListener {
                 }
 
                 @Override
-                public synchronized void connectionOpen(ProtobufParser handler) {
+                public synchronized void connectionOpen(ProtobufParser<Protos.TwoWayChannelMessage> handler) {
                     ServerConnectionEventHandler eventHandler = eventHandlerFactory.onNewConnection(address);
                     if (eventHandler == null)
                         handler.closeConnection();
@@ -138,11 +143,12 @@ public class PaymentChannelServerListener {
     public void bindAndStart(int port) throws Exception {
         server = new NioServer(new StreamParserFactory() {
             @Override
-            public ProtobufParser getNewParser(InetAddress inetAddress, int port) {
+            public ProtobufParser<Protos.TwoWayChannelMessage> getNewParser(InetAddress inetAddress, int port) {
                 return new ServerHandler(new InetSocketAddress(inetAddress, port), timeoutSeconds).socketProtobufHandler;
             }
         }, new InetSocketAddress(port));
-        server.startAndWait();
+        server.startAsync();
+        server.awaitRunning();
     }
 
     /**
@@ -159,7 +165,7 @@ public class PaymentChannelServerListener {
      * @param eventHandlerFactory A factory which generates event handlers which are created for each new connection
      */
     public PaymentChannelServerListener(TransactionBroadcaster broadcaster, Wallet wallet,
-                                        final int timeoutSeconds, BigInteger minAcceptedChannelSize,
+                                        final int timeoutSeconds, Coin minAcceptedChannelSize,
                                         HandlerFactory eventHandlerFactory) throws IOException {
         this.wallet = checkNotNull(wallet);
         this.broadcaster = checkNotNull(broadcaster);
@@ -176,6 +182,7 @@ public class PaymentChannelServerListener {
      * wallet.</p>
      */
     public void close() {
-        server.stopAndWait();
+        server.stopAsync();
+        server.awaitTerminated();
     }
 }

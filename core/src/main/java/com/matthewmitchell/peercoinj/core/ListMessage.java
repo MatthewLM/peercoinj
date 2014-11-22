@@ -34,16 +34,14 @@ public abstract class ListMessage extends Message {
 
     public static final long MAX_INVENTORY_ITEMS = 50000;
 
-
     public ListMessage(NetworkParameters params, byte[] bytes) throws ProtocolException {
         super(params, bytes, 0);
     }
 
-    public ListMessage(NetworkParameters params, byte[] msg, boolean parseLazy, boolean parseRetain, int length)
+    public ListMessage(NetworkParameters params, byte[] payload, boolean parseLazy, boolean parseRetain, int length)
             throws ProtocolException {
-        super(params, msg, 0, parseLazy, parseRetain, length);
+        super(params, payload, 0, parseLazy, parseRetain, length);
     }
-
 
     public ListMessage(NetworkParameters params) {
         super(params);
@@ -83,7 +81,7 @@ public abstract class ListMessage extends Message {
         // An inv is vector<CInv> where CInv is int+hash. The int is either 1 or 2 for tx or block.
         items = new ArrayList<InventoryItem>((int) arrayLen);
         for (int i = 0; i < arrayLen; i++) {
-            if (cursor + InventoryItem.MESSAGE_LENGTH > bytes.length) {
+            if (cursor + InventoryItem.MESSAGE_LENGTH > payload.length) {
                 throw new ProtocolException("Ran off the end of the INV");
             }
             int typeCode = (int) readUint32();
@@ -108,7 +106,7 @@ public abstract class ListMessage extends Message {
             InventoryItem item = new InventoryItem(type, readHash());
             items.add(item);
         }
-        bytes = null;
+        payload = null;
     }
 
     @Override
@@ -124,7 +122,15 @@ public abstract class ListMessage extends Message {
 
     @Override
     public boolean equals(Object o) {
-        return o.getClass() == this.getClass() &&
-                ((ListMessage)o).items.equals(this.items);
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ListMessage other = (ListMessage) o;
+        return items.equals(other.items);
     }
+
+    @Override
+    public int hashCode() {
+        return items.hashCode();
+    }
+
 }

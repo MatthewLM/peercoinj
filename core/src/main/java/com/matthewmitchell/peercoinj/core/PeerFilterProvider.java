@@ -44,7 +44,7 @@ public interface PeerFilterProvider {
     public BloomFilter getBloomFilter(int size, double falsePositiveRate, long nTweak);
 
     /** Whether this filter provider depends on the server updating the filter on all matches */
-    boolean isRequiringUpdateAllBloomFilter();
+    public boolean isRequiringUpdateAllBloomFilter();
 
     /**
      * Returns an object that will be locked before any other methods are called and unlocked afterwards. You must

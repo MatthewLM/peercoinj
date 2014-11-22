@@ -16,6 +16,7 @@
 
 package com.matthewmitchell.peercoinj.core;
 
+import com.google.common.base.Preconditions.checkArgument;
 import com.matthewmitchell.peercoinj.store.BlockStore;
 import com.matthewmitchell.peercoinj.store.BlockStoreException;
 import com.matthewmitchell.peercoinj.store.ValidHashStore;
@@ -71,6 +72,31 @@ public class BlockChain extends AbstractBlockChain {
         StoredBlock newBlock = storedPrev.build(blockHeader);
         blockStore.put(newBlock);
         return newBlock;
+    }
+
+    @Override
+    protected void rollbackBlockStore(int height) throws BlockStoreException {
+        lock.lock();
+        try {
+            int currentHeight = getBestChainHeight();
+            checkArgument(height >= 0 && height <= currentHeight, "Bad height: %s", height);
+            if (height == currentHeight)
+                return; // nothing to do
+
+            // Look for the block we want to be the new chain head
+            StoredBlock newChainHead = blockStore.getChainHead();
+            while (newChainHead.getHeight() > height) {
+                newChainHead = newChainHead.getPrev(blockStore);
+                if (newChainHead == null)
+                    throw new BlockStoreException("Unreachable height");
+            }
+
+            // Modify store directly
+            blockStore.put(newChainHead);
+            this.setChainHead(newChainHead);
+        } finally {
+            lock.unlock();
+        }
     }
     
     @Override

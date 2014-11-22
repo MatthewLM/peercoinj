@@ -43,6 +43,7 @@ public class Pong extends Message {
         length = 8;
     }
     
+    @Override
     public void peercoinSerializeToStream(OutputStream stream) throws IOException {
         Utils.int64ToByteStreamLE(nonce, stream);
     }
@@ -51,7 +52,11 @@ public class Pong extends Message {
     protected void parseLite() {
     }
     
-    long getNonce() {
+
+    /** Returns the nonce sent by the remote peer. */
+    public long getNonce() {
         return nonce;
     }
+
 }
+

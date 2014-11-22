@@ -23,6 +23,7 @@ import javax.net.SocketFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
@@ -72,6 +73,7 @@ public class BlockingClient implements MessageWriteTarget {
                 if (clientSet != null)
                     clientSet.add(BlockingClient.this);
                 try {
+                    InetSocketAddress iServerAddress = (InetSocketAddress)serverAddress;
                     socket.connect(serverAddress, connectTimeoutMillis);
                     parser.connectionOpened();
                     InputStream stream = socket.getInputStream();
@@ -118,6 +120,7 @@ public class BlockingClient implements MessageWriteTarget {
      * Closes the connection to the server, triggering the {@link StreamParser#connectionClosed()}
      * event on the network-handling thread where all callbacks occur.
      */
+    @Override
     public void closeConnection() {
         // Closes the channel, triggering an exception in the network-handling thread triggering connectionClosed()
         try {

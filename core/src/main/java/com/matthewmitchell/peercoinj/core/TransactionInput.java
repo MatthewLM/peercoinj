@@ -17,6 +17,9 @@
 package com.matthewmitchell.peercoinj.core;
 
 import com.matthewmitchell.peercoinj.script.Script;
+import com.matthewmitchell.peercoinj.wallet.DefaultRiskAnalysis;
+import com.matthewmitchell.peercoinj.wallet.KeyBag;
+import com.matthewmitchell.peercoinj.wallet.RedeemData;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -24,6 +27,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.lang.ref.WeakReference;
+import java.util.Arrays;
 import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkElementIndex;
@@ -53,28 +57,30 @@ public class TransactionInput extends ChildMessage implements Serializable {
     // The Script object obtained from parsing scriptBytes. Only filled in on demand and if the transaction is not
     // coinbase.
     transient private WeakReference<Script> scriptSig;
-    // A pointer to the transaction that owns this input.
-    private Transaction parentTransaction;
+    /** Value of the output connected to the input, if known. This field does not participate in equals()/hashCode(). */
+    @Nullable
+    private final Coin value;
 
     /**
      * Creates an input that connects to nothing - used only in creation of coinbase transactions.
      */
-    public TransactionInput(NetworkParameters params, Transaction parentTransaction, byte[] scriptBytes) {
-        super(params);
-        this.scriptBytes = scriptBytes;
-        this.outpoint = new TransactionOutPoint(params, NO_SEQUENCE, (Transaction)null);
-        this.sequence = NO_SEQUENCE;
-        this.parentTransaction = parentTransaction;
-        length = 40 + (scriptBytes == null ? 1 : VarInt.sizeOf(scriptBytes.length) + scriptBytes.length);
+    public TransactionInput(NetworkParameters params, @Nullable Transaction parentTransaction, byte[] scriptBytes) {
+        this(params, parentTransaction, scriptBytes, new TransactionOutPoint(params, NO_SEQUENCE, (Transaction) null));
     }
 
     public TransactionInput(NetworkParameters params, @Nullable Transaction parentTransaction, byte[] scriptBytes,
                             TransactionOutPoint outpoint) {
+        this(params, parentTransaction, scriptBytes, outpoint, null);
+    }
+
+    public TransactionInput(NetworkParameters params, @Nullable Transaction parentTransaction, byte[] scriptBytes,
+            TransactionOutPoint outpoint, @Nullable Coin value) {
         super(params);
         this.scriptBytes = scriptBytes;
         this.outpoint = outpoint;
         this.sequence = NO_SEQUENCE;
-        this.parentTransaction = parentTransaction;
+        this.value = value;
+        setParent(parentTransaction);
         length = 40 + (scriptBytes == null ? 1 : VarInt.sizeOf(scriptBytes.length) + scriptBytes.length);
     }
 
@@ -84,28 +90,28 @@ public class TransactionInput extends ChildMessage implements Serializable {
     TransactionInput(NetworkParameters params, Transaction parentTransaction, TransactionOutput output) {
         super(params);
         long outputIndex = output.getIndex();
-        outpoint = new TransactionOutPoint(params, outputIndex, output.parentTransaction);
+        outpoint = new TransactionOutPoint(params, outputIndex, output.getParentTransaction());
         scriptBytes = EMPTY_ARRAY;
         sequence = NO_SEQUENCE;
-        this.parentTransaction = parentTransaction;
-
+        setParent(parentTransaction);
+        this.value = output.getValue();
         length = 41;
     }
 
     /**
      * Deserializes an input message. This is usually part of a transaction message.
      */
-    public TransactionInput(NetworkParameters params, Transaction parentTransaction,
-                            byte[] payload, int offset) throws ProtocolException {
+    public TransactionInput(NetworkParameters params, @Nullable Transaction parentTransaction, byte[] payload, int offset) throws ProtocolException {
         super(params, payload, offset);
-        this.parentTransaction = parentTransaction;
+        setParent(parentTransaction);
+        this.value = null;
     }
 
     /**
      * Deserializes an input message. This is usually part of a transaction message.
      * @param params NetworkParameters object.
-     * @param msg Peercoin protocol formatted byte array containing message content.
-     * @param offset The location of the first msg byte within the array.
+     * @param payload Peercoin protocol formatted byte array containing message content.
+     * @param offset The location of the first payload byte within the array.
      * @param parseLazy Whether to perform a full parse immediately or delay until a read is requested.
      * @param parseRetain Whether to retain the backing byte array for quick reserialization.  
      * If true and the backing byte array is invalidated due to modification of a field then 
@@ -113,13 +119,14 @@ public class TransactionInput extends ChildMessage implements Serializable {
      * as the length will be provided as part of the header.  If unknown then set to Message.UNKNOWN_LENGTH
      * @throws ProtocolException
      */
-    public TransactionInput(NetworkParameters params, Transaction parentTransaction, byte[] msg, int offset,
+    public TransactionInput(NetworkParameters params, Transaction parentTransaction, byte[] payload, int offset,
                             boolean parseLazy, boolean parseRetain)
             throws ProtocolException {
-        super(params, msg, offset, parentTransaction, parseLazy, parseRetain, UNKNOWN_LENGTH);
-        this.parentTransaction = parentTransaction;
+        super(params, payload, offset, parentTransaction, parseLazy, parseRetain, UNKNOWN_LENGTH);
+        this.value = null;
     }
 
+    @Override
     protected void parseLite() throws ProtocolException {
         int curs = cursor;
         int scriptLen = (int) readVarInt(36);
@@ -127,8 +134,9 @@ public class TransactionInput extends ChildMessage implements Serializable {
         cursor = curs;
     }
 
+    @Override
     void parse() throws ProtocolException {
-        outpoint = new TransactionOutPoint(params, bytes, cursor, this, parseLazy, parseRetain);
+        outpoint = new TransactionOutPoint(params, payload, cursor, this, parseLazy, parseRetain);
         cursor += outpoint.getMessageSize();
         int scriptLen = (int) readVarInt();
         scriptBytes = readBytes(scriptLen);
@@ -251,12 +259,21 @@ public class TransactionInput extends ChildMessage implements Serializable {
      * @return The Transaction that owns this input.
      */
     public Transaction getParentTransaction() {
-        return parentTransaction;
+        return (Transaction) parent;
+    }
+
+    /**
+     * @return Value of the output connected to this input, if known. Null if unknown.
+     */
+    @Nullable
+    public Coin getValue() {
+        return value;
     }
 
     /**
      * Returns a human readable debug string.
      */
+    @Override
     public String toString() {
         if (isCoinBase())
             return "TxIn: COINBASE";
@@ -286,6 +303,15 @@ public class TransactionInput extends ChildMessage implements Serializable {
         if (tx == null)
             return null;
         return tx.getOutputs().get((int) outpoint.getIndex());
+    }
+
+    /**
+     * Alias for getOutpoint().getConnectedRedeemData(keyBag)
+     * @see TransactionOutPoint#getConnectedRedeemData(org.bitcoinj.wallet.KeyBag)
+     */
+    @Nullable
+    public RedeemData getConnectedRedeemData(KeyBag keyBag) throws ScriptException {
+        return getOutpoint().getConnectedRedeemData(keyBag);
     }
 
     public enum ConnectMode {
@@ -325,13 +351,13 @@ public class TransactionInput extends ChildMessage implements Serializable {
         checkElementIndex((int) outpoint.getIndex(), transaction.getOutputs().size(), "Corrupt transaction");
         TransactionOutput out = transaction.getOutput((int) outpoint.getIndex());
         if (!out.isAvailableForSpending()) {
-            if (out.parentTransaction.equals(outpoint.fromTx)) {
+            if (getParentTransaction().equals(outpoint.fromTx)) {
                 // Already connected.
                 return ConnectionResult.SUCCESS;
             } else if (mode == ConnectMode.DISCONNECT_ON_CONFLICT) {
                 out.markAsUnspent();
             } else if (mode == ConnectMode.ABORT_ON_CONFLICT) {
-                outpoint.fromTx = checkNotNull(out.parentTransaction);
+                outpoint.fromTx = out.getParentTransaction();
                 return TransactionInput.ConnectionResult.ALREADY_SPENT;
             }
         }
@@ -341,7 +367,7 @@ public class TransactionInput extends ChildMessage implements Serializable {
 
     /** Internal use only: connects this TransactionInput to the given output (updates pointers and spent flags) */
     public void connect(TransactionOutput out) {
-        outpoint.fromTx = checkNotNull(out.parentTransaction);
+        outpoint.fromTx = out.getParentTransaction();
         out.markAsSpent(this);
     }
 
@@ -402,15 +428,15 @@ public class TransactionInput extends ChildMessage implements Serializable {
      * @throws VerificationException If the outpoint doesn't match the given output.
      */
     public void verify(TransactionOutput output) throws VerificationException {
-        if (output.parentTransaction != null) {
-            if (!getOutpoint().getHash().equals(output.parentTransaction.getHash()))
+        if (output.parent != null) {
+            if (!getOutpoint().getHash().equals(output.getParentTransaction().getHash()))
                 throw new VerificationException("This input does not refer to the tx containing the output.");
             if (getOutpoint().getIndex() != output.getIndex())
                 throw new VerificationException("This input refers to a different output on the given tx.");
         }
         Script pubKey = output.getScriptPubKey();
-        int myIndex = parentTransaction.getInputs().indexOf(this);
-        getScriptSig().correctlySpends(parentTransaction, myIndex, pubKey, true);
+        int myIndex = getParentTransaction().getInputs().indexOf(this);
+        getScriptSig().correctlySpends(getParentTransaction(), myIndex, pubKey);
     }
 
     /**
@@ -422,4 +448,47 @@ public class TransactionInput extends ChildMessage implements Serializable {
     public TransactionOutput getConnectedOutput() {
         return getOutpoint().getConnectedOutput();
     }
+
+    /** Returns a copy of the input detached from its containing transaction, if need be. */
+    public TransactionInput duplicateDetached() {
+        return new TransactionInput(params, null, bitcoinSerialize(), 0);
+    }
+
+    /**
+     * <p>Returns either RuleViolation.NONE if the input is standard, or which rule makes it non-standard if so.
+     * The "IsStandard" rules control whether the default Bitcoin Core client blocks relay of a tx / refuses to mine it,
+     * however, non-standard transactions can still be included in blocks and will be accepted as valid if so.</p>
+     *
+     * <p>This method simply calls <tt>DefaultRiskAnalysis.isInputStandard(this)</tt>.</p>
+     */
+    public DefaultRiskAnalysis.RuleViolation isStandard() {
+        return DefaultRiskAnalysis.isInputStandard(this);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        TransactionInput input = (TransactionInput) o;
+
+        if (sequence != input.sequence) return false;
+        if (!outpoint.equals(input.outpoint)) return false;
+        if (!Arrays.equals(scriptBytes, input.scriptBytes)) return false;
+        if (scriptSig != null ? !scriptSig.equals(input.scriptSig) : input.scriptSig != null) return false;
+        if (parent != input.parent) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) (sequence ^ (sequence >>> 32));
+        result = 31 * result + outpoint.hashCode();
+        result = 31 * result + (scriptBytes != null ? Arrays.hashCode(scriptBytes) : 0);
+        result = 31 * result + (scriptSig != null ? scriptSig.hashCode() : 0);
+        return result;
+    }
+
 }
+

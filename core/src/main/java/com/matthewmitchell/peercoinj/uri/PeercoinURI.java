@@ -26,12 +26,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+
 import java.io.UnsupportedEncodingException;
-import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -74,7 +77,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @author Andreas Schildbach (initial code)
  * @author Jim Burton (enhancements for MultiBit)
  * @author Gary Rowe (BIP21 support)
- * @see <a href="https://github.com.matthewmitchell/bips/blob/master/bip-0021.mediawiki">BIP 0021</a>
+ * @see <a href="https://github.com/bitcoin/bips/blob/master/bip-0021.mediawiki">BIP 0021</a>
  */
 public class PeercoinURI {
     /**
@@ -149,7 +152,7 @@ public class PeercoinURI {
         }
 
         // Split off the address from the rest of the query parameters.
-        String[] addressSplitTokens = schemeSpecificPart.split("\\?");
+        String[] addressSplitTokens = schemeSpecificPart.split("\\?", 2);
         if (addressSplitTokens.length == 0)
             throw new PeercoinURIParseException("No data found after the peercoin: prefix");
         String addressToken = addressSplitTokens[0];  // may be empty!
@@ -159,12 +162,8 @@ public class PeercoinURI {
             // Only an address is specified - use an empty '<name>=<value>' token array.
             nameValuePairTokens = new String[] {};
         } else {
-            if (addressSplitTokens.length == 2) {
-                // Split into '<name>=<value>' tokens.
-                nameValuePairTokens = addressSplitTokens[1].split("&");
-            } else {
-                throw new PeercoinURIParseException("Too many question marks in URI '" + uri + "'");
-            }
+            // Split into '<name>=<value>' tokens.
+            nameValuePairTokens = addressSplitTokens[1].split("&");
         }
 
         // Attempt to parse the rest of the URI parameters.
@@ -207,9 +206,11 @@ public class PeercoinURI {
             if (FIELD_AMOUNT.equals(nameToken)) {
                 // Decode the amount (contains an optional decimal component to 8dp).
                 try {
-                    BigInteger amount = Utils.toNanoCoins(valueToken);
+                    Coin amount = Coin.parseCoin(valueToken);
+                    if (amount.signum() < 0)
+                        throw new ArithmeticException("Negative coins specified");
                     putWithValidation(FIELD_AMOUNT, amount);
-                } catch (NumberFormatException e) {
+                } catch (IllegalArgumentException e) {
                     throw new OptionalFieldValidationException(String.format("'%s' is not a valid amount", valueToken), e);
                 } catch (ArithmeticException e) {
                     throw new OptionalFieldValidationException(String.format("'%s' has too many decimal places", valueToken), e);
@@ -263,8 +264,8 @@ public class PeercoinURI {
      * @return The amount name encoded using a pure integer value based at
      *         10,000,000 units is 1 lat. May be null if no amount is specified
      */
-    public BigInteger getAmount() {
-        return (BigInteger) parameterMap.get(FIELD_AMOUNT);
+    public Coin getAmount() {
+        return (Coin) parameterMap.get(FIELD_AMOUNT);
     }
 
     /**
@@ -288,7 +289,25 @@ public class PeercoinURI {
     public String getPaymentRequestUrl() {
         return (String) parameterMap.get(FIELD_PAYMENT_REQUEST_URL);
     }
-    
+
+    /**
+     * Returns the URLs where a payment request (as specified in BIP 70) may be fetched. The first URL is the main URL,
+     * all subsequent URLs are fallbacks.
+     */
+    public List<String> getPaymentRequestUrls() {
+        ArrayList<String> urls = new ArrayList<String>();
+        while (true) {
+            int i = urls.size();
+            String paramName = FIELD_PAYMENT_REQUEST_URL + (i > 0 ? Integer.toString(i) : "");
+            String url = (String) parameterMap.get(paramName);
+            if (url == null)
+                break;
+            urls.add(url);
+        }
+        Collections.reverse(urls);
+        return urls;
+    }
+
     /**
      * @param name The name of the parameter
      * @return The parameter value, or null if not present
@@ -313,7 +332,7 @@ public class PeercoinURI {
         return builder.toString();
     }
 
-    public static String convertToPeercoinURI(Address address, BigInteger amount, String label, String message) {
+    public static String convertToPeercoinURI(Address address, Coin amount, String label, String message) {
         return convertToPeercoinURI(address.toString(), amount, label, message);
     }
 
@@ -321,16 +340,16 @@ public class PeercoinURI {
      * Simple Peercoin URI builder using known good fields.
      * 
      * @param address The Peercoin address
-     * @param amount The amount in nanocoins (decimal)
+     * @param amount The amount
      * @param label A label
      * @param message A message
      * @return A String containing the Peercoin URI
      */
-    public static String convertToPeercoinURI(String address, @Nullable BigInteger amount, @Nullable String label,
+    public static String convertToPeercoinURI(String address, @Nullable Coin amount, @Nullable String label,
                                              @Nullable String message) {
         checkNotNull(address);
-        if (amount != null && amount.compareTo(BigInteger.ZERO) < 0) {
-            throw new IllegalArgumentException("Amount must be positive");
+        if (amount != null && amount.signum() < 0) {
+            throw new IllegalArgumentException("Coin must be positive");
         }
         
         StringBuilder builder = new StringBuilder();
@@ -340,7 +359,7 @@ public class PeercoinURI {
         
         if (amount != null) {
             builder.append(QUESTION_MARK_SEPARATOR).append(FIELD_AMOUNT).append("=");
-            builder.append(Utils.peercoinValueToPlainString(amount));
+            builder.append(amount.toPlainString());
             questionMarkHasBeenOutput = true;
         }
         

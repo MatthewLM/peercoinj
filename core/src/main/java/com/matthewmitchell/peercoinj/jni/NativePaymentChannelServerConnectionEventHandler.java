@@ -18,7 +18,7 @@ public class NativePaymentChannelServerConnectionEventHandler extends ServerConn
     public native void channelOpen(Sha256Hash channelId);
 
     @Override
-    public native void paymentIncrease(BigInteger by, BigInteger to);
+    public native ListenableFuture<ByteString> paymentIncrease(Coin by, Coin to, ByteString info);
 
     @Override
     public native void channelClosed(PaymentChannelCloseException.CloseReason reason);

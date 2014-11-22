@@ -1,5 +1,6 @@
 /**
  * Copyright 2013 Matija Mazi.
+ * Copyright 2014 Giannis Dzegoutanis.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,21 +18,25 @@
 package com.matthewmitchell.peercoinj.crypto;
 
 import com.matthewmitchell.peercoinj.core.ECKey;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import org.spongycastle.crypto.digests.SHA512Digest;
 import org.spongycastle.crypto.macs.HMac;
 import org.spongycastle.crypto.params.KeyParameter;
-import org.spongycastle.math.ec.ECPoint;
 
+import javax.annotation.Nonnull;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Static utilities used in BIP 32 Hierarchical Deterministic Wallets (HDW).
  */
 public final class HDUtils {
-
-    private HDUtils() { }
+    private static final Joiner PATH_JOINER = Joiner.on("/");
 
     static HMac createHmacSha512Digest(byte[] key) {
         SHA512Digest digest = new SHA512Digest();
@@ -52,16 +57,8 @@ public final class HDUtils {
         return hmacSha512(createHmacSha512Digest(key), data);
     }
 
-    static ECPoint compressedCopy(ECPoint pubKPoint) {
-        return ECKey.CURVE.getCurve().createPoint(pubKPoint.getX().toBigInteger(), pubKPoint.getY().toBigInteger(), true);
-    }
-
-    static ECPoint toUncompressed(ECPoint pubKPoint) {
-        return ECKey.CURVE.getCurve().createPoint(pubKPoint.getX().toBigInteger(), pubKPoint.getY().toBigInteger(), false);
-    }
-
     static byte[] toCompressed(byte[] uncompressedPoint) {
-        return compressedCopy(ECKey.CURVE.getCurve().decodePoint(uncompressedPoint)).getEncoded();
+        return ECKey.CURVE.getCurve().decodePoint(uncompressedPoint).getEncoded(true);
     }
 
     static byte[] longTo4ByteArray(long n) {
@@ -70,11 +67,34 @@ public final class HDUtils {
         return bytes;
     }
 
-    static byte[] getBytes(ECPoint pubKPoint) {
-        return compressedCopy(pubKPoint).getEncoded();
+    public static ImmutableList<ChildNumber> append(List<ChildNumber> path, ChildNumber childNumber) {
+        return ImmutableList.<ChildNumber>builder().addAll(path).add(childNumber).build();
     }
 
-    static ImmutableList<ChildNumber> append(ImmutableList<ChildNumber> path, ChildNumber childNumber) {
-        return ImmutableList.<ChildNumber>builder().addAll(path).add(childNumber).build();
+    public static String formatPath(List<ChildNumber> path) {
+        return PATH_JOINER.join(Iterables.concat(Collections.singleton("M"), path));
+    }
+
+    /**
+     * The path is a human-friendly representation of the deterministic path. For example:
+     *
+     * "44H / 0H / 0H / 1 / 1"
+     *
+     * Where a letter "H" means hardened key. Spaces are ignored.
+     */
+    public static List<ChildNumber> parsePath(@Nonnull String path) {
+        String[] parsedNodes = path.replace("M", "").split("/");
+        List<ChildNumber> nodes = new ArrayList<ChildNumber>();
+
+        for (String n : parsedNodes) {
+            n = n.replaceAll(" ", "");
+            if (n.length() == 0) continue;
+            boolean isHard = n.endsWith("H");
+            if (isHard) n = n.substring(0, n.length() - 1);
+            int nodeNumber = Integer.parseInt(n);
+            nodes.add(new ChildNumber(nodeNumber, isHard));
+        }
+
+        return nodes;
     }
 }

@@ -33,7 +33,7 @@ public class UnitTestParams extends NetworkParameters {
         addressHeader = 111;
         p2shHeader = 196;
         acceptableAddressCodes = new int[] { addressHeader, p2shHeader };
-        proofOfWorkLimit = new BigInteger("00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", 16);
+        maxTarget = new BigInteger("00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", 16);
         genesisBlock.setTime(System.currentTimeMillis() / 1000);
         genesisBlock.setDifficultyTarget(Block.EASIEST_DIFFICULTY_TARGET);
         genesisBlock.solve();
@@ -54,6 +54,7 @@ public class UnitTestParams extends NetworkParameters {
         return instance;
     }
 
+    @Override
     public String getPaymentProtocolId() {
         return null;
     }

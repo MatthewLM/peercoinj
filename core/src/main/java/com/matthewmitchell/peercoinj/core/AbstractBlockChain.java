@@ -1,5 +1,6 @@
 /*
  * Copyright 2012 Google Inc.
+ * Copyright 2014 Andreas Schildbach
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -163,10 +164,23 @@ public abstract class AbstractBlockChain {
      */
     public void addWallet(Wallet wallet) {
         addListener(wallet, Threading.SAME_THREAD);
-        if (wallet.getLastBlockSeenHeight() != getBestChainHeight()) {
-            log.warn("Wallet/chain height mismatch: {} vs {}", wallet.getLastBlockSeenHeight(), getBestChainHeight());
+        int walletHeight = wallet.getLastBlockSeenHeight();
+        int chainHeight = getBestChainHeight();
+        if (walletHeight != chainHeight) {
+            log.warn("Wallet/chain height mismatch: {} vs {}", walletHeight, chainHeight);
             log.warn("Hashes: {} vs {}", wallet.getLastBlockSeenHash(), getChainHead().getHeader().getHash());
-        }
+
+            // This special case happens when the VM crashes because of a transaction received. It causes the updated
+            // block store to persist, but not the wallet. In order to fix the issue, we roll back the block store to
+            // the wallet height to make it look like as if the block has never been received.
+            if (walletHeight < chainHeight && walletHeight > 0) {
+                try {
+                    rollbackBlockStore(walletHeight);
+                    log.info("Rolled back block store to height {}.", walletHeight);
+                } catch (BlockStoreException x) {
+                    log.warn("Rollback of block store failed, continuing with mismatched heights. This can happen due to a replay.");
+                }
+            }
     }
 
     /** Removes a wallet from the chain. */
@@ -211,7 +225,15 @@ public abstract class AbstractBlockChain {
      */
     protected abstract StoredBlock addToBlockStore(StoredBlock storedPrev, Block block)
             throws BlockStoreException, VerificationException;
-    
+
+    /**
+     * Rollback the block store to a given height. This is currently only supported by {@link BlockChain} instances.
+     * 
+     * @throws BlockStoreException
+     *             if the operation fails or is unsupported.
+     */
+    protected abstract void rollbackBlockStore(int height) throws BlockStoreException;
+
     /**
      * Adds/updates the given {@link StoredBlock} with the block store.
      * This version is used when the transactions have already been verified to properly spend txOutputChanges.
@@ -231,6 +253,22 @@ public abstract class AbstractBlockChain {
      * that were started by disconnectTransactions/connectTransactions.
      */
     protected abstract void doSetChainHead(StoredBlock chainHead) throws BlockStoreException;
+
+    /**
+     * Returns the hashes of the currently stored orphan blocks and then deletes them from this objects storage.
+     * Used by Peer when a filter exhaustion event has occurred and thus any orphan blocks that have been downloaded
+     * might be inaccurate/incomplete.
+     */
+    public Set<Sha256Hash> drainOrphanBlocks() {
+        lock.lock();
+        try {
+            Set<Sha256Hash> hashes = new HashSet<Sha256Hash>(orphanBlocks.keySet());
+            orphanBlocks.clear();
+            return hashes;
+        } finally {
+            lock.unlock();
+        }
+    }
     
     /**
      * Called if we (possibly) previously called disconnectTransaction/connectTransactions,
@@ -790,7 +828,7 @@ public abstract class AbstractBlockChain {
             Iterator<OrphanBlock> iter = orphanBlocks.values().iterator();
             while (iter.hasNext()) {
                 OrphanBlock orphanBlock = iter.next();
-                log.debug("Trying to connect {}", orphanBlock.block.getHash());
+
                 // Look up the blocks previous.
                 StoredBlock prev = getStoredBlockInCurrentScope(orphanBlock.block.getPrevBlockHash());
                 if (prev == null) {
@@ -798,8 +836,10 @@ public abstract class AbstractBlockChain {
                     log.debug("  but it is not connectable right now");
                     continue;
                 }
+
                 // Otherwise we can connect it now.
                 // False here ensures we don't recurse infinitely downwards when connecting huge chains.
+                log.info("Connected orphan {}", orphanBlock.block.getHash());
                 add(orphanBlock.block, false, orphanBlock.filteredTxHashes, orphanBlock.filteredTxn);
                 iter.remove();
                 blocksConnectedThisRound++;
@@ -818,31 +858,6 @@ public abstract class AbstractBlockChain {
      */
     private void checkDifficultyTransitions(StoredBlock storedPrev, Block nextBlock) throws BlockStoreException, VerificationException {
 	    // No difficulty checks, placing trust in central hashes
-    }
-
-    private void checkTestnetDifficulty(StoredBlock storedPrev, Block prev, Block next) throws VerificationException, BlockStoreException {
-        checkState(lock.isHeldByCurrentThread());
-        // After 15th February 2012 the rules on the testnet change to avoid people running up the difficulty
-        // and then leaving, making it too hard to mine a block. On non-difficulty transition points, easy
-        // blocks are allowed if there has been a span of 20 minutes without one.
-        final long timeDelta = next.getTimeSeconds() - prev.getTimeSeconds();
-        // There is an integer underflow bug in peercoin-qt that means mindiff blocks are accepted when time
-        // goes backwards.
-        if (timeDelta >= 0 && timeDelta <= NetworkParameters.TARGET_SPACING * 2) {
-            // Walk backwards until we find a block that doesn't have the easiest proof of work, then check
-            // that difficulty is equal to that one.
-            StoredBlock cursor = storedPrev;
-            while (!cursor.getHeader().equals(params.getGenesisBlock()) &&
-                   cursor.getHeight() % params.getInterval() != 0 &&
-                   cursor.getHeader().getDifficultyTargetAsInteger().equals(params.getProofOfWorkLimit()))
-                cursor = cursor.getPrev(blockStore);
-            BigInteger cursorDifficulty = cursor.getHeader().getDifficultyTargetAsInteger();
-            BigInteger newDifficulty = next.getDifficultyTargetAsInteger();
-            if (!cursorDifficulty.equals(newDifficulty))
-                throw new VerificationException("Testnet block transition that is not allowed: " +
-                    Long.toHexString(cursor.getHeader().getDifficultyTarget()) + " vs " +
-                    Long.toHexString(next.getDifficultyTarget()));
-        }
     }
 
     /**

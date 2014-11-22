@@ -1,5 +1,5 @@
 /**
- * Copyright 2011 Google Inc.
+ * Copyright 2013 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,15 +17,15 @@
 package com.matthewmitchell.peercoinj.core;
 
 import com.matthewmitchell.peercoinj.script.Script;
+import com.matthewmitchell.peercoinj.wallet.KeyChainEventListener;
 
-import java.math.BigInteger;
 import java.util.List;
 
 /**
  * <p>Implementors are called when the contents of the wallet changes, for instance due to receiving/sending money
  * or a block chain re-organize. It may be convenient to derive from {@link AbstractWalletEventListener} instead.</p>
  */
-public interface WalletEventListener {
+public interface WalletEventListener extends KeyChainEventListener {
     /**
      * This is called when a transaction is seen that sends coins <b>to</b> this wallet, either because it
      * was broadcast across the network or because a block was received. If a transaction is seen when it was broadcast,
@@ -39,7 +39,7 @@ public interface WalletEventListener {
      * @param prevBalance Balance before the coins were received.
      * @param newBalance  Current balance of the wallet. This is the 'estimated' balance.
      */
-    void onCoinsReceived(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance);
+    void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance);
 
     /**
      * This is called when a transaction is seen that sends coins <b>from</b> this wallet, either
@@ -57,7 +57,7 @@ public interface WalletEventListener {
      * @param prevBalance  The wallets balance before this transaction was seen.
      * @param newBalance   The wallets balance after this transaction was seen. This is the 'estimated' balance.
      */
-    void onCoinsSent(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance);
+    void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance);
 
     // TODO: Finish onReorganize to be more useful.
     /**
@@ -116,12 +116,7 @@ public interface WalletEventListener {
      */
     void onWalletChanged(Wallet wallet);
 
-    /**
-     * Called whenever a new key is added to the wallet, whether that be via {@link Wallet#addKeys(java.util.List)}
-     * or due to some other automatic derivation.
-     */
-    void onKeysAdded(Wallet wallet, List<ECKey> keys);
-
     /** Called whenever a new watched script is added to the wallet. */
     void onScriptsAdded(Wallet wallet, List<Script> scripts);
+
 }

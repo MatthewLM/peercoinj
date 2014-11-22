@@ -19,12 +19,16 @@ package com.matthewmitchell.peercoinj.protocols.channels;
 import com.matthewmitchell.peercoinj.core.*;
 import com.matthewmitchell.peercoinj.utils.Threading;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.ByteString;
 import net.jcip.annotations.GuardedBy;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigInteger;
+import javax.annotation.Nullable;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static com.google.common.base.Preconditions.*;
@@ -37,10 +41,11 @@ public class StoredPaymentChannelServerStates implements WalletExtension {
     private static final org.slf4j.Logger log = LoggerFactory.getLogger(StoredPaymentChannelServerStates.class);
 
     static final String EXTENSION_ID = StoredPaymentChannelServerStates.class.getName();
+    static final int MAX_SECONDS_TO_WAIT_FOR_BROADCASTER_TO_BE_SET = 10;
 
     @GuardedBy("lock") @VisibleForTesting final Map<Sha256Hash, StoredServerChannel> mapChannels = new HashMap<Sha256Hash, StoredServerChannel>();
-    private final Wallet wallet;
-    private final TransactionBroadcaster broadcaster;
+    private Wallet wallet;
+    private final SettableFuture<TransactionBroadcaster> broadcasterFuture = SettableFuture.create();
 
     private final Timer channelTimeoutHandler = new Timer(true);
 
@@ -50,7 +55,7 @@ public class StoredPaymentChannelServerStates implements WalletExtension {
      * The offset between the refund transaction's lock time and the time channels will be automatically closed.
      * This defines a window during which we must get the last payment transaction verified, ie it should allow time for
      * network propagation and for the payment transaction to be included in a block. Note that the channel expire time
-     * is measured in terms of our local clock, and the refund transaction's lock time is measured in terms of Peercoin
+     * is measured in terms of our local clock, and the refund transaction's lock time is measured in terms of Bitcoin
      * block header timestamps, which are allowed to drift up to two hours in the future, as measured by relaying nodes.
      */
     public static final long CHANNEL_EXPIRE_OFFSET = -2*60*60;
@@ -59,9 +64,28 @@ public class StoredPaymentChannelServerStates implements WalletExtension {
      * Creates a new PaymentChannelServerStateManager and associates it with the given {@link Wallet} and
      * {@link TransactionBroadcaster} which are used to complete and announce payment transactions.
      */
-    public StoredPaymentChannelServerStates(Wallet wallet, TransactionBroadcaster broadcaster) {
-        this.wallet = checkNotNull(wallet);
-        this.broadcaster = checkNotNull(broadcaster);
+    public StoredPaymentChannelServerStates(@Nullable Wallet wallet, TransactionBroadcaster broadcaster) {
+        setTransactionBroadcaster(broadcaster);
+        this.wallet = wallet;
+    }
+
+    /**
+     * Creates a new PaymentChannelServerStateManager and associates it with the given {@link Wallet}
+     *
+     * Use this constructor if you use WalletAppKit, it will provide the broadcaster for you (no need to call the setter)
+     */
+    public StoredPaymentChannelServerStates(@Nullable Wallet wallet) {
+        this.wallet = wallet;
+    }
+
+    /**
+     * Use this setter if the broadcaster is not available during instantiation and you're not using WalletAppKit.
+     * This setter will let you delay the setting of the broadcaster until the Bitcoin network is ready.
+     *
+     * @param broadcaster Used when the payment channels are closed
+     */
+    public void setTransactionBroadcaster(TransactionBroadcaster broadcaster) {
+        this.broadcasterFuture.set(checkNotNull(broadcaster));
     }
 
     /**
@@ -83,6 +107,7 @@ public class StoredPaymentChannelServerStates implements WalletExtension {
         synchronized (channel) {
             channel.closeConnectedHandler();
             try {
+                TransactionBroadcaster broadcaster = getBroadcaster();
                 channel.getOrCreateState(wallet, broadcaster).close();
             } catch (InsufficientMoneyException e) {
                 e.printStackTrace();
@@ -92,6 +117,24 @@ public class StoredPaymentChannelServerStates implements WalletExtension {
             channel.state = null;
         }
         wallet.addOrUpdateExtension(this);
+    }
+
+    /**
+     * If the broadcaster has not been set for MAX_SECONDS_TO_WAIT_FOR_BROADCASTER_TO_BE_SET seconds, then
+     * the programmer probably forgot to set it and we should throw exception.
+     */
+    private TransactionBroadcaster getBroadcaster() {
+        try {
+            return broadcasterFuture.get(MAX_SECONDS_TO_WAIT_FOR_BROADCASTER_TO_BE_SET, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        } catch (TimeoutException e) {
+            String err = "Transaction broadcaster not set";
+            log.error(err);
+            throw new RuntimeException(err,e);
+        }
     }
 
     /**
@@ -150,14 +193,14 @@ public class StoredPaymentChannelServerStates implements WalletExtension {
             ServerState.StoredServerPaymentChannels.Builder builder = ServerState.StoredServerPaymentChannels.newBuilder();
             for (StoredServerChannel channel : mapChannels.values()) {
                 // First a few asserts to make sure things won't break
-                checkState(channel.bestValueToMe.compareTo(BigInteger.ZERO) >= 0 && channel.bestValueToMe.compareTo(NetworkParameters.MAX_MONEY) < 0);
+                checkState(channel.bestValueToMe.signum() >= 0 && channel.bestValueToMe.compareTo(NetworkParameters.MAX_MONEY) < 0);
                 checkState(channel.refundTransactionUnlockTimeSecs > 0);
                 checkNotNull(channel.myKey.getPrivKeyBytes());
                 ServerState.StoredServerPaymentChannel.Builder channelBuilder = ServerState.StoredServerPaymentChannel.newBuilder()
-                        .setBestValueToMe(channel.bestValueToMe.longValue())
+                        .setBestValueToMe(channel.bestValueToMe.value)
                         .setRefundTransactionUnlockTimeSecs(channel.refundTransactionUnlockTimeSecs)
-                        .setContractTransaction(ByteString.copyFrom(channel.contract.peercoinSerialize()))
-                        .setClientOutput(ByteString.copyFrom(channel.clientOutput.peercoinSerialize()))
+                        .setContractTransaction(ByteString.copyFrom(channel.contract.bitcoinSerialize()))
+                        .setClientOutput(ByteString.copyFrom(channel.clientOutput.bitcoinSerialize()))
                         .setMyKey(ByteString.copyFrom(channel.myKey.getPrivKeyBytes()));
                 if (channel.bestValueSignature != null)
                     channelBuilder.setBestValueSignature(ByteString.copyFrom(channel.bestValueSignature));
@@ -173,7 +216,7 @@ public class StoredPaymentChannelServerStates implements WalletExtension {
     public void deserializeWalletExtension(Wallet containingWallet, byte[] data) throws Exception {
         lock.lock();
         try {
-            checkArgument(containingWallet == wallet);
+            this.wallet = containingWallet;
             ServerState.StoredServerPaymentChannels states = ServerState.StoredServerPaymentChannels.parseFrom(data);
             NetworkParameters params = containingWallet.getParams();
             for (ServerState.StoredServerPaymentChannel storedState : states.getChannelsList()) {
@@ -181,8 +224,8 @@ public class StoredPaymentChannelServerStates implements WalletExtension {
                         new Transaction(params, storedState.getContractTransaction().toByteArray()),
                         new TransactionOutput(params, null, storedState.getClientOutput().toByteArray(), 0),
                         storedState.getRefundTransactionUnlockTimeSecs(),
-                        new ECKey(storedState.getMyKey().toByteArray(), null),
-                        BigInteger.valueOf(storedState.getBestValueToMe()),
+                        ECKey.fromPrivate(storedState.getMyKey().toByteArray()),
+                        Coin.valueOf(storedState.getBestValueToMe()),
                         storedState.hasBestValueSignature() ? storedState.getBestValueSignature().toByteArray() : null);
                 putChannel(channel);
             }

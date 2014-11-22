@@ -16,8 +16,10 @@
 
 package com.matthewmitchell.peercoinj.core;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
+import com.google.common.base.Objects;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
@@ -28,23 +30,28 @@ import static com.google.common.base.Preconditions.checkArgument;
  * <p>and the result is then Base58 encoded. This format is used for addresses, and private keys exported using the
  * dumpprivkey command.</p>
  */
-public class VersionedChecksummedBytes {
-    protected int version;
+public class VersionedChecksummedBytes implements Serializable {
+    protected final int version;
     protected byte[] bytes;
 
     protected VersionedChecksummedBytes(String encoded) throws AddressFormatException {
-        byte[] tmp = Base58.decodeChecked(encoded);
-        version = tmp[0] & 0xFF;
-        bytes = new byte[tmp.length - 1];
-        System.arraycopy(tmp, 1, bytes, 0, tmp.length - 1);
+        byte[] versionAndDataBytes = Base58.decodeChecked(encoded);
+        byte versionByte = versionAndDataBytes[0];
+        version = versionByte & 0xFF;
+        bytes = new byte[versionAndDataBytes.length - 1];
+        System.arraycopy(versionAndDataBytes, 1, bytes, 0, versionAndDataBytes.length - 1);
     }
 
     protected VersionedChecksummedBytes(int version, byte[] bytes) {
-        checkArgument(version < 256 && version >= 0);
+        checkArgument(version >= 0 && version < 256);
         this.version = version;
         this.bytes = bytes;
     }
 
+    /**
+     * Returns the base-58 encoded String representation of this
+     * object, including version and checksum bytes.
+     */
     @Override
     public String toString() {
         // A stringified buffer is:
@@ -52,21 +59,23 @@ public class VersionedChecksummedBytes {
         byte[] addressBytes = new byte[1 + bytes.length + 4];
         addressBytes[0] = (byte) version;
         System.arraycopy(bytes, 0, addressBytes, 1, bytes.length);
-        byte[] check = Utils.doubleDigest(addressBytes, 0, bytes.length + 1);
-        System.arraycopy(check, 0, addressBytes, bytes.length + 1, 4);
+        byte[] checksum = Utils.doubleDigest(addressBytes, 0, bytes.length + 1);
+        System.arraycopy(checksum, 0, addressBytes, bytes.length + 1, 4);
         return Base58.encode(addressBytes);
     }
 
     @Override
     public int hashCode() {
-        return Arrays.hashCode(bytes);
+        return Objects.hashCode(version, Arrays.hashCode(bytes));
     }
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof VersionedChecksummedBytes)) return false;
-        VersionedChecksummedBytes vcb = (VersionedChecksummedBytes) o;
-        return Arrays.equals(vcb.bytes, bytes);
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        VersionedChecksummedBytes other = (VersionedChecksummedBytes) o;
+        return this.version == other.version
+                && Arrays.equals(this.bytes, other.bytes);
     }
 
     /**

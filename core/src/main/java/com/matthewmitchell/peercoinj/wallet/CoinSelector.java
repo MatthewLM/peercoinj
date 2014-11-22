@@ -1,9 +1,9 @@
 package com.matthewmitchell.peercoinj.wallet;
 
+import com.matthewmitchell.peercoinj.core.Coin;
 import com.matthewmitchell.peercoinj.core.TransactionOutput;
 
-import java.math.BigInteger;
-import java.util.LinkedList;
+import java.util.List;
 
 /**
  * A CoinSelector is responsible for picking some outputs to spend, from the list of all spendable outputs. It
@@ -12,5 +12,10 @@ import java.util.LinkedList;
  * enough money in the wallet.
  */
 public interface CoinSelector {
-    public CoinSelection select(BigInteger target, LinkedList<TransactionOutput> candidates);
+    /**
+     * Creates a CoinSelection that tries to meet the target amount of value. The candidates list is given to
+     * this call and can be edited freely. See the docs for CoinSelection to learn more, or look a the implementation
+     * of {@link DefaultCoinSelector}.
+     */
+    public CoinSelection select(Coin target, List<TransactionOutput> candidates);
 }

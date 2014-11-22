@@ -16,6 +16,7 @@
 
 package com.matthewmitchell.peercoinj.jni;
 
+import com.matthewmitchell.peercoinj.core.Coin;
 import com.matthewmitchell.peercoinj.core.ECKey;
 import com.matthewmitchell.peercoinj.core.Transaction;
 import com.matthewmitchell.peercoinj.core.Wallet;
@@ -34,10 +35,10 @@ public class NativeWalletEventListener implements WalletEventListener {
     public long ptr;
 
     @Override
-    public native void onCoinsReceived(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance);
+    public native void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance);
 
     @Override
-    public native void onCoinsSent(Wallet wallet, Transaction tx, BigInteger prevBalance, BigInteger newBalance);
+    public native void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance);
 
     @Override
     public native void onReorganize(Wallet wallet);
@@ -49,7 +50,7 @@ public class NativeWalletEventListener implements WalletEventListener {
     public native void onWalletChanged(Wallet wallet);
 
     @Override
-    public native void onKeysAdded(Wallet wallet, List<ECKey> keys);
+    public native void onKeysAdded(List<ECKey> keys);
 
     @Override
     public native void onScriptsAdded(Wallet wallet, List<Script> scripts);

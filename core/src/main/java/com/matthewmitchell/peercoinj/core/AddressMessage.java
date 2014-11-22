@@ -20,7 +20,7 @@ public class AddressMessage extends Message {
     /**
      * Contruct a new 'addr' message.
      * @param params NetworkParameters object.
-     * @param offset The location of the first msg byte within the array.
+     * @param offset The location of the first payload byte within the array.
      * @param parseLazy Whether to perform a full parse immediately or delay until a read is requested.
      * @param parseRetain Whether to retain the backing byte array for quick reserialization.  
      * If true and the backing byte array is invalidated due to modification of a field then 
@@ -77,7 +77,7 @@ public class AddressMessage extends Message {
             throw new ProtocolException("Address message too large.");
         addresses = new ArrayList<PeerAddress>((int) numAddresses);
         for (int i = 0; i < numAddresses; i++) {
-            PeerAddress addr = new PeerAddress(params, bytes, cursor, protocolVersion, this, parseLazy, parseRetain);
+            PeerAddress addr = new PeerAddress(params, payload, cursor, protocolVersion, this, parseLazy, parseRetain);
             addresses.add(addr);
             cursor += addr.getMessageSize();
         }
@@ -97,6 +97,7 @@ public class AddressMessage extends Message {
         }
     }
 
+    @Override
     public int getMessageSize() {
         if (length != UNKNOWN_LENGTH)
             return length;

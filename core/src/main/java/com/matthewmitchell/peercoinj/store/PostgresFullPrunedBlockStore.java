@@ -1,5 +1,6 @@
 /*
  * Copyright 2014 BitPOS Pty Ltd.
+ * Copyright 2014 Andreas Schildbach
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,12 +23,15 @@ import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.sql.*;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Properties;
 
 /**
  * <p>A full pruned block store using the Postgres database engine. As an added bonus an address index is calculated,
@@ -49,6 +53,7 @@ public class PostgresFullPrunedBlockStore implements FullPrunedBlockStore {
     private int fullStoreDepth;
     private String username;
     private String password;
+    private String schemaName;
 
     private static final String driver = "org.postgresql.Driver";
     private static final String CREATE_SETTINGS_TABLE = "CREATE TABLE settings (\n" +
@@ -107,9 +112,59 @@ public class PostgresFullPrunedBlockStore implements FullPrunedBlockStore {
      */
     public PostgresFullPrunedBlockStore(NetworkParameters params, int fullStoreDepth, String hostname, String dbName,
                                         String username, String password) throws BlockStoreException {
+        this(params, "jdbc:postgresql://" + hostname + "/" + dbName, fullStoreDepth, username, password, null);
+    }
+
+    /**
+     * <p>Create a new PostgresFullPrunedBlockStore, storing the tables in the schema specified.  You may want to
+     * specify a schema to avoid name collisions, or just to keep the database better organized.  The schema is not
+     * required, and if one is not provided than the default schema for the username will be used.  See
+     * <a href="http://www.postgres.org/docs/9.3/static/ddl-schemas.html">the postgres schema docs</a> for more on
+     * schemas.</p>
+     *
+     * @param params A copy of the NetworkParameters used.
+     * @param fullStoreDepth The number of blocks of history stored in full (something like 1000 is pretty safe).
+     * @param hostname The hostname of the database to connect to.
+     * @param dbName The database to connect to.
+     * @param username The database username.
+     * @param password The password to the database.
+     * @param schemaName The name of the schema to put the tables in.  May be null if no schema is being used.
+     * @throws BlockStoreException If the database fails to open for any reason.
+     */
+    public PostgresFullPrunedBlockStore(NetworkParameters params, int fullStoreDepth, String hostname, String dbName,
+                                        String username, String password, @Nullable String schemaName) throws BlockStoreException {
+        this(params, "jdbc:postgresql://" + hostname + "/" + dbName, fullStoreDepth, username, password, schemaName);
+    }
+
+    /**
+     * <p>Create a new PostgresFullPrunedBlockStore, using the full connection URL instead of a hostname and password,
+     * and optionally allowing a schema to be specified.</p>
+     *
+     * <p>The connection URL will be passed to the database driver, and should look like
+     * "jdbc:postrgresql://host[:port]/databasename".  You can use this to change the port, or specify additional
+     * parameters.  See <a href="http://jdbc.postgresql.org/documentation/head/connect.html#connection-parameters">
+     * the PostgreSQL JDBC documentation</a> for more on the connection URL.</p>
+     *
+     * <p>This constructor also accepts a schema name to use, which can be used to avoid name collisions, or to keep the
+     * database organized.  If no schema is provided the default schema for the username will be used.  See
+     * <a href="http://www.postgres.org/docs/9.3/static/ddl-schemas.html">the postgres schema docs</a> for more on
+     * schemas.</p>
+     *
+     *
+     * @param params A copy of the NetworkParameters used.
+     * @param connectionURL The jdbc url to connect to the database.
+     * @param fullStoreDepth The number of blocks of history stored in full (something like 1000 is pretty safe).
+     * @param username The database username.
+     * @param password The password to the database.
+     * @param schemaName The name of the schema to put the tables in.  May be null if no schema is being used.
+     * @throws BlockStoreException If the database fails to open for any reason.
+     */
+    public PostgresFullPrunedBlockStore(NetworkParameters params, String connectionURL, int fullStoreDepth,
+                                        String username, String password, @Nullable String schemaName) throws BlockStoreException {
         this.params = params;
         this.fullStoreDepth = fullStoreDepth;
-        connectionURL = "jdbc:postgresql://" + hostname + "/" + dbName;
+        this.connectionURL = connectionURL;
+        this.schemaName = schemaName;
 
         this.username = username;
         this.password = password;
@@ -140,7 +195,7 @@ public class PostgresFullPrunedBlockStore implements FullPrunedBlockStore {
 
     private synchronized void maybeConnect() throws BlockStoreException {
         try {
-            if (conn.get() != null)
+            if (conn.get() != null && !conn.get().isClosed())
                 return;
 
             Properties props = new Properties();
@@ -150,6 +205,12 @@ public class PostgresFullPrunedBlockStore implements FullPrunedBlockStore {
             conn.set(DriverManager.getConnection(connectionURL, props));
 
             Connection connection = conn.get();
+            // set the schema if one is needed
+            if(schemaName != null) {
+                Statement s = connection.createStatement();
+                s.execute("CREATE SCHEMA IF NOT EXISTS " + schemaName + ";");
+                s.execute("set search_path to '" + schemaName +"';");
+            }
             allConnections.add(conn.get());
             log.info("Made a new connection to database " + connectionURL);
         } catch (SQLException ex) {
@@ -157,10 +218,17 @@ public class PostgresFullPrunedBlockStore implements FullPrunedBlockStore {
         }
     }
 
+    @Override
     public synchronized void close() {
         for (Connection conn : allConnections) {
             try {
-                conn.rollback();
+                if(!conn.getAutoCommit()) {
+                    conn.rollback();
+                }
+                conn.close();
+                if(conn == this.conn.get()) {
+                    this.conn.set(null);
+                }
             } catch (SQLException ex) {
                 throw new RuntimeException(ex);
             }
@@ -385,6 +453,7 @@ public class PostgresFullPrunedBlockStore implements FullPrunedBlockStore {
         }
     }
 
+    @Override
     public void put(StoredBlock storedBlock) throws BlockStoreException {
         maybeConnect();
         try {
@@ -394,6 +463,7 @@ public class PostgresFullPrunedBlockStore implements FullPrunedBlockStore {
         }
     }
 
+    @Override
     public void put(StoredBlock storedBlock, StoredUndoableBlock undoableBlock) throws BlockStoreException {
         maybeConnect();
         // We skip the first 4 bytes because (on prodnet) the minimum target has 4 0-bytes
@@ -425,7 +495,7 @@ public class PostgresFullPrunedBlockStore implements FullPrunedBlockStore {
 
         try {
             if (log.isDebugEnabled())
-                log.debug("Looking for undoable block with hash: " + Utils.bytesToHexString(hashBytes));
+                log.debug("Looking for undoable block with hash: " + Utils.HEX.encode(hashBytes));
 
             PreparedStatement findS = conn.get().prepareStatement("select 1 from undoableBlocks where hash = ?");
             findS.setBytes(1, hashBytes);
@@ -444,8 +514,7 @@ public class PostgresFullPrunedBlockStore implements FullPrunedBlockStore {
                 s.setBytes(3, hashBytes);
 
                 if (log.isDebugEnabled())
-                    log.debug("Updating undoable block with hash: " + Utils.bytesToHexString(hashBytes));
-
+                    log.debug("Updating undoable block with hash: " + Utils.HEX.encode(hashBytes));
 
                 if (transactions == null) {
                     s.setBytes(1, txOutChanges);
@@ -467,8 +536,7 @@ public class PostgresFullPrunedBlockStore implements FullPrunedBlockStore {
             s.setInt(2, height);
 
             if (log.isDebugEnabled())
-                log.debug("Inserting undoable block with hash: " + Utils.bytesToHexString(hashBytes)  + " at height " + height);
-
+                log.debug("Inserting undoable block with hash: " + Utils.HEX.encode(hashBytes)  + " at height " + height);
 
             if (transactions == null) {
                 s.setBytes(3, txOutChanges);
@@ -538,14 +606,17 @@ public class PostgresFullPrunedBlockStore implements FullPrunedBlockStore {
         }
     }
 
+    @Override
     public StoredBlock get(Sha256Hash hash) throws BlockStoreException {
         return get(hash, false);
     }
 
+    @Override
     public StoredBlock getOnceUndoableStoredBlock(Sha256Hash hash) throws BlockStoreException {
         return get(hash, true);
     }
 
+    @Override
     public StoredUndoableBlock getUndoBlock(Sha256Hash hash) throws BlockStoreException {
         maybeConnect();
         PreparedStatement s = null;
@@ -606,10 +677,12 @@ public class PostgresFullPrunedBlockStore implements FullPrunedBlockStore {
         }
     }
 
+    @Override
     public StoredBlock getChainHead() throws BlockStoreException {
         return chainHeadBlock;
     }
 
+    @Override
     public void setChainHead(StoredBlock chainHead) throws BlockStoreException {
         Sha256Hash hash = chainHead.getHeader().getHash();
         this.chainHeadHash = hash;
@@ -627,10 +700,12 @@ public class PostgresFullPrunedBlockStore implements FullPrunedBlockStore {
         }
     }
 
+    @Override
     public StoredBlock getVerifiedChainHead() throws BlockStoreException {
         return verifiedChainHeadBlock;
     }
 
+    @Override
     public void setVerifiedChainHead(StoredBlock chainHead) throws BlockStoreException {
         Sha256Hash hash = chainHead.getHeader().getHash();
         this.verifiedChainHeadHash = hash;
@@ -668,6 +743,7 @@ public class PostgresFullPrunedBlockStore implements FullPrunedBlockStore {
         }
     }
 
+    @Override
     public StoredTransactionOutput getTransactionOutput(Sha256Hash hash, long index) throws BlockStoreException {
         maybeConnect();
         PreparedStatement s = null;
@@ -684,7 +760,7 @@ public class PostgresFullPrunedBlockStore implements FullPrunedBlockStore {
             }
             // Parse it.
             int height = results.getInt(1);
-            BigInteger value = new BigInteger(results.getBytes(2));
+            Coin value = Coin.valueOf(new BigInteger(results.getBytes(2)).longValue());
             // Tell the StoredTransactionOutput that we are a coinbase, as that is encoded in height
             StoredTransactionOutput txout = new StoredTransactionOutput(hash, index, value, height, true, results.getBytes(3));
             return txout;
@@ -698,6 +774,7 @@ public class PostgresFullPrunedBlockStore implements FullPrunedBlockStore {
         }
     }
 
+    @Override
     public void addUnspentTransactionOutput(StoredTransactionOutput out) throws BlockStoreException {
         maybeConnect();
         PreparedStatement s = null;
@@ -705,7 +782,7 @@ public class PostgresFullPrunedBlockStore implements FullPrunedBlockStore {
         // Calculate the toAddress (if any)
         String dbAddress = "";
         int type = 0;
-        Script  outputScript = null;
+        Script outputScript = null;
         try
         {
             outputScript = new Script(out.getScriptBytes());
@@ -734,8 +811,7 @@ public class PostgresFullPrunedBlockStore implements FullPrunedBlockStore {
 
                 dbAddress = outputScript.getFromAddress(params).toString();
                 type = 2;
-            } else if (outputScript.isPayToScriptHash())
-            {
+            } else {
                 dbAddress = Address.fromP2SHHash(params, outputScript.getPubKeyHash()).toString();
                 type = 3;
             }
@@ -748,7 +824,7 @@ public class PostgresFullPrunedBlockStore implements FullPrunedBlockStore {
             // index is actually an unsigned int
             s.setInt(2, (int)out.getIndex());
             s.setInt(3, out.getHeight());
-            s.setBytes(4, out.getValue().toByteArray());
+            s.setBytes(4, BigInteger.valueOf(out.getValue().value).toByteArray());
             s.setBytes(5, out.getScriptBytes());
             s.setString(6, dbAddress);
             s.setInt(7, type);
@@ -765,6 +841,7 @@ public class PostgresFullPrunedBlockStore implements FullPrunedBlockStore {
         }
     }
 
+    @Override
     public void removeUnspentTransactionOutput(StoredTransactionOutput out) throws BlockStoreException {
         maybeConnect();
         // TODO: This should only need one query (maybe a stored procedure)
@@ -783,6 +860,7 @@ public class PostgresFullPrunedBlockStore implements FullPrunedBlockStore {
         }
     }
 
+    @Override
     public void beginDatabaseBatchWrite() throws BlockStoreException {
 
         maybeConnect();
@@ -797,6 +875,7 @@ public class PostgresFullPrunedBlockStore implements FullPrunedBlockStore {
         }
     }
 
+    @Override
     public void commitDatabaseBatchWrite() throws BlockStoreException {
         maybeConnect();
 
@@ -812,6 +891,7 @@ public class PostgresFullPrunedBlockStore implements FullPrunedBlockStore {
         }
     }
 
+    @Override
     public void abortDatabaseBatchWrite() throws BlockStoreException {
 
         maybeConnect();
@@ -830,6 +910,7 @@ public class PostgresFullPrunedBlockStore implements FullPrunedBlockStore {
         }
     }
 
+    @Override
     public boolean hasUnspentOutputs(Sha256Hash hash, int numOutputs) throws BlockStoreException {
         maybeConnect();
         PreparedStatement s = null;

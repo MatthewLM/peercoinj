@@ -39,17 +39,23 @@ public class InventoryItem {
     }
 
 
+    @Override
     public String toString() {
         return type.toString() + ": " + hash;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        InventoryItem other = (InventoryItem) o;
+        return type == other.type &&
+               hash.equals(other.hash);
+    }
+
+    @Override
     public int hashCode() {
         return hash.hashCode() + type.ordinal();
     }
 
-    public boolean equals(Object o) {
-        return o instanceof InventoryItem &&
-                ((InventoryItem)o).type == this.type &&
-                ((InventoryItem)o).hash.equals(this.hash);
-    }
 }

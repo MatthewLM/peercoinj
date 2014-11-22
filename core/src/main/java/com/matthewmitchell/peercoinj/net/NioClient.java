@@ -1,5 +1,6 @@
 /*
  * Copyright 2013 Google Inc.
+ * Copyright 2014 Andreas Schildbach
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +21,6 @@ import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 
-import static com.google.common.base.Preconditions.checkState;
-
 /**
  * Creates a simple connection to a server using a {@link StreamParser} to process data.
  */
@@ -33,6 +32,7 @@ public class NioClient implements MessageWriteTarget {
         private final StreamParser upstreamParser;
         private MessageWriteTarget writeTarget;
         private boolean closeOnOpen = false;
+        private boolean closeCalled = false;
         Handler(StreamParser upstreamParser, int connectTimeoutMillis) {
             this.upstreamParser = upstreamParser;
             setSocketTimeout(connectTimeoutMillis);
@@ -41,14 +41,17 @@ public class NioClient implements MessageWriteTarget {
 
         @Override
         protected synchronized void timeoutOccurred() {
-            upstreamParser.connectionClosed();
             closeOnOpen = true;
+            connectionClosed();
         }
 
         @Override
-        public void connectionClosed() {
-            upstreamParser.connectionClosed();
-            manager.stop();
+        public synchronized void connectionClosed() {
+            manager.stopAsync();
+            if (!closeCalled) {
+                closeCalled = true;
+                upstreamParser.connectionClosed();
+            }
         }
 
         @Override
@@ -90,7 +93,8 @@ public class NioClient implements MessageWriteTarget {
      */
     public NioClient(final SocketAddress serverAddress, final StreamParser parser,
                      final int connectTimeoutMillis) throws IOException {
-        manager.startAndWait();
+        manager.startAsync();
+        manager.awaitRunning();
         handler = new Handler(parser, connectTimeoutMillis);
         manager.openConnection(serverAddress, handler);
     }

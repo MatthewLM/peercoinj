@@ -29,8 +29,8 @@ public class GetHeadersMessage extends GetBlocksMessage {
         super(params, locator, stopHash);
     }
 
-    public GetHeadersMessage(NetworkParameters params, byte[] msg) throws ProtocolException {
-        super(params, msg);
+    public GetHeadersMessage(NetworkParameters params, byte[] payload) throws ProtocolException {
+        super(params, payload);
     }
 
     @Override
@@ -50,11 +50,13 @@ public class GetHeadersMessage extends GetBlocksMessage {
      */
     @Override
     public boolean equals(Object o) {
-        if (o == null || o.getClass() != getClass()) return false;
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         GetHeadersMessage other = (GetHeadersMessage) o;
-        return (other.version == version &&
-                locator.size() == other.locator.size() && locator.containsAll(other.locator) &&
-                stopHash.equals(other.stopHash));
+        return version == other.version &&
+               locator.size() == other.locator.size() &&
+               locator.containsAll(other.locator) &&
+               stopHash.equals(other.stopHash);
     }
 
     @Override

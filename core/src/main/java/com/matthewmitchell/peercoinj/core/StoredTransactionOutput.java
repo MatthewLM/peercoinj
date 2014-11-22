@@ -31,7 +31,7 @@ public class StoredTransactionOutput implements Serializable {
      *  A transaction output has some value and a script used for authenticating that the redeemer is allowed to spend
      *  this output.
      */
-    private BigInteger value;
+    private Coin value;
     private byte[] scriptBytes;
 
     /** Hash of the transaction to which we refer. */
@@ -53,7 +53,7 @@ public class StoredTransactionOutput implements Serializable {
      * @param height the height this output was created in
      * @param scriptBytes
      */
-    public StoredTransactionOutput(Sha256Hash hash, long index, BigInteger value, int height, boolean isCoinbase, byte[] scriptBytes) {
+    public StoredTransactionOutput(Sha256Hash hash, long index, Coin value, int height, boolean isCoinbase, byte[] scriptBytes) {
         this.hash = hash;
         this.index = index;
         this.value = value;
@@ -73,7 +73,7 @@ public class StoredTransactionOutput implements Serializable {
         byte[] valueBytes = new byte[8];
         if (in.read(valueBytes, 0, 8) != 8)
             throw new EOFException();
-        value = BigInteger.valueOf(Utils.readInt64(valueBytes, 0));
+        value = Coin.valueOf(Utils.readInt64(valueBytes, 0));
         
         int scriptBytesLength = ((in.read() & 0xFF) << 0) |
                                 ((in.read() & 0xFF) << 8) |
@@ -103,7 +103,7 @@ public class StoredTransactionOutput implements Serializable {
      * The value which this Transaction output holds
      * @return the value
      */
-    public BigInteger getValue() {
+    public Coin getValue() {
         return value;
     }
 
@@ -138,14 +138,17 @@ public class StoredTransactionOutput implements Serializable {
         return height;
     }
 
+    @Override
     public String toString() {
-        return String.format("Stored TxOut of %s (%s:%d)", Utils.peercoinValueToFriendlyString(value), hash.toString(), index);
+        return String.format("Stored TxOut of %s (%s:%d)", value.toFriendlyString(), hash.toString(), index);
     }
 
+    @Override
     public int hashCode() {
         return hash.hashCode() + (int)index;
     }
 
+    @Override
     public boolean equals(Object o) {
         if (!(o instanceof StoredTransactionOutput)) return false;
         return ((StoredTransactionOutput) o).getIndex() == this.getIndex() &&
@@ -153,7 +156,7 @@ public class StoredTransactionOutput implements Serializable {
     }
 
     public void serializeToStream(OutputStream bos) throws IOException {
-        Utils.uint64ToByteStreamLE(value, bos);
+        Utils.uint64ToByteStreamLE(BigInteger.valueOf(value.value), bos);
         
         bos.write(0xFF & scriptBytes.length >> 0);
         bos.write(0xFF & scriptBytes.length >> 8);
