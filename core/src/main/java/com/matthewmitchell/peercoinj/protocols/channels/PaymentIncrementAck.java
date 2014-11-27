@@ -1,6 +1,6 @@
-package org.bitcoinj.protocols.channels;
+package com.matthewmitchell.peercoinj.protocols.channels;
 
-import org.bitcoinj.core.Coin;
+import com.matthewmitchell.peercoinj.core.Coin;
 import com.google.protobuf.ByteString;
 
 import javax.annotation.Nullable;

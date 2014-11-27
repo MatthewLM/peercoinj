@@ -29,7 +29,7 @@ import java.util.Set;
  */
 public class Networks {
     /** Registered networks */
-    private static Set<NetworkParameters> networks = ImmutableSet.of(MainNetParams.get());
+    private static Set<NetworkParameters> networks = ImmutableSet.of((NetworkParameters)MainNetParams.get());
 
     public static Set<NetworkParameters> get() {
         return networks;

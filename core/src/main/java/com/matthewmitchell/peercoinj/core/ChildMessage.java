@@ -73,11 +73,11 @@ public abstract class ChildMessage extends Message {
             parent.unCache();
     }
     
-    @Override
     protected void adjustLength(int adjustment) {
         adjustLength(0, adjustment);
     }
 
+    @Override
     protected void adjustLength(int newArraySize, int adjustment) {
         super.adjustLength(newArraySize, adjustment);
         if (parent != null)

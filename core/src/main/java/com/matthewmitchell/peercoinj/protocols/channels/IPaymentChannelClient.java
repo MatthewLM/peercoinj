@@ -21,7 +21,7 @@ import com.matthewmitchell.peercoinj.core.InsufficientMoneyException;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import com.google.protobuf.ByteString;
-import org.bitcoin.paymentchannel.Protos;
+import com.matthewmitchell.peercoinj.paymentchannel.Protos;
 
 import javax.annotation.Nullable;
 

@@ -17,7 +17,7 @@ package com.matthewmitchell.peercoinj.crypto;
 
 import java.io.Serializable;
 
-import org.peercoinj.wallet.Protos.Wallet.EncryptionType;
+import com.matthewmitchell.peercoinj.wallet.Protos.Wallet.EncryptionType;
 import org.spongycastle.crypto.params.KeyParameter;
 
 import java.io.Serializable;

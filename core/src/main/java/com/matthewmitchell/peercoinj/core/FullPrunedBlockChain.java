@@ -1,5 +1,6 @@
 /*
  * Copyright 2012 Matt Corallo.
+ * Copyright 2014 Andreas Schildbach
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +18,10 @@
 package com.matthewmitchell.peercoinj.core;
 
 import com.matthewmitchell.peercoinj.script.Script;
-import com.matthewmitchell.peercoinj.script.ScriptVerifyFlag;
+import com.matthewmitchell.peercoinj.script.Script.VerifyFlag;
 import com.matthewmitchell.peercoinj.store.BlockStoreException;
 import com.matthewmitchell.peercoinj.store.FullPrunedBlockStore;
 import com.matthewmitchell.peercoinj.store.ValidHashStore;
-import com.matthewmitchell.peercoinj.utils.DaemonThreadFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -123,8 +123,7 @@ public class FullPrunedBlockChain extends AbstractBlockChain {
     //TODO: Remove lots of duplicated code in the two connectTransactions
     
     // TODO: execute in order of largest transaction (by input count) first
-    ExecutorService scriptVerificationExecutor = Executors.newFixedThreadPool(
-            Runtime.getRuntime().availableProcessors(), new DaemonThreadFactory());
+    ExecutorService scriptVerificationExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
     /** A job submitted to the executor which verifies signatures. */
     private static class Verifier implements Callable<VerificationException> {
@@ -188,8 +187,6 @@ public class FullPrunedBlockChain extends AbstractBlockChain {
                         sigOps += tx.getSigOpCount();
                 }
             }
-            Coin totalFees = Coin.ZERO;
-            Coin coinbaseValue = null;
             for (final Transaction tx : block.transactions) {
                 boolean isCoinBase = tx.isCoinBase();
                 Coin valueIn = Coin.ZERO;
@@ -207,11 +204,8 @@ public class FullPrunedBlockChain extends AbstractBlockChain {
                         // Coinbases can't be spent until they mature, to avoid re-orgs destroying entire transaction
                         // chains. The assumption is there will ~never be re-orgs deeper than the spendable coinbase
                         // chain depth.
-                        if (prevOut.isCoinbase()) {
-                            if (height - prevOut.getHeight() < params.getSpendableCoinbaseDepth()) {
-                                throw new VerificationException("Tried to spend coinbase at depth " + (height - prevOut.getHeight()));
-                            }
-                        }
+                        if (height - prevOut.getHeight() < params.getSpendableCoinbaseDepth())
+                            throw new VerificationException("Tried to spend coinbase at depth " + (height - prevOut.getHeight()));
                         // TODO: Check we're not spending the genesis transaction here. Satoshis code won't allow it.
                         valueIn = valueIn.add(prevOut.getValue());
                         if (verifyFlags.contains(VerifyFlag.P2SH)) {
@@ -242,13 +236,6 @@ public class FullPrunedBlockChain extends AbstractBlockChain {
                 // but we check again here just for defence in depth. Transactions with zero output value are OK.
                 if (valueOut.signum() < 0 || valueOut.compareTo(NetworkParameters.MAX_MONEY) > 0)
                     throw new VerificationException("Transaction output value out of range");
-                if (isCoinBase) {
-                    coinbaseValue = valueOut;
-                } else {
-                    if (valueIn.compareTo(valueOut) < 0 || valueIn.compareTo(NetworkParameters.MAX_MONEY) > 0)
-                        throw new VerificationException("Transaction input value out of range");
-                    totalFees = totalFees.add(valueIn.subtract(valueOut));
-                }
                 
                 if (!isCoinBase && runScripts) {
                     // Because correctlySpends modifies transactions, this must come after we are done with tx
@@ -257,8 +244,6 @@ public class FullPrunedBlockChain extends AbstractBlockChain {
                     listScriptVerificationResults.add(future);
                 }
             }
-            if (totalFees.compareTo(NetworkParameters.MAX_MONEY) > 0 || block.getBlockInflation(height).add(totalFees).compareTo(coinbaseValue) < 0)
-                throw new VerificationException("Transaction fees out of range");
             for (Future<VerificationException> future : listScriptVerificationResults) {
                 VerificationException e;
                 try {
@@ -318,9 +303,7 @@ public class FullPrunedBlockChain extends AbstractBlockChain {
                             throw new VerificationException("Block failed BIP30 test!");
                     }
                 }
-                Coin totalFees = Coin.ZERO;
-                Coin coinbaseValue = null;
-                
+
                 if (scriptVerificationExecutor.isShutdown())
                     scriptVerificationExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
                 List<Future<VerificationException>> listScriptVerificationResults = new ArrayList<Future<VerificationException>>(transactions.size());
@@ -336,7 +319,7 @@ public class FullPrunedBlockChain extends AbstractBlockChain {
                                                                                                     in.getOutpoint().getIndex());
                             if (prevOut == null)
                                 throw new VerificationException("Attempted spend of a non-existent or already spent output!");
-                            if (prevOut.isCoinbase() && newBlock.getHeight() - prevOut.getHeight() < params.getSpendableCoinbaseDepth())
+                            if (newBlock.getHeight() - prevOut.getHeight() < params.getSpendableCoinbaseDepth())
                                 throw new VerificationException("Tried to spend coinbase at depth " + (newBlock.getHeight() - prevOut.getHeight()));
                             valueIn = valueIn.add(prevOut.getValue());
                             if (verifyFlags.contains(VerifyFlag.P2SH)) {
@@ -366,13 +349,6 @@ public class FullPrunedBlockChain extends AbstractBlockChain {
                     // but we check again here just for defence in depth. Transactions with zero output value are OK.
                     if (valueOut.signum() < 0 || valueOut.compareTo(NetworkParameters.MAX_MONEY) > 0)
                         throw new VerificationException("Transaction output value out of range");
-                    if (isCoinBase) {
-                        coinbaseValue = valueOut;
-                    } else {
-                        if (valueIn.compareTo(valueOut) < 0 || valueIn.compareTo(NetworkParameters.MAX_MONEY) > 0)
-                            throw new VerificationException("Transaction input value out of range");
-                        totalFees = totalFees.add(valueIn.subtract(valueOut));
-                    }
                     
                     if (!isCoinBase) {
                         // Because correctlySpends modifies transactions, this must come after we are done with tx
@@ -381,9 +357,6 @@ public class FullPrunedBlockChain extends AbstractBlockChain {
                         listScriptVerificationResults.add(future);
                     }
                 }
-                if (totalFees.compareTo(NetworkParameters.MAX_MONEY) > 0 ||
-                        newBlock.getHeader().getBlockInflation(newBlock.getHeight()).add(totalFees).compareTo(coinbaseValue) < 0)
-                    throw new VerificationException("Transaction fees out of range");
                 txOutChanges = new TransactionOutputChanges(txOutsCreated, txOutsSpent);
                 for (Future<VerificationException> future : listScriptVerificationResults) {
                     VerificationException e;

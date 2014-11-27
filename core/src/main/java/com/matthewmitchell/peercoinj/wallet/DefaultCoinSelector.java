@@ -1,5 +1,6 @@
 package com.matthewmitchell.peercoinj.wallet;
 
+import com.matthewmitchell.peercoinj.core.Coin;
 import com.matthewmitchell.peercoinj.core.NetworkParameters;
 import com.matthewmitchell.peercoinj.core.Transaction;
 import com.matthewmitchell.peercoinj.core.TransactionConfidence;

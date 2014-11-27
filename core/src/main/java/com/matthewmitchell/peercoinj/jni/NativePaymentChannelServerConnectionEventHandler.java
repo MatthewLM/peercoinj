@@ -3,8 +3,8 @@ package com.matthewmitchell.peercoinj.jni;
 import com.matthewmitchell.peercoinj.core.*;
 import com.matthewmitchell.peercoinj.protocols.channels.PaymentChannelCloseException;
 import com.matthewmitchell.peercoinj.protocols.channels.ServerConnectionEventHandler;
-
-import java.math.BigInteger;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.protobuf.ByteString;
 
 /**
  * An event listener that relays events to a native C++ object. A pointer to that object is stored in

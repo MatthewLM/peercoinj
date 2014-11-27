@@ -358,7 +358,7 @@ public class H2FullPrunedBlockStore implements FullPrunedBlockStore {
             s.setBytes(1, hashBytes);
             s.setBytes(2, storedBlock.getChainWork().toByteArray());
             s.setInt(3, storedBlock.getHeight());
-            s.setBytes(4, storedBlock.getHeader().unsafePeercoinSerialize());
+            s.setBytes(4, storedBlock.getHeader().unsafepeercoinSerialize());
             s.setBoolean(5, wasUndoable);
             s.executeUpdate();
             s.close();
@@ -662,7 +662,7 @@ public class H2FullPrunedBlockStore implements FullPrunedBlockStore {
             }
             // Parse it.
             int height = results.getInt(1);
-            BigInteger value = new BigInteger(results.getBytes(2));
+            Coin value = Coin.valueOf(new BigInteger(results.getBytes(2)).longValue());
             // Tell the StoredTransactionOutput that we are a coinbase, as that is encoded in height
             return new StoredTransactionOutput(hash, index, value, height, true, results.getBytes(3));
         } catch (SQLException ex) {

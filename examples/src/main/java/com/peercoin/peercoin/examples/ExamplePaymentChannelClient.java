@@ -1,5 +1,6 @@
 /*
  * Copyright 2013 Google Inc.
+ * Copyright 2014 Andreas Schildbach
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,25 +19,27 @@ package com.matthewmitchell.peercoinj.examples;
 
 import com.matthewmitchell.peercoinj.core.*;
 import com.matthewmitchell.peercoinj.kits.WalletAppKit;
-import com.matthewmitchell.peercoinj.params.TestNet3Params;
+import com.matthewmitchell.peercoinj.params.RegTestParams;
 import com.matthewmitchell.peercoinj.protocols.channels.PaymentChannelClientConnection;
 import com.matthewmitchell.peercoinj.protocols.channels.StoredPaymentChannelClientStates;
 import com.matthewmitchell.peercoinj.protocols.channels.ValueOutOfRangeException;
 import com.matthewmitchell.peercoinj.utils.BriefLogFormatter;
+import com.matthewmitchell.peercoinj.utils.Threading;
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.Uninterruptibles;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 
-import static com.matthewmitchell.peercoinj.core.Utils.CENT;
-import static java.math.BigInteger.TEN;
-import static java.math.BigInteger.ZERO;
+import static com.matthewmitchell.peercoinj.core.Coin.CENT;
 
 /**
  * Simple client that connects to the given host, opens a channel, and pays one cent.
@@ -44,7 +47,7 @@ import static java.math.BigInteger.ZERO;
 public class ExamplePaymentChannelClient {
     private static final org.slf4j.Logger log = LoggerFactory.getLogger(ExamplePaymentChannelClient.class);
     private WalletAppKit appKit;
-    private final BigInteger channelSize;
+    private final Coin channelSize;
     private final ECKey myKey;
     private final NetworkParameters params;
 
@@ -57,7 +60,7 @@ public class ExamplePaymentChannelClient {
     public ExamplePaymentChannelClient() {
         channelSize = CENT;
         myKey = new ECKey();
-        params = TestNet3Params.get();
+        params = RegTestParams.get();
     }
 
     public void run(final String host) throws Exception {
@@ -66,17 +69,19 @@ public class ExamplePaymentChannelClient {
         // the plugin that knows how to parse all the additional data is present during the load.
         appKit = new WalletAppKit(params, new File("."), "payment_channel_example_client") {
             @Override
-            protected void addWalletExtensions() {
+            protected List<WalletExtension> provideWalletExtensions() {
                 // The StoredPaymentChannelClientStates object is responsible for, amongst other things, broadcasting
                 // the refund transaction if its lock time has expired. It also persists channels so we can resume them
                 // after a restart.
-                wallet().addExtension(new StoredPaymentChannelClientStates(wallet(), peerGroup()));
+                return ImmutableList.<WalletExtension>of(new StoredPaymentChannelClientStates(null, peerGroup()));
             }
         };
-        appKit.startAndWait();
+        appKit.connectToLocalHost();
+        appKit.startAsync();
+        appKit.awaitRunning();
         // We now have active network connections and a fully synced wallet.
         // Add a new key which will be used for the multisig contract.
-        appKit.wallet().addKey(myKey);
+        appKit.wallet().importKey(myKey);
         appKit.wallet().allowSpendingUnconfirmedTransactions();
 
         System.out.println(appKit.wallet());
@@ -96,17 +101,16 @@ public class ExamplePaymentChannelClient {
         // demonstrates resuming a channel that wasn't closed yet. It should close automatically once we run out
         // of money on the channel.
         log.info("Round one ...");
-        openAndSend(timeoutSecs, server, channelID);
+        openAndSend(timeoutSecs, server, channelID, 5);
         log.info("Round two ...");
         log.info(appKit.wallet().toString());
-        openAndSend(timeoutSecs, server, channelID);
-        log.info("Waiting ...");
-        Thread.sleep(60 * 60 * 1000);  // 1 hour.
+        openAndSend(timeoutSecs, server, channelID, 4);   // 4 times because the opening of the channel made a payment.
         log.info("Stopping ...");
-        appKit.stopAndWait();
+        appKit.stopAsync();
+        appKit.awaitTerminated();
     }
 
-    private void openAndSend(int timeoutSecs, InetSocketAddress server, String channelID) throws IOException, ValueOutOfRangeException, InterruptedException {
+    private void openAndSend(int timeoutSecs, InetSocketAddress server, String channelID, final int times) throws IOException, ValueOutOfRangeException, InterruptedException {
         PaymentChannelClientConnection client = new PaymentChannelClientConnection(
                 server, timeoutSecs, appKit.wallet(), myKey, channelSize, channelID);
         // Opening the channel requires talking to the server, so it's asynchronous.
@@ -114,17 +118,28 @@ public class ExamplePaymentChannelClient {
         Futures.addCallback(client.getChannelOpenFuture(), new FutureCallback<PaymentChannelClientConnection>() {
             @Override
             public void onSuccess(PaymentChannelClientConnection client) {
-                // Success! We should be able to try making micropayments now. Try doing it 5 times.
-                for (int i = 0; i < 5; i++) {
+                // By the time we get here, if the channel is new then we already made a micropayment! The reason is,
+                // we are not allowed to have payment channels that pay nothing at all.
+                log.info("Success! Trying to make {} micropayments. Already paid {} satoshis on this channel",
+                        times, client.state().getValueSpent());
+                final Coin MICROPAYMENT_SIZE = CENT.divide(10);
+                for (int i = 0; i < times; i++) {
                     try {
-                        client.incrementPayment(CENT.divide(TEN));
+                        // Wait because the act of making a micropayment is async, and we're not allowed to overlap.
+                        // This callback is running on the user thread (see the last lines in openAndSend) so it's safe
+                        // for us to block here: if we didn't select the right thread, we'd end up blocking the payment
+                        // channels thread and would deadlock.
+                        Uninterruptibles.getUninterruptibly(client.incrementPayment(MICROPAYMENT_SIZE));
                     } catch (ValueOutOfRangeException e) {
                         log.error("Failed to increment payment by a CENT, remaining value is {}", client.state().getValueRefunded());
-                        System.exit(-3);
+                        throw new RuntimeException(e);
+                    } catch (ExecutionException e) {
+                        log.error("Failed to increment payment", e);
+                        throw new RuntimeException(e);
                     }
                     log.info("Successfully sent payment of one CENT, total remaining on channel is now {}", client.state().getValueRefunded());
                 }
-                if (client.state().getValueRefunded().equals(ZERO)) {
+                if (client.state().getValueRefunded().compareTo(MICROPAYMENT_SIZE) < 0) {
                     // Now tell the server we're done so they should broadcast the final transaction and refund us what's
                     // left. If we never do this then eventually the server will time out and do it anyway and if the
                     // server goes away for longer, then eventually WE will time out and the refund tx will get broadcast
@@ -143,18 +158,18 @@ public class ExamplePaymentChannelClient {
                 log.error("Failed to open connection", throwable);
                 latch.countDown();
             }
-        });
+        }, Threading.USER_THREAD);
         latch.await();
     }
 
-    private void waitForSufficientBalance(BigInteger amount) {
+    private void waitForSufficientBalance(Coin amount) {
         // Not enough money in the wallet.
-        BigInteger amountPlusFee = amount.add(Wallet.SendRequest.DEFAULT_FEE_PER_KB);
+        Coin amountPlusFee = amount.add(Wallet.SendRequest.DEFAULT_FEE_PER_KB);
         // ESTIMATED because we don't really need to wait for confirmation.
-        ListenableFuture<BigInteger> balanceFuture = appKit.wallet().getBalanceFuture(amountPlusFee, Wallet.BalanceType.ESTIMATED);
+        ListenableFuture<Coin> balanceFuture = appKit.wallet().getBalanceFuture(amountPlusFee, Wallet.BalanceType.ESTIMATED);
         if (!balanceFuture.isDone()) {
-            System.out.println("Please send " + Utils.peercoinValueToFriendlyString(amountPlusFee) +
-                    " BTC to " + myKey.toAddress(params));
+            System.out.println("Please send " + amountPlusFee.toFriendlyString() +
+                    " to " + myKey.toAddress(params));
             Futures.getUnchecked(balanceFuture);
         }
     }

@@ -25,7 +25,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import org.bitcoin.protocols.payments.Protos;
+import com.matthewmitchell.peercoinj.protocols.payments.Protos;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
@@ -316,7 +316,7 @@ public class PaymentProtocol {
         Protos.Payment.Builder builder = Protos.Payment.newBuilder();
         for (Transaction transaction : transactions) {
             transaction.verify();
-            builder.addTransactions(ByteString.copyFrom(transaction.unsafeBitcoinSerialize()));
+            builder.addTransactions(ByteString.copyFrom(transaction.unsafepeercoinSerialize()));
         }
         if (refundOutputs != null) {
             for (Protos.Output output : refundOutputs)

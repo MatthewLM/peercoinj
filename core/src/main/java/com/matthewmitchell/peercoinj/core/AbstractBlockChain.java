@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
@@ -108,7 +107,7 @@ public abstract class AbstractBlockChain {
     // locked most of the time.
     private final Object chainHeadLock = new Object();
 
-    public final NetworkParameters params;
+    protected final NetworkParameters params;
     private final CopyOnWriteArrayList<ListenerRegistration<BlockChainListener>> listeners;
 
     // Holds a block header and, optionally, a list of tx hashes or block's transactions
@@ -181,6 +180,7 @@ public abstract class AbstractBlockChain {
                     log.warn("Rollback of block store failed, continuing with mismatched heights. This can happen due to a replay.");
                 }
             }
+        }
     }
 
     /** Removes a wallet from the chain. */
@@ -225,15 +225,7 @@ public abstract class AbstractBlockChain {
      */
     protected abstract StoredBlock addToBlockStore(StoredBlock storedPrev, Block block)
             throws BlockStoreException, VerificationException;
-
-    /**
-     * Rollback the block store to a given height. This is currently only supported by {@link BlockChain} instances.
-     * 
-     * @throws BlockStoreException
-     *             if the operation fails or is unsupported.
-     */
-    protected abstract void rollbackBlockStore(int height) throws BlockStoreException;
-
+    
     /**
      * Adds/updates the given {@link StoredBlock} with the block store.
      * This version is used when the transactions have already been verified to properly spend txOutputChanges.
@@ -246,29 +238,21 @@ public abstract class AbstractBlockChain {
     protected abstract StoredBlock addToBlockStore(StoredBlock storedPrev, Block header,
                                                    @Nullable TransactionOutputChanges txOutputChanges)
             throws BlockStoreException, VerificationException;
-    
+
+    /**
+     * Rollback the block store to a given height. This is currently only supported by {@link BlockChain} instances.
+     * 
+     * @throws BlockStoreException
+     *             if the operation fails or is unsupported.
+     */
+    protected abstract void rollbackBlockStore(int height) throws BlockStoreException;
+
     /**
      * Called before setting chain head in memory.
      * Should write the new head to block store and then commit any database transactions
      * that were started by disconnectTransactions/connectTransactions.
      */
     protected abstract void doSetChainHead(StoredBlock chainHead) throws BlockStoreException;
-
-    /**
-     * Returns the hashes of the currently stored orphan blocks and then deletes them from this objects storage.
-     * Used by Peer when a filter exhaustion event has occurred and thus any orphan blocks that have been downloaded
-     * might be inaccurate/incomplete.
-     */
-    public Set<Sha256Hash> drainOrphanBlocks() {
-        lock.lock();
-        try {
-            Set<Sha256Hash> hashes = new HashSet<Sha256Hash>(orphanBlocks.keySet());
-            orphanBlocks.clear();
-            return hashes;
-        } finally {
-            lock.unlock();
-        }
-    }
     
     /**
      * Called if we (possibly) previously called disconnectTransaction/connectTransactions,
@@ -421,7 +405,7 @@ public abstract class AbstractBlockChain {
                 log.error("Failed to verify block: ", e);
                 log.error(block.getHashAsString());
                 throw e;
-            } 
+            }
 
             // Try linking it to a place in the currently known blocks.
             StoredBlock storedPrev = getStoredBlockInCurrentScope(block.getPrevBlockHash());
@@ -457,6 +441,22 @@ public abstract class AbstractBlockChain {
 
             statsBlocksAdded++;
             return true;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Returns the hashes of the currently stored orphan blocks and then deletes them from this objects storage.
+     * Used by Peer when a filter exhaustion event has occurred and thus any orphan blocks that have been downloaded
+     * might be inaccurate/incomplete.
+     */
+    public Set<Sha256Hash> drainOrphanBlocks() {
+        lock.lock();
+        try {
+            Set<Sha256Hash> hashes = new HashSet<Sha256Hash>(orphanBlocks.keySet());
+            orphanBlocks.clear();
+            return hashes;
         } finally {
             lock.unlock();
         }

@@ -199,7 +199,7 @@ public class PaymentChannelServerState {
         log.info("Signed refund transaction.");
         this.clientOutput = refundTx.getOutput(0);
         state = State.WAITING_FOR_MULTISIG_CONTRACT;
-        return sig.encodeToBitcoin();
+        return sig.encodeToPeercoin();
     }
 
     /**
@@ -286,7 +286,7 @@ public class PaymentChannelServerState {
         checkState(state == State.READY);
         checkNotNull(refundSize);
         checkNotNull(signatureBytes);
-        TransactionSignature signature = TransactionSignature.decodeFromBitcoin(signatureBytes, true);
+        TransactionSignature signature = TransactionSignature.decodeFromPeercoin(signatureBytes, true);
         // We allow snapping to zero for the payment amount because it's treated specially later, but not less than
         // the dust level because that would prevent the transaction from being relayed/mined.
         final boolean fullyUsedUp = refundSize.equals(Coin.ZERO);
@@ -340,7 +340,7 @@ public class PaymentChannelServerState {
     // Signs the first input of the transaction which must spend the multisig contract.
     private void signMultisigInput(Transaction tx, Transaction.SigHash hashType, boolean anyoneCanPay) {
         TransactionSignature signature = tx.calculateSignature(0, serverKey, multisigScript, hashType, anyoneCanPay);
-        byte[] mySig = signature.encodeToBitcoin();
+        byte[] mySig = signature.encodeToPeercoin();
         Script scriptSig = ScriptBuilder.createMultiSigInputScriptBytes(ImmutableList.of(bestValueSignature, mySig));
         tx.getInput(0).setScriptSig(scriptSig);
     }

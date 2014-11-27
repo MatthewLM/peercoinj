@@ -1,5 +1,6 @@
 /*
  * Copyright 2011 Google Inc.
+ * Copyright 2014 Andreas Schildbach
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +23,6 @@ import com.matthewmitchell.peercoinj.store.BlockStore;
 import com.matthewmitchell.peercoinj.store.MemoryBlockStore;
 
 import java.io.File;
-import java.math.BigInteger;
 import java.net.InetAddress;
 
 /**
@@ -41,11 +41,11 @@ public class RefreshWallet {
 
         final PeerGroup peerGroup = new PeerGroup(params, chain);
         peerGroup.addAddress(new PeerAddress(InetAddress.getLocalHost()));
-        peerGroup.start();
+        peerGroup.startAsync();
 
         wallet.addEventListener(new AbstractWalletEventListener() {
             @Override
-            public synchronized void onCoinsReceived(Wallet w, Transaction tx, BigInteger prevBalance, BigInteger newBalance) {
+            public synchronized void onCoinsReceived(Wallet w, Transaction tx, Coin prevBalance, Coin newBalance) {
                 System.out.println("\nReceived tx " + tx.getHashAsString());
                 System.out.println(tx.toString());
             }
@@ -53,7 +53,7 @@ public class RefreshWallet {
 
         // Now download and process the block chain.
         peerGroup.downloadBlockChain();
-        peerGroup.stop();
+        peerGroup.stopAsync();
         wallet.saveToFile(file);
         System.out.println("\nDone!\n");
         System.out.println(wallet.toString());

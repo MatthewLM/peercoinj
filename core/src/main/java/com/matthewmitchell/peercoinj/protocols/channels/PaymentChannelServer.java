@@ -24,7 +24,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.protobuf.ByteString;
 import net.jcip.annotations.GuardedBy;
-import org.bitcoin.paymentchannel.Protos;
+import com.matthewmitchell.peercoinj.paymentchannel.Protos;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
@@ -500,7 +500,7 @@ public class PaymentChannelServer {
                 if (result != null) {
                     // Result can be null on various error paths, like if we never actually opened
                     // properly and so on.
-                    msg.getSettlementBuilder().setTx(ByteString.copyFrom(result.bitcoinSerialize()));
+                    msg.getSettlementBuilder().setTx(ByteString.copyFrom(result.peercoinSerialize()));
                     log.info("Sending CLOSE back with broadcast settlement tx.");
                 } else {
                     log.info("Sending CLOSE back without broadcast settlement tx.");

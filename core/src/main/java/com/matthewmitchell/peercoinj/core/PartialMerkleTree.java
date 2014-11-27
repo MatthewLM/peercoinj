@@ -24,7 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-import static org.bitcoinj.core.Utils.*;
+import static com.matthewmitchell.peercoinj.core.Utils.*;
 
 /**
  * <p>A data structure that contains proofs of block inclusion for one or more transactions, in an efficient manner.</p>
@@ -123,7 +123,7 @@ public class PartialMerkleTree extends Message {
         length = cursor - offset;
     }
     
-    // Based on CPartialMerkleTree::TraverseAndBuild in Bitcoin Core.
+    // Based on CPartialMerkleTree::TraverseAndBuild in Peercoin-qt.
     private static void traverseAndBuild(int height, int pos, List<Sha256Hash> allLeafHashes, byte[] includeBits,
                                          List<Boolean> matchedChildBits, List<Sha256Hash> resultHashes) {
         boolean parentOfMatch = false;

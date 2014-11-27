@@ -18,14 +18,14 @@ import com.matthewmitchell.peercoinj.core.*;
 import com.matthewmitchell.peercoinj.crypto.TrustStoreLoader;
 import com.matthewmitchell.peercoinj.params.MainNetParams;
 import com.matthewmitchell.peercoinj.protocols.payments.PaymentProtocol.PkiVerificationData;
-import com.matthewmitchell.peercoinj.uri.BitcoinURI;
+import com.matthewmitchell.peercoinj.uri.PeercoinURI;
 import com.matthewmitchell.peercoinj.utils.Threading;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.protobuf.InvalidProtocolBufferException;
 
-import org.bitcoin.protocols.payments.Protos;
+import com.matthewmitchell.peercoinj.protocols.payments.Protos;
 
 import javax.annotation.Nullable;
 
@@ -43,12 +43,12 @@ import java.util.concurrent.Callable;
  * <p>A PaymentSession can be initialized from one of the following:</p>
  *
  * <ul>
- * <li>A {@link BitcoinURI} object that conforms to BIP 0072</li>
+ * <li>A {@link PeercoinURI} object that conforms to BIP 0072</li>
  * <li>A url where the {@link Protos.PaymentRequest} can be fetched</li>
  * <li>Directly with a {@link Protos.PaymentRequest} object</li>
  * </ul>
  *
- * <p>If initialized with a BitcoinURI or a url, a network request is made for the payment request object and a
+ * <p>If initialized with a PeercoinURI or a url, a network request is made for the payment request object and a
  * ListenableFuture is returned that will be notified with the PaymentSession object after it is downloaded.</p>
  *
  * <p>Once the PaymentSession is initialized, typically a wallet application will prompt the user to confirm that the
@@ -80,44 +80,44 @@ public class PaymentSession {
 
     /**
      * <p>Returns a future that will be notified with a PaymentSession object after it is fetched using the provided uri.
-     * uri is a BIP-72-style BitcoinURI object that specifies where the {@link Protos.PaymentRequest} object may
+     * uri is a BIP-72-style PeercoinURI object that specifies where the {@link Protos.PaymentRequest} object may
      * be fetched in the r= parameter.</p>
      *
      * <p>If the payment request object specifies a PKI method, then the system trust store will be used to verify
      * the signature provided by the payment request. An exception is thrown by the future if the signature cannot
      * be verified.</p>
      */
-    public static ListenableFuture<PaymentSession> createFromBitcoinUri(final BitcoinURI uri) throws PaymentProtocolException {
-        return createFromBitcoinUri(uri, true, null);
+    public static ListenableFuture<PaymentSession> createFromPeercoinUri(final PeercoinURI uri) throws PaymentProtocolException {
+        return createFromPeercoinUri(uri, true, null);
     }
 
     /**
      * Returns a future that will be notified with a PaymentSession object after it is fetched using the provided uri.
-     * uri is a BIP-72-style BitcoinURI object that specifies where the {@link Protos.PaymentRequest} object may
+     * uri is a BIP-72-style PeercoinURI object that specifies where the {@link Protos.PaymentRequest} object may
      * be fetched in the r= parameter.
      * If verifyPki is specified and the payment request object specifies a PKI method, then the system trust store will
      * be used to verify the signature provided by the payment request. An exception is thrown by the future if the
      * signature cannot be verified.
      */
-    public static ListenableFuture<PaymentSession> createFromBitcoinUri(final BitcoinURI uri, final boolean verifyPki)
+    public static ListenableFuture<PaymentSession> createFromPeercoinUri(final PeercoinURI uri, final boolean verifyPki)
             throws PaymentProtocolException {
-        return createFromBitcoinUri(uri, verifyPki, null);
+        return createFromPeercoinUri(uri, verifyPki, null);
     }
 
     /**
      * Returns a future that will be notified with a PaymentSession object after it is fetched using the provided uri.
-     * uri is a BIP-72-style BitcoinURI object that specifies where the {@link Protos.PaymentRequest} object may
+     * uri is a BIP-72-style PeercoinURI object that specifies where the {@link Protos.PaymentRequest} object may
      * be fetched in the r= parameter.
      * If verifyPki is specified and the payment request object specifies a PKI method, then the system trust store will
      * be used to verify the signature provided by the payment request. An exception is thrown by the future if the
      * signature cannot be verified.
      * If trustStoreLoader is null, the system default trust store is used.
      */
-    public static ListenableFuture<PaymentSession> createFromBitcoinUri(final BitcoinURI uri, final boolean verifyPki, @Nullable final TrustStoreLoader trustStoreLoader)
+    public static ListenableFuture<PaymentSession> createFromPeercoinUri(final PeercoinURI uri, final boolean verifyPki, @Nullable final TrustStoreLoader trustStoreLoader)
             throws PaymentProtocolException {
         String url = uri.getPaymentRequestUrl();
         if (url == null)
-            throw new PaymentProtocolException.InvalidPaymentRequestURL("No payment request URL (r= parameter) in BitcoinURI " + uri);
+            throw new PaymentProtocolException.InvalidPaymentRequestURL("No payment request URL (r= parameter) in PeercoinURI " + uri);
         try {
             return fetchPaymentRequest(new URI(url), verifyPki, trustStoreLoader);
         } catch (URISyntaxException e) {
@@ -240,7 +240,7 @@ public class PaymentSession {
     }
 
     /**
-     * Returns the total amount of bitcoins requested.
+     * Returns the total amount of peercoins requested.
      */
     public Coin getValue() {
         return totalValue;
@@ -303,7 +303,7 @@ public class PaymentSession {
     /**
      * Generates a Payment message and sends the payment to the merchant who sent the PaymentRequest.
      * Provide transactions built by the wallet.
-     * NOTE: This does not broadcast the transactions to the bitcoin network, it merely sends a Payment message to the
+     * NOTE: This does not broadcast the transactions to the peercoin network, it merely sends a Payment message to the
      * merchant confirming the payment.
      * Returns an object wrapping PaymentACK once received.
      * If the PaymentRequest did not specify a payment_url, returns null and does nothing.

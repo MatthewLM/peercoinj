@@ -90,6 +90,9 @@ public class PeerGroup extends AbstractExecutionThreadService implements Transac
     // Addresses to try to connect to, excluding active peers.
     @GuardedBy("lock") private final PriorityQueue<PeerAddress> inactives;
     @GuardedBy("lock") private final Map<PeerAddress, ExponentialBackoff> backoffMap;
+    @GuardedBy("lock") private final ArrayList<PeerAddress> backups;
+    @GuardedBy("lock") private final ArrayList<PeerAddress> backupConnect;
+    private int backupStart = 0, backupCount = 0;
 
     // Currently active peers. This is an ordered list rather than a set to make unit tests predictable.
     private final CopyOnWriteArrayList<Peer> peers;
@@ -106,6 +109,7 @@ public class PeerGroup extends AbstractExecutionThreadService implements Transac
     private final CopyOnWriteArrayList<ListenerRegistration<PeerEventListener>> peerEventListeners;
     // Peer discovery sources, will be polled occasionally if there aren't enough inactives.
     private final CopyOnWriteArraySet<PeerDiscovery> peerDiscoverers;
+    private final CopyOnWriteArraySet<PeerDiscovery> backupDiscoverers;
     // The version message to use for new connections.
     @GuardedBy("lock") private VersionMessage versionMessage;
     // Switch for enabling download of pending transaction dependencies.
@@ -708,13 +712,13 @@ public class PeerGroup extends AbstractExecutionThreadService implements Transac
             for (InetSocketAddress address : addresses) {
             	if (address == null)
             		break;
-            	addressSet.add(new PeerAddress(address));
+            	addressList.add(new PeerAddress(address));
             }
         }
 
         lock.lock();
         try {
-            for (PeerAddress address : addressSet)
+            for (PeerAddress address : addressList)
                 if (backup) addBackup(address); else addInactive(address);
         } finally {
             lock.unlock();
@@ -727,7 +731,7 @@ public class PeerGroup extends AbstractExecutionThreadService implements Transac
         }
 
         log.info("{}eer discovery took {}msec and returned {} items", backup ? "Backup p" : "P",
-                System.currentTimeMillis() - start, addressSet.size());
+                System.currentTimeMillis() - start, addressList.size());
         
     }
 

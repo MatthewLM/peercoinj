@@ -250,8 +250,8 @@ import java.util.regex.Pattern;
  * deferential to ISO 4217, you might construct a formatter in a single line this way:
  *
  * <blockquote><pre>
- * PpcFormat f = PpcFormat.builder().style(CODE).code("XBT").build();
- * String out = f.format(COIN); <strong>// "XBT 1.00"</strong>
+ * PpcFormat f = PpcFormat.builder().style(CODE).code("PPC").build();
+ * String out = f.format(COIN); <strong>// "PPC 1.00"</strong>
  * </pre></blockquote>
  *
  * <p>See the documentation of the {@link PpcFormat.Builder} class for details.
@@ -1312,7 +1312,7 @@ public abstract class PpcFormat extends Format {
 
     /* Lazy initialization;  No reason to create all these objects unless needed for parsing */
     // coin indicator regex String; TODO: does this need to be volatile?
-    private volatile String ci = "(" + COIN_SYMBOL + "|" + COIN_SYMBOL_ALT + "|B⃦|" + COIN_CODE + "|XBT)";
+    private volatile String ci = "(" + COIN_SYMBOL + "|" + COIN_SYMBOL_ALT + "|B⃦|" + COIN_CODE + "|PPC)";
     private Pattern coinPattern;
     private volatile ScaleMatcher[] denoms;
     ScaleMatcher[] denomMatchers() {

@@ -1920,9 +1920,9 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
                     // so the exact nature of the mutation can be examined.
                     log.warn("Saw two pending transactions double spend each other");
                     log.warn("  offending input is input {}", tx.getInputs().indexOf(input));
-                    log.warn("{}: {}", tx.getHash(), Utils.HEX.encode(tx.unsafePeercoinSerialize()));
+                    log.warn("{}: {}", tx.getHash(), Utils.HEX.encode(tx.unsafepeercoinSerialize()));
                     Transaction other = input.getConnectedOutput().getSpentBy().getParentTransaction();
-                    log.warn("{}: {}", other.getHash(), Utils.HEX.encode(tx.unsafePeercoinSerialize()));
+                    log.warn("{}: {}", other.getHash(), Utils.HEX.encode(tx.unsafepeercoinSerialize()));
                 }
             } else if (result == TransactionInput.ConnectionResult.SUCCESS) {
                 // Otherwise we saw a transaction spend our coins, but we didn't try and spend them ourselves yet.
@@ -4010,7 +4010,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
     //region Fee calculation code
 
     public FeeCalculation calculateFee(SendRequest req, Coin value, List<TransactionInput> originalInputs,
-                                       , LinkedList<TransactionOutput> candidates) throws InsufficientMoneyException {
+                                       LinkedList<TransactionOutput> candidates) throws InsufficientMoneyException {
         checkState(lock.isHeldByCurrentThread());
         FeeCalculation result = new FeeCalculation();
         // There are 3 possibilities for what adding change might do:
@@ -4069,7 +4069,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
                 change = change.add(additionalValueSelected);
 
             // If change is < 0.01 PPC, we will need to discard the change
-            if (!change.equals(BigInteger.ZERO) && change.compareTo(Transaction.MIN_NONDUST_OUTPUT) < 0) {
+            if (!change.equals(Coin.ZERO) && change.compareTo(Transaction.MIN_NONDUST_OUTPUT) < 0) {
                 isCategory2 = true;
                 // Want change to go up to the minimum output amount
                 if (additionalValueForNextCategory != null)
@@ -4077,7 +4077,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
                 else 
                     additionalValueForNextCategory = Transaction.MIN_NONDUST_OUTPUT.subtract(change);
                 // Change is discarded
-                change = BigInteger.ZERO;
+                change = Coin.ZERO;
             }
 
             int size = 0;
@@ -4135,7 +4135,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
 
         if (selection2 == null && selection1 == null) {
             checkNotNull(valueMissing);
-            log.warn("Insufficient value in wallet for send: needed {} more", peercoinValueToFriendlyString(valueMissing));
+            log.warn("Insufficient value in wallet for send: needed {} more", valueMissing.toFriendlyString());
             throw new InsufficientMoneyException(valueMissing);
         }
 

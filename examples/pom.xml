@@ -21,7 +21,7 @@
     <parent>
         <groupId>com.matthewmitchell</groupId>
         <artifactId>peercoinj-parent</artifactId>
-        <version>0.11.3</version>
+        <version>0.12.2</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -39,7 +39,7 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-jdk14</artifactId>
-            <version>1.6.4</version>
+            <version>1.7.6</version>
         </dependency>
         <dependency>
             <groupId>com.h2database</groupId>

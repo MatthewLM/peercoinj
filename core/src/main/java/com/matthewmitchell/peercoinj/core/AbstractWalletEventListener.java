@@ -17,7 +17,7 @@
 package com.matthewmitchell.peercoinj.core;
 
 import com.matthewmitchell.peercoinj.script.Script;
-import org.bitcoinj.wallet.AbstractKeyChainEventListener;
+import com.matthewmitchell.peercoinj.wallet.AbstractKeyChainEventListener;
 
 import java.util.List;
 
@@ -33,6 +33,7 @@ public abstract class AbstractWalletEventListener extends AbstractKeyChainEventL
     @Override
     public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
         onChange();
+    }
 
     @Override
     public void onReorganize(Wallet wallet) {

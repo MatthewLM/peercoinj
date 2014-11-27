@@ -16,7 +16,7 @@
 
 package com.matthewmitchell.peercoinj.core;
 
-import com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkArgument;
 import com.matthewmitchell.peercoinj.store.BlockStore;
 import com.matthewmitchell.peercoinj.store.BlockStoreException;
 import com.matthewmitchell.peercoinj.store.ValidHashStore;

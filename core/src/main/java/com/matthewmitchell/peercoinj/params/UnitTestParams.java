@@ -42,7 +42,6 @@ public class UnitTestParams extends NetworkParameters {
         dumpedPrivateKeyHeader = 239;
         targetTimespan = 200000000;  // 6 years. Just a very big number.
         spendableCoinbaseDepth = 5;
-        subsidyDecreaseBlockCount = 100;
         dnsSeeds = null;
     }
 

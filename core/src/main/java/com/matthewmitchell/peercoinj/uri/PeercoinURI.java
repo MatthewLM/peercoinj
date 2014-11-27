@@ -20,8 +20,8 @@ package com.matthewmitchell.peercoinj.uri;
 
 import com.matthewmitchell.peercoinj.core.Address;
 import com.matthewmitchell.peercoinj.core.AddressFormatException;
+import com.matthewmitchell.peercoinj.core.Coin;
 import com.matthewmitchell.peercoinj.core.NetworkParameters;
-import com.matthewmitchell.peercoinj.core.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,7 +92,7 @@ public class PeercoinURI {
     public static final String FIELD_ADDRESS = "address";
     public static final String FIELD_PAYMENT_REQUEST_URL = "r";
 
-    public static final String Peercoin_SCHEME = "ppcoin";
+    public static final String PEERCOIN_SCHEME = "ppcoin";
     private static final String ENCODED_SPACE_CHARACTER = "%20";
     private static final String AMPERSAND_SEPARATOR = "&";
     private static final String QUESTION_MARK_SEPARATOR = "?";
@@ -262,7 +262,7 @@ public class PeercoinURI {
 
     /**
      * @return The amount name encoded using a pure integer value based at
-     *         10,000,000 units is 1 lat. May be null if no amount is specified
+     *         10,000,000 units is 1 PPC. May be null if no amount is specified
      */
     public Coin getAmount() {
         return (Coin) parameterMap.get(FIELD_AMOUNT);
@@ -353,7 +353,7 @@ public class PeercoinURI {
         }
         
         StringBuilder builder = new StringBuilder();
-        builder.append(Peercoin_SCHEME).append(":").append(address);
+        builder.append(PEERCOIN_SCHEME).append(":").append(address);
         
         boolean questionMarkHasBeenOutput = false;
         

@@ -98,8 +98,7 @@ public abstract class Message implements Serializable {
      * as the length will be provided as part of the header.  If unknown then set to Message.UNKNOWN_LENGTH
      * @throws ProtocolException
      */
-    Message(NetworkParameters params, byte[] payload, int offset, int protocolVersion, boolean parseLazy,
-            final boolean parseRetain, int length) throws ProtocolException {
+    Message(NetworkParameters params, byte[] payload, int offset, int protocolVersion, boolean parseLazy, boolean parseRetain, int length) throws ProtocolException {
         this.parseLazy = parseLazy;
         this.parseRetain = parseRetain;
         this.protocolVersion = protocolVersion;
@@ -132,10 +131,10 @@ public abstract class Message implements Serializable {
     private void selfCheck(byte[] payload, int offset) {
         if (!(this instanceof VersionMessage)) {
             maybeParse();
-            byte[] payloadpayload = new byte[cursor - offset];
-            System.arraycopy(payload, offset, payloadpayload, 0, cursor - offset);
+            byte[] payloadBytes = new byte[cursor - offset];
+            System.arraycopy(payload, offset, payloadBytes, 0, cursor - offset);
             byte[] reserialized = peercoinSerialize();
-            if (!Arrays.equals(reserialized, payloadpayload))
+            if (!Arrays.equals(reserialized, payloadBytes))
                 throw new RuntimeException("Serialization is wrong: \n" +
                         Utils.HEX.encode(reserialized) + " vs \n" +
                         Utils.HEX.encode(payloadBytes));
@@ -248,7 +247,6 @@ public abstract class Message implements Serializable {
      * used for unit testing
      */
     public boolean isCached() {
-        //return parseLazy ? parsed && payload != null : payload != null;
         return payload != null;
     }
 
@@ -272,18 +270,18 @@ public abstract class Message implements Serializable {
      */
     void setChecksum(byte[] checksum) {
         if (checksum.length != 4)
-            throw new IllegalArgumentException("Checksum length must be 4 payload, actual length: " + checksum.length);
+            throw new IllegalArgumentException("Checksum length must be 4 bytes, actual length: " + checksum.length);
         this.checksum = checksum;
     }
 
     /**
-     * Returns a copy of the array returned by {@link Message#unsafePeercoinSerialize()}, which is safe to mutate.
+     * Returns a copy of the array returned by {@link Message#unsafepeercoinSerialize()}, which is safe to mutate.
      * If you need extra performance and can guarantee you won't write to the array, you can use the unsafe version.
      *
      * @return a freshly allocated serialized byte array
      */
     public byte[] peercoinSerialize() {
-        byte[] payload = unsafePeercoinSerialize();
+        byte[] payload = unsafepeercoinSerialize();
         byte[] copy = new byte[payload.length];
         System.arraycopy(payload, 0, copy, 0, payload.length);
         return copy;
@@ -306,7 +304,7 @@ public abstract class Message implements Serializable {
      *
      * @return a byte array owned by this object, do NOT mutate it.
      */
-    public byte[] unsafePeercoinSerialize() {
+    public byte[] unsafepeercoinSerialize() {
         // 1st attempt to use a cached array.
         if (payload != null) {
             if (offset == 0 && length == payload.length) {
@@ -435,11 +433,11 @@ public abstract class Message implements Serializable {
     BigInteger readUint64() throws ProtocolException {
         try {
             // Java does not have an unsigned 64 bit type. So scrape it off the wire then flip.
-            byte[] valpayload = new byte[8];
-            System.arraycopy(payload, cursor, valpayload, 0, 8);
-            valpayload = Utils.reverseBytes(valpayload);
-            cursor += valpayload.length;
-            return new BigInteger(valpayload);
+            byte[] valbytes = new byte[8];
+            System.arraycopy(payload, cursor, valbytes, 0, 8);
+            valbytes = Utils.reverseBytes(valbytes);
+            cursor += valbytes.length;
+            return new BigInteger(valbytes);
         } catch (IndexOutOfBoundsException e) {
             throw new ProtocolException(e);
         }
@@ -461,6 +459,9 @@ public abstract class Message implements Serializable {
 
 
     byte[] readBytes(int length) throws ProtocolException {
+        if (length > MAX_SIZE) {
+            throw new ProtocolException("Claimed byte array length too large: " + length);
+        }
         try {
             byte[] b = new byte[length];
             System.arraycopy(payload, cursor, b, 0, length);
@@ -484,6 +485,9 @@ public abstract class Message implements Serializable {
                 return "";
             }
             cursor += varInt.getOriginalSizeInBytes();
+            if (varInt.value > MAX_SIZE) {
+                throw new ProtocolException("Claimed var_str length too large: " + varInt.value);
+            }
             byte[] characters = new byte[(int) varInt.value];
             System.arraycopy(payload, cursor, characters, 0, characters.length);
             cursor += characters.length;

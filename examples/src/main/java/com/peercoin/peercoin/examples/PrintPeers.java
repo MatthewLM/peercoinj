@@ -82,9 +82,10 @@ public class PrintPeers {
         for (final InetAddress addr : addrs) {
             InetSocketAddress address = new InetSocketAddress(addr, params.getPort());
             final Peer peer = new Peer(params, new VersionMessage(params, 0), null, new PeerAddress(address));
-            final SettableFuture future = SettableFuture.create();
+            final SettableFuture<Void> future = SettableFuture.create();
             // Once the connection has completed version handshaking ...
             peer.addEventListener(new AbstractPeerEventListener() {
+                @Override
                 public void onPeerConnected(Peer p, int peerCount) {
                     // Check the chain height it claims to have.
                     VersionMessage ver = peer.getPeerVersionMessage();
@@ -106,6 +107,7 @@ public class PrintPeers {
                     peer.close();
                 }
 
+                @Override
                 public void onPeerDisconnected(Peer p, int peerCount) {
                     if (!future.isDone())
                         System.out.println("Failed to talk to " + addr);

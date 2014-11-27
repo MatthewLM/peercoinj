@@ -229,9 +229,8 @@ public class WalletProtobufSerializer {
         
         txBuilder.setPool(getProtoPool(wtx))
                  .setHash(hashToByteString(tx.getHash()))
-                 .setVersion((int) tx.getVersion()
-                 .setTime(tx.getTime()
-        );
+                 .setVersion((int) tx.getVersion())
+                 .setTime(tx.getTime());
 
         if (tx.getUpdateTime() != null) {
             txBuilder.setUpdatedAt(tx.getUpdateTime().getTime());

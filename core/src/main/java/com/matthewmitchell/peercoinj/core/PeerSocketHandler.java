@@ -102,7 +102,7 @@ public abstract class PeerSocketHandler extends AbstractTimeoutHandler implement
                 closePending = true;
                 if (peerGroup != null) {
                 	// Handle peer death
-                	peerGroup.handlePeerDeath((Peer) this);
+                	peerGroup.handlePeerDeath((Peer) this, null);
                 }
                 return;
             }

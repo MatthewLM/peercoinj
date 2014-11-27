@@ -129,7 +129,7 @@ public class WalletFiles {
     }
 
     /** Queues up a save in the background. Useful for not very important wallet changes. */
-    public void savelater() {
+    public void saveLater() {
         if (savePending.getAndSet(true))
             return;   // Already pending.
         executor.schedule(saver, delay, delayTimeUnit);

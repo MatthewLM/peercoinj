@@ -193,9 +193,9 @@ public class Peer extends PeerSocketHandler {
      *
      * <p>Note that this does <b>NOT</b> make a connection to the given remoteAddress, it only creates a handler for a
      * connection. If you want to create a one-off connection, create a Peer and pass it to
-     * {@link org.bitcoinj.net.NioClientManager#openConnection(java.net.SocketAddress, com.matthewmitchell.peercoinj.net.StreamParser)}
+     * {@link com.matthewmitchell.peercoinj.net.NioClientManager#openConnection(java.net.SocketAddress, com.matthewmitchell.peercoinj.net.StreamParser)}
      * or
-     * {@link org.bitcoinj.net.NioClient#NioClient(java.net.SocketAddress, com.matthewmitchell.peercoinj.net.StreamParser, int)}.</p>
+     * {@link com.matthewmitchell.peercoinj.net.NioClient#NioClient(java.net.SocketAddress, com.matthewmitchell.peercoinj.net.StreamParser, int)}.</p>
      *
      * <p>The remoteAddress provided should match the remote address of the peer which is being connected to, and is
      * used to keep track of which peers relayed transactions and offer more descriptive logging.</p>
@@ -853,49 +853,6 @@ public class Peer extends PeerSocketHandler {
         pendingBlockDownloads.remove(m.getHash());
         try {
             // Otherwise it's a block sent to us because the peer thought we needed it, so add it to the block chain.
-            // The FilteredBlock m here contains a list of hashes, and may contain Transaction objects for a subset
-            // of the hashes (those that were sent to us by the remote peer). Any hashes that haven't had a tx
-            // provided in processTransaction are ones that were announced to us previously via an 'inv' so the
-            // assumption is we have already downloaded them and either put them in the wallet, or threw them away
-            // for being false positives.
-            //
-            // TODO: Fix the following protocol race.
-            // It is possible for this code to go wrong such that we miss a confirmation. If the remote peer announces
-            // a relevant transaction via an 'inv' and then it immediately announces the block that confirms
-            // the tx before we had a chance to download it+its dependencies and provide them to the wallet, then we
-            // will add the block to the chain here without the tx being in the wallet and thus it will miss its
-            // confirmation and become stuck forever. The fix is to notice that there's a pending getdata for a tx
-            // that appeared in this block and delay processing until it arrived ... it's complicated by the fact that
-            // the data may be requested by a different peer to this one.
-
-            // Ask each wallet attached to the peer/blockchain if this block exhausts the list of data items
-            // (keys/addresses) that were used to calculate the previous filter. If so, then it's possible this block
-            // is only partial. Check for discarding first so we don't check for exhaustion on blocks we already know
-            // we're going to discard, otherwise redundant filters might end up being queued and calculated.
-            lock.lock();
-            try {
-                if (awaitingFreshFilter != null) {
-                    log.info("Discarding block {} because we're still waiting for a fresh filter", m.getHash());
-                    // We must record the hashes of blocks we discard because you cannot do getblocks twice on the same
-                    // range of blocks and get an inv both times, due to the codepath in Bitcoin Core hitting
-                    // CPeer::PushInventory() which checks CPeer::setInventoryKnown and thus deduplicates.
-                    awaitingFreshFilter.add(m.getHash());
-                    return;   // Chain download process is restarted via a call to setBloomFilter.
-                } else if (checkForFilterExhaustion(m)) {
-                    // Yes, so we must abandon the attempt to process this block and any further blocks we receive,
-                    // then wait for the Bloom filter to be recalculated, sent to this peer and for the peer to acknowledge
-                    // that the new filter is now in use (which we have to simulate with a ping/pong), and then we can
-                    // safely restart the chain download with the new filter that contains a new set of lookahead keys.
-                    log.info("Bloom filter exhausted whilst processing block {}, discarding", m.getHash());
-                    awaitingFreshFilter = new LinkedList<Sha256Hash>();
-                    awaitingFreshFilter.add(m.getHash());
-                    awaitingFreshFilter.addAll(blockChain.drainOrphanBlocks());
-                    return;   // Chain download process is restarted via a call to setBloomFilter.
-                }
-            } finally {
-                lock.unlock();
-            }
-
             if (blockChain.add(m)) {
                 // The block was successfully linked into the chain. Notify the user of our progress.
                 invokeOnBlocksDownloaded(m);
@@ -941,9 +898,8 @@ public class Peer extends PeerSocketHandler {
 
     // TODO: Fix this duplication.
     private void endFilteredBlock(FilteredBlock m) {
-        if (log.isDebugEnabled()) {
+        if (log.isDebugEnabled())
             log.debug("{}: Received broadcast filtered block {}", getAddress(), m.getHash().toString());
-        }
         if (!vDownloadData) {
             log.debug("{}: Received block we did not ask for: {}", getAddress(), m.getHash().toString());
             return;
@@ -972,6 +928,35 @@ public class Peer extends PeerSocketHandler {
             // confirmation and become stuck forever. The fix is to notice that there's a pending getdata for a tx
             // that appeared in this block and delay processing until it arrived ... it's complicated by the fact that
             // the data may be requested by a different peer to this one.
+
+            // Ask each wallet attached to the peer/blockchain if this block exhausts the list of data items
+            // (keys/addresses) that were used to calculate the previous filter. If so, then it's possible this block
+            // is only partial. Check for discarding first so we don't check for exhaustion on blocks we already know
+            // we're going to discard, otherwise redundant filters might end up being queued and calculated.
+            lock.lock();
+            try {
+                if (awaitingFreshFilter != null) {
+                    log.info("Discarding block {} because we're still waiting for a fresh filter", m.getHash());
+                    // We must record the hashes of blocks we discard because you cannot do getblocks twice on the same
+                    // range of blocks and get an inv both times, due to the codepath in Bitcoin Core hitting
+                    // CPeer::PushInventory() which checks CPeer::setInventoryKnown and thus deduplicates.
+                    awaitingFreshFilter.add(m.getHash());
+                    return;   // Chain download process is restarted via a call to setBloomFilter.
+                } else if (checkForFilterExhaustion(m)) {
+                    // Yes, so we must abandon the attempt to process this block and any further blocks we receive,
+                    // then wait for the Bloom filter to be recalculated, sent to this peer and for the peer to acknowledge
+                    // that the new filter is now in use (which we have to simulate with a ping/pong), and then we can
+                    // safely restart the chain download with the new filter that contains a new set of lookahead keys.
+                    log.info("Bloom filter exhausted whilst processing block {}, discarding", m.getHash());
+                    awaitingFreshFilter = new LinkedList<Sha256Hash>();
+                    awaitingFreshFilter.add(m.getHash());
+                    awaitingFreshFilter.addAll(blockChain.drainOrphanBlocks());
+                    return;   // Chain download process is restarted via a call to setBloomFilter.
+                }
+            } finally {
+                lock.unlock();
+            }
+
             if (blockChain.add(m)) {
                 // The block was successfully linked into the chain. Notify the user of our progress.
                 invokeOnBlocksDownloaded(m.getBlockHeader());
@@ -1308,7 +1293,7 @@ public class Peer extends PeerSocketHandler {
         List<Sha256Hash> blockLocator = new ArrayList<Sha256Hash>(51);
         // For now we don't do the exponential thinning as suggested here:
         //
-        //   https://en.peercoin.it/wiki/Protocol_specification#getblocks
+        //   https://en.bitcoin.it/wiki/Protocol_specification#getblocks
         //
         // This is because it requires scanning all the block chain headers, which is very slow. Instead we add the top
         // 100 block headers. If there is a re-org deeper than that, we'll end up downloading the entire chain. We
@@ -1335,9 +1320,8 @@ public class Peer extends PeerSocketHandler {
             }
         }
         // Only add the locator if we didn't already do so. If the chain is < 50 blocks we already reached it.
-        if (cursor != null) {
+        if (cursor != null)
             blockLocator.add(params.getGenesisBlock().getHash());
-        }
 
         // Record that we requested this range of blocks so we can filter out duplicate requests in the event of a
         // block being solved during chain download.

@@ -84,7 +84,7 @@ public class Block extends Message {
     private long nonce;
 
     /** If null, it means this object holds only the headers. */
-    List<Transaction> transactions;
+    public List<Transaction> transactions;
     
     //Peercoin
     private byte[] blockSig = null;
@@ -974,7 +974,7 @@ public class Block extends Message {
      */
     @VisibleForTesting
     public Block createNextBlock(Address to, long time) {
-        return createNextBlock(to, null, time, pubkeyForTesting, Utils.toNanoCoins(50, 0));
+        return createNextBlock(to, null, time, pubkeyForTesting, Coin.valueOf(50, 0));
     }
 
     /**
@@ -990,7 +990,7 @@ public class Block extends Message {
         if (to != null) {
             // Add a transaction paying 50 coins to the "to" address.
             Transaction t = new Transaction(params);
-            t.addOutput(new TransactionOutput(params, t, Utils.toNanoCoins(50, 0), to));
+            t.addOutput(new TransactionOutput(params, t, Coin.valueOf(50, 0), to));
             // The input does not really need to be a valid signature, as long as it has the right general form.
             TransactionInput input;
             if (prevOut == null) {
@@ -1025,21 +1025,21 @@ public class Block extends Message {
 
     @VisibleForTesting
     public Block createNextBlock(@Nullable Address to, TransactionOutPoint prevOut) {
-        return createNextBlock(to, prevOut, Utils.currentTimeMillis() / 1000, pubkeyForTesting, Utils.toNanoCoins(50, 0));
+        return createNextBlock(to, prevOut, Utils.currentTimeMillis() / 1000, pubkeyForTesting, Coin.valueOf(50, 0));
     }
 
     @VisibleForTesting
-    public Block createNextBlock(@Nullable Address to, BigInteger value) {
+    public Block createNextBlock(@Nullable Address to, Coin value) {
         return createNextBlock(to, null, Utils.currentTimeMillis() / 1000, pubkeyForTesting, value);
     }
 
     @VisibleForTesting
     public Block createNextBlock(@Nullable Address to) {
-        return createNextBlock(to, Utils.toNanoCoins(50, 0));
+        return createNextBlock(to, Coin.valueOf(50, 0));
     }
 
     @VisibleForTesting
-    public Block createNextBlockWithCoinbase(byte[] pubKey, BigInteger coinbaseValue) {
+    public Block createNextBlockWithCoinbase(byte[] pubKey, Coin coinbaseValue) {
         return createNextBlock(null, null, Utils.currentTimeSeconds(), pubKey, coinbaseValue);
     }
 
@@ -1049,7 +1049,7 @@ public class Block extends Message {
      */
     @VisibleForTesting
     Block createNextBlockWithCoinbase(byte[] pubKey) {
-        return createNextBlock(null, null, Utils.currentTimeSeconds(), pubKey, Utils.toNanoCoins(50, 0));
+        return createNextBlock(null, null, Utils.currentTimeSeconds(), pubKey, Coin.valueOf(50, 0));
     }
 
     @VisibleForTesting

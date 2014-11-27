@@ -307,7 +307,7 @@ public class TransactionInput extends ChildMessage implements Serializable {
 
     /**
      * Alias for getOutpoint().getConnectedRedeemData(keyBag)
-     * @see TransactionOutPoint#getConnectedRedeemData(org.bitcoinj.wallet.KeyBag)
+     * @see TransactionOutPoint#getConnectedRedeemData(com.matthewmitchell.peercoinj.wallet.KeyBag)
      */
     @Nullable
     public RedeemData getConnectedRedeemData(KeyBag keyBag) throws ScriptException {
@@ -451,7 +451,7 @@ public class TransactionInput extends ChildMessage implements Serializable {
 
     /** Returns a copy of the input detached from its containing transaction, if need be. */
     public TransactionInput duplicateDetached() {
-        return new TransactionInput(params, null, bitcoinSerialize(), 0);
+        return new TransactionInput(params, null, peercoinSerialize(), 0);
     }
 
     /**

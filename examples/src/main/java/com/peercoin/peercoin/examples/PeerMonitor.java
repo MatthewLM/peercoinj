@@ -1,5 +1,6 @@
 /*
  * Copyright 2012 Google Inc.
+ * Copyright 2014 Andreas Schildbach
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,7 +58,7 @@ public class PeerMonitor {
     public PeerMonitor() {
         setupNetwork();
         setupGUI();
-        peerGroup.start();
+        peerGroup.startAsync();
     }
 
     private void setupNetwork() {
@@ -100,6 +101,7 @@ public class PeerMonitor {
     private void refreshUI() {
         // Tell the Swing UI thread to redraw the peers table.
         SwingUtilities.invokeLater(new Runnable() {
+            @Override
             public void run() {
                 peerTableModel.updateFromPeerGroup();
             }
@@ -113,7 +115,8 @@ public class PeerMonitor {
             @Override
             public void windowClosing(WindowEvent windowEvent) {
                 System.out.println("Shutting down ...");
-                peerGroup.stopAndWait();
+                peerGroup.stopAsync();
+                peerGroup.awaitTerminated();
                 System.out.println("Shutdown complete.");
                 System.exit(0);
             }
@@ -123,6 +126,7 @@ public class PeerMonitor {
         JLabel instructions = new JLabel("Number of peers to connect to: ");
         final SpinnerNumberModel spinnerModel = new SpinnerNumberModel(4, 0, 100, 1);
         spinnerModel.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(ChangeEvent changeEvent) {
                 peerGroup.setMaxConnections(spinnerModel.getNumber().intValue());
             }
@@ -149,6 +153,7 @@ public class PeerMonitor {
 
         // Refresh the UI every half second to get the latest ping times. The event handler runs in the UI thread.
         new Timer(1000, new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 peerTableModel.updateFromPeerGroup();
             }
@@ -172,6 +177,7 @@ public class PeerMonitor {
             fireTableDataChanged();
         }
 
+        @Override
         public int getRowCount() {
             return connectedPeers.size() + pendingPeers.size();
         }
@@ -189,10 +195,12 @@ public class PeerMonitor {
             }
         }
 
+        @Override
         public int getColumnCount() {
             return 6;
         }
 
+        @Override
         public Class<?> getColumnClass(int column) {
             switch (column) {
                 case PROTOCOL_VERSION:
@@ -206,6 +214,7 @@ public class PeerMonitor {
             }
         }
 
+        @Override
         public Object getValueAt(int row, int col) {
             if (row >= connectedPeers.size()) {
                 // Peer that isn't connected yet.
@@ -264,6 +273,7 @@ public class PeerMonitor {
             this.bold = new Font("Sans Serif", Font.BOLD, 12);
         }
 
+        @Override
         public Component getTableCellRendererComponent(JTable table, Object contents,
                                                        boolean selected, boolean hasFocus, int row, int column) {
             row = table.convertRowIndexToModel(row);

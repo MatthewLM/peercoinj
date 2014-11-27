@@ -325,7 +325,7 @@ public class PaymentChannelClientState {
     public synchronized void provideRefundSignature(byte[] theirSignature) throws VerificationException {
         checkNotNull(theirSignature);
         checkState(state == State.WAITING_FOR_SIGNED_REFUND);
-        TransactionSignature theirSig = TransactionSignature.decodeFromBitcoin(theirSignature, true);
+        TransactionSignature theirSig = TransactionSignature.decodeFromPeercoin(theirSignature, true);
         if (theirSig.sigHashMode() != Transaction.SigHash.NONE || !theirSig.anyoneCanPay())
             throw new VerificationException("Refund signature was not SIGHASH_NONE|SIGHASH_ANYONECANPAY");
         // Sign the refund transaction ourselves.

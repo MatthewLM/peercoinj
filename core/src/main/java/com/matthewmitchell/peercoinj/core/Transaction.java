@@ -93,14 +93,14 @@ public class Transaction extends ChildMessage implements Serializable {
      * If fee is lower than this value (in satoshis), a default reference client will treat it as if there were no fee.
      * Currently this is 10000 satoshis.
      */
-    public static final BigInteger REFERENCE_DEFAULT_MIN_TX_FEE = Coin.valueOf(10000);
+    public static final Coin REFERENCE_DEFAULT_MIN_TX_FEE = Coin.valueOf(10000);
 
     /**
      * Any standard (ie pay-to-address) output smaller than this value (in satoshis) will most likely be rejected by the network.
      * This is calculated by assuming a standard output will be 34 bytes, and then using the formula used in
      * {@link TransactionOutput#getMinNonDustValue(BigInteger)}. Currently it's 10000 satoshis.
      */
-    public static final BigInteger MIN_NONDUST_OUTPUT = Coin.valueOf(10000);
+    public static final Coin MIN_NONDUST_OUTPUT = Coin.valueOf(10000);
 
     // These are serialized in both peercoin and java serialization.
     private long version;
@@ -176,7 +176,7 @@ public class Transaction extends ChildMessage implements Serializable {
     public Transaction(NetworkParameters params) {
         super(params);
         version = 1;
-        time = System.currentTimeSeconds();
+        time = Utils.currentTimeSeconds();
         inputs = new ArrayList<TransactionInput>();
         outputs = new ArrayList<TransactionOutput>();
         // We don't initialize appearsIn deliberately as it's only useful for transactions stored in the wallet.
