@@ -47,11 +47,11 @@ import com.matthewmitchell.peercoinj.core.Monetary;
 public final class MonetaryFormat {
 
     /** Standard format for the PPC denomination. */
-    public static final MonetaryFormat PPC = new MonetaryFormat().shift(0).minDecimals(2).repeatOptionalDecimals(2, 3);
+    public static final MonetaryFormat PPC = new MonetaryFormat().shift(0).minDecimals(2).repeatOptionalDecimals(2, 2);
     /** Standard format for the mPPC denomination. */
     public static final MonetaryFormat MPPC = new MonetaryFormat().shift(3).minDecimals(2).optionalDecimals(2);
     /** Standard format for the µPPC denomination. */
-    public static final MonetaryFormat UPPC = new MonetaryFormat().shift(6).minDecimals(0).optionalDecimals(2);
+    public static final MonetaryFormat UPPC = new MonetaryFormat().shift(6).minDecimals(0).optionalDecimals(0);
     /** Standard format for fiat amounts. */
     public static final MonetaryFormat FIAT = new MonetaryFormat().shift(0).minDecimals(2).repeatOptionalDecimals(2, 1);
     /** Currency code for base 1 Peercoin. */
