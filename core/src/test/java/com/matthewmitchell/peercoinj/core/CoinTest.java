@@ -120,7 +120,7 @@ public class CoinTest {
         assertEquals("4321.1234", parseCoin("4321.1234").toPlainString());
         assertEquals("54321.12345", parseCoin("54321.12345").toPlainString());
         assertEquals("654321.123456", parseCoin("654321.123456").toPlainString());
-        assertEquals("2000000000000", parseCoin("2000000000000").toPlainString());
+        assertEquals("2000000000", parseCoin("2000000000").toPlainString());
         try {
             assertEquals("2000000000000.000001", parseCoin("2000000000000.000001").toPlainString());
             Assert.fail();  // More than MAX_MONEY

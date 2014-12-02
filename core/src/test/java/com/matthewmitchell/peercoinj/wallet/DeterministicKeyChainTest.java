@@ -59,16 +59,16 @@ public class DeterministicKeyChainTest {
         ECKey key1 = chain.getKey(KeyChain.KeyPurpose.RECEIVE_FUNDS);
         ECKey key2 = chain.getKey(KeyChain.KeyPurpose.RECEIVE_FUNDS);
 
-        final Address address = new Address(UnitTestParams.get(), "n1bQNoEx8uhmCzzA5JPG6sFdtsUQhwiQJV");
+        final Address address = new Address(UnitTestParams.get(), "PUfdEiYpNokhQjBJhojQwr1aed3awZhnvV");
         assertEquals(address, key1.toAddress(UnitTestParams.get()));
-        assertEquals("mnHUcqUVvrfi5kAaXJDQzBb9HsWs78b42R", key2.toAddress(UnitTestParams.get()).toString());
+        assertEquals("PFMhUknNAkieHUMj9oZZqAM63d63NeazW2", key2.toAddress(UnitTestParams.get()).toString());
         assertEquals(key1, chain.findKeyFromPubHash(address.getHash160()));
         assertEquals(key2, chain.findKeyFromPubKey(key2.getPubKey()));
 
         key1.sign(Sha256Hash.ZERO_HASH);
 
         ECKey key3 = chain.getKey(KeyChain.KeyPurpose.CHANGE);
-        assertEquals("mqumHgVDqNzuXNrszBmi7A2UpmwaPMx4HQ", key3.toAddress(UnitTestParams.get()).toString());
+        assertEquals("PJyz9bo65H3qj742ch7rx8nRaXWkZRLrTA", key3.toAddress(UnitTestParams.get()).toString());
         key3.sign(Sha256Hash.ZERO_HASH);
     }
 

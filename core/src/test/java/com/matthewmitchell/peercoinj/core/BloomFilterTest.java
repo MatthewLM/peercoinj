@@ -66,22 +66,4 @@ public class BloomFilterTest {
         assertTrue(Arrays.equals(HEX.decode("03ce4299050000000100008002"), filter.peercoinSerialize()));
     }
 
-    @Test
-    public void walletTest() throws Exception {
-        NetworkParameters params = MainNetParams.get();
-
-        DumpedPrivateKey privKey = new DumpedPrivateKey(params, "5Kg1gnAjaLfKiwhhPpGS3QfRg2m6awQvaj98JCZBZQ5SuS2F15C");
-        
-        Address addr = privKey.getKey().toAddress(params);
-        assertTrue(addr.toString().equals("17Wx1GQfyPTNWpQMHrTwRSMTCAonSiZx9e"));
-
-        KeyChainGroup group = new KeyChainGroup(params);
-        // Add a random key which happens to have been used in a recent generation
-        group.importKeys(privKey.getKey(), ECKey.fromPublicOnly(HEX.decode("02b51a5b0e88627675af1d5414aa2cab6180f5041a83cc1f01f983a90197214fe8")));
-        Wallet wallet = new Wallet(params, group);
-        wallet.commitTx(new Transaction(params, HEX.decode("01000000dd55125401f78efc61ba0efcc0a7e4cfe500243134c836ad8e711df50f7b20da7803c9e768000000006c493046022100e81fbb5e9713dce02b83d40eb12a2817afe75495a1d94c0fbe7550d5f6a8ab4b022100bdc7425a84a57dbeb645c2ef13c51ed61efa8af37157d03071e9f8d96d7815a8012102f8d2c02b00df38ca0855b3c8d8080ba464d4a107cfd0a9fa6b372c05ae3f0ab9ffffffff02d0230d04000000001976a914f64abd6e80f8c0ad346ef518627310cd58ed75b888ac80c3c901000000001976a91462498536f21c70ecba83e78e5cabf43d590d287788ac00000000")));
-        
-        // We should have 2 per pubkey, and one for the pay-2-pubkey output we have
-        assertEquals(5, wallet.getBloomFilterElementCount());
-    }
 }

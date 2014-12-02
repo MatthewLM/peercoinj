@@ -290,7 +290,7 @@ public class PaymentChannelServerState {
         // We allow snapping to zero for the payment amount because it's treated specially later, but not less than
         // the dust level because that would prevent the transaction from being relayed/mined.
         final boolean fullyUsedUp = refundSize.equals(Coin.ZERO);
-        if (refundSize.compareTo(clientOutput.getMinNonDustValue()) < 0 && !fullyUsedUp)
+        if (refundSize.compareTo(Transaction.MIN_OUTPUT_VALUE) < 0 && !fullyUsedUp)
             throw new ValueOutOfRangeException("Attempt to refund negative value or value too small to be accepted by the network");
         Coin newValueToMe = totalValue.subtract(refundSize);
         if (newValueToMe.signum() < 0)

@@ -2977,9 +2977,8 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
          * mean it has some outputs to the intended destinations, but no inputs or change address (and therefore no
          * fees) - the wallet will calculate all that for you and update tx later.</p>
          *
-         * <p>Be careful when adding outputs that you check the min output value
-         * ({@link TransactionOutput#getMinNonDustValue(Coin)}) to avoid the whole transaction being rejected
-         * because one output is dust.</p>
+         * <p>Be careful when adding outputs that you check the min output value to avoid the whole transaction being 
+         * rejected because one output is too small.</p>
          *
          * <p>If there are already inputs to the transaction, make sure their out point has a connected output,
          * otherwise their value will be added to fee.  Also ensure they are either signed or are spendable by a wallet
@@ -3041,17 +3040,6 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
         public static Coin DEFAULT_FEE_PER_KB = Transaction.REFERENCE_DEFAULT_MIN_TX_FEE;
 
         /**
-         * <p>Requires that there be enough fee for a default reference client to at least relay the transaction.
-         * (ie ensure the transaction will not be outright rejected by the network). Defaults to true, you should
-         * only set this to false if you know what you're doing.</p>
-         *
-         * <p>Note that this does not enforce certain fee rules that only apply to transactions which are larger than
-         * 26,000 bytes. If you get a transaction which is that large, you should set a fee and feePerKb of at least
-         * {@link Transaction#REFERENCE_DEFAULT_MIN_TX_FEE}.</p>
-         */
-        public boolean ensureMinRequiredFee = true;
-
-        /**
          * If true (the default), the inputs will be signed.
          */
         public boolean signInputs = true;
@@ -3103,7 +3091,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
         /**
          * <p>Creates a new SendRequest to the given address for the given value.</p>
          *
-         * <p>Be very careful when value is smaller than {@link Transaction#MIN_NONDUST_OUTPUT} as the transaction will
+         * <p>Be very careful when value is smaller than {@link Transaction#MIN_OUTPUT_VALUE} as the transaction will
          * likely be rejected by the network in this case.</p>
          */
         public static SendRequest to(Address destination, Coin value) {
@@ -3118,10 +3106,10 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
         /**
          * <p>Creates a new SendRequest to the given pubkey for the given value.</p>
          *
-         * <p>Be careful to check the output's value is reasonable using
-         * {@link TransactionOutput#getMinNonDustValue(Coin)} afterwards or you risk having the transaction
-         * rejected by the network. Note that using {@link SendRequest#to(Address, Coin)} will result
-         * in a smaller output, and thus the ability to use a smaller output value without rejection.</p>
+         * <p>Be careful to check the output's value is more or equal to the minimum allowed 
+         * afterwards or you risk having the transaction rejected by the network. Note that using 
+         * {@link SendRequest#to(Address, Coin)} will result in a smaller output, and thus the 
+         * ability to use a smaller output value without rejection.</p>
          */
         public static SendRequest to(NetworkParameters params, ECKey destination, Coin value) {
             SendRequest req = new SendRequest();
@@ -3162,7 +3150,6 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
             helper.add("changeAddress", changeAddress);
             helper.add("fee", fee);
             helper.add("feePerKb", feePerKb);
-            helper.add("ensureMinRequiredFee", ensureMinRequiredFee);
             helper.add("signInputs", signInputs);
             helper.add("aesKey", aesKey != null ? "set" : null); // careful to not leak the key
             helper.add("coinSelector", coinSelector);
@@ -3190,7 +3177,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
      * prevent this, but that should only occur once the transaction has been accepted by the network. This implies
      * you cannot have more than one outstanding sending tx at once.</p>
      *
-     * <p>You MUST ensure that the value is not smaller than {@link Transaction#MIN_NONDUST_OUTPUT} or the transaction
+     * <p>You MUST ensure that the value is not smaller than {@link Transaction#MIN_OUTPUT_VALUE} or the transaction
      * will almost certainly be rejected by the network as dust.</p>
      *
      * @param address The Peercoin address to send the money to.
@@ -3198,7 +3185,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
      * @return either the created Transaction or null if there are insufficient coins.
      * coins as spent until commitTx is called on the result.
      * @throws InsufficientMoneyException if the request could not be completed due to not enough balance.
-     * @throws DustySendRequested if the resultant transaction would violate the dust rules (an output that's too small to be worthwhile)
+     * @throws TooSmallOutput if there is an output which is below the minimum allowed amount
      * @throws CouldNotAdjustDownwards if emptying the wallet was requested and the output can't be shrunk for fees without violating a protocol rule.
      * @throws ExceededMaxTransactionSize if the resultant transaction is too big for Peercoin to process (try breaking up the amounts of value)
      */
@@ -3219,7 +3206,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
      * @return the Transaction that was created
      * @throws InsufficientMoneyException if the request could not be completed due to not enough balance.
      * @throws IllegalArgumentException if you try and complete the same SendRequest twice
-     * @throws DustySendRequested if the resultant transaction would violate the dust rules (an output that's too small to be worthwhile)
+     * @throws TooSmallOutput if there is an output which is below the minimum allowed amount
      * @throws CouldNotAdjustDownwards if emptying the wallet was requested and the output can't be shrunk for fees without violating a protocol rule.
      * @throws ExceededMaxTransactionSize if the resultant transaction is too big for Peercoin to process (try breaking up the amounts of value)
      */
@@ -3247,7 +3234,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
      * successfully broadcast. This means that even if the network hasn't heard about your transaction you won't be
      * able to spend those same coins again.</p>
      *
-     * <p>You MUST ensure that value is not smaller than {@link Transaction#MIN_NONDUST_OUTPUT} or the transaction will
+     * <p>You MUST ensure that value is not smaller than {@link Transaction#MIN_OUTPUT_VALUE} or the transaction will
      * almost certainly be rejected by the network as dust.</p>
      *
      * @param broadcaster a {@link TransactionBroadcaster} to use to send the transactions out.
@@ -3255,7 +3242,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
      * @param value How much value to send.
      * @return An object containing the transaction that was created, and a future for the broadcast of it.
      * @throws InsufficientMoneyException if the request could not be completed due to not enough balance.
-     * @throws DustySendRequested if the resultant transaction would violate the dust rules (an output that's too small to be worthwhile)
+     * @throws TooSmallOutput if there is an output which is below the minimum allowed amount
      * @throws CouldNotAdjustDownwards if emptying the wallet was requested and the output can't be shrunk for fees without violating a protocol rule.
      * @throws ExceededMaxTransactionSize if the resultant transaction is too big for Peercoin to process (try breaking up the amounts of value)
      */
@@ -3280,7 +3267,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
      * @return An object containing the transaction that was created, and a future for the broadcast of it.
      * @throws InsufficientMoneyException if the request could not be completed due to not enough balance.
      * @throws IllegalArgumentException if you try and complete the same SendRequest twice
-     * @throws DustySendRequested if the resultant transaction would violate the dust rules (an output that's too small to be worthwhile)
+     * @throws TooSmallOutput if there is an output which is below the minimum allowed amount
      * @throws CouldNotAdjustDownwards if emptying the wallet was requested and the output can't be shrunk for fees without violating a protocol rule.
      * @throws ExceededMaxTransactionSize if the resultant transaction is too big for Peercoin to process (try breaking up the amounts of value)
      */
@@ -3312,7 +3299,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
      * @throws IllegalStateException if no transaction broadcaster has been configured.
      * @throws InsufficientMoneyException if the request could not be completed due to not enough balance.
      * @throws IllegalArgumentException if you try and complete the same SendRequest twice
-     * @throws DustySendRequested if the resultant transaction would violate the dust rules (an output that's too small to be worthwhile)
+     * @throws TooSmallOutput if there is an output which is below the minimum allowed amount
      * @throws CouldNotAdjustDownwards if emptying the wallet was requested and the output can't be shrunk for fees without violating a protocol rule.
      * @throws ExceededMaxTransactionSize if the resultant transaction is too big for Peercoin to process (try breaking up the amounts of value)
      */
@@ -3331,7 +3318,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
      * @return The {@link Transaction} that was created or null if there was insufficient balance to send the coins.
      * @throws InsufficientMoneyException if the request could not be completed due to not enough balance.
      * @throws IllegalArgumentException if you try and complete the same SendRequest twice
-     * @throws DustySendRequested if the resultant transaction would violate the dust rules (an output that's too small to be worthwhile)
+     * @throws TooSmallOutput if there is an output which is below the minimum allowed amount
      * @throws CouldNotAdjustDownwards if emptying the wallet was requested and the output can't be shrunk for fees without violating a protocol rule.
      * @throws ExceededMaxTransactionSize if the resultant transaction is too big for Peercoin to process (try breaking up the amounts of value)
      */
@@ -3342,8 +3329,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
     }
 
     public static class CompletionException extends RuntimeException {}
-    public static class DustySendRequested extends CompletionException {}
-    public static class MultipleOpReturnRequested extends CompletionException {}
+    public static class TooSmallOutput extends CompletionException {}
 
     /**
      * Thrown when we were trying to empty the wallet, and the total amount of money we were trying to empty after
@@ -3360,7 +3346,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
      * @param req a SendRequest that contains the incomplete transaction and details for how to make it valid.
      * @throws InsufficientMoneyException if the request could not be completed due to not enough balance.
      * @throws IllegalArgumentException if you try and complete the same SendRequest twice
-     * @throws DustySendRequested if the resultant transaction would violate the dust rules (an output that's too small to be worthwhile)
+     * @throws TooSmallOutput if there is an output which is below the minimum allowed amount
      * @throws CouldNotAdjustDownwards if emptying the wallet was requested and the output can't be shrunk for fees without violating a protocol rule.
      * @throws ExceededMaxTransactionSize if the resultant transaction is too big for Peercoin to process (try breaking up the amounts of value)
      */
@@ -3368,9 +3354,13 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
         lock.lock();
         try {
             checkArgument(!req.completed, "Given SendRequest has already been completed.");
-            // Calculate the amount of value we need to import.
+            // Calculate the amount of value we need to import
+            // and check outputs are at least minimum values allowed
+            
             Coin value = Coin.ZERO;
             for (TransactionOutput output : req.tx.getOutputs()) {
+                if (output.getValue().compareTo(Transaction.MIN_OUTPUT_VALUE) < 0 && !req.emptyWallet)
+                    throw new TooSmallOutput();
                 value = value.add(output.getValue());
             }
 
@@ -3387,11 +3377,6 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
             value = value.subtract(totalInput);
 
             List<TransactionInput> originalInputs = new ArrayList<TransactionInput>(req.tx.getInputs());
-            int opReturnCount = 0;
-
-            if (opReturnCount > 1) { // Only 1 OP_RETURN per transaction allowed.
-                throw new MultipleOpReturnRequested();
-            }
 
             // Calculate a list of ALL potential candidates for spending and then ask a coin selector to provide us
             // with the actual outputs that'll be used to gather the required amount of value. In this way, users
@@ -3422,7 +3407,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
             for (TransactionOutput output : bestCoinSelection.gathered)
                 req.tx.addInput(output);
 
-            if (req.ensureMinRequiredFee && req.emptyWallet) {
+            if (req.emptyWallet) {
                 final Coin baseFee = req.fee == null ? Coin.ZERO : req.fee;
                 final Coin feePerKb = req.feePerKb == null ? Coin.ZERO : req.feePerKb;
                 Transaction tx = req.tx;
@@ -3534,12 +3519,16 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
         // Check if we need additional fee due to the transaction's size
         int size = tx.peercoinSerialize().length;
         size += estimateBytesForSigning(coinSelection);
-        Coin fee = baseFee.add(feePerKb.multiply((size / 1000) + 1));
+        
+        // ppcoin: Always add required fee
+        if (baseFee.compareTo(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE) < 0)
+            baseFee = Transaction.REFERENCE_DEFAULT_MIN_TX_FEE;
+        
+        Coin fee = baseFee.add(feePerKb.multiply((size / 1000)));
+        
         output.setValue(output.getValue().subtract(fee));
-        // Check if we need additional fee due to the output's value
-        if (output.getValue().compareTo(Coin.CENT) < 0 && fee.compareTo(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE) < 0)
-            output.setValue(output.getValue().subtract(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.subtract(fee)));
-        return output.getMinNonDustValue().compareTo(output.getValue()) <= 0;
+        // Fail if output is below minimum allowed value.
+        return Transaction.MIN_OUTPUT_VALUE.compareTo(output.getValue()) <= 0;
     }
 
     /**
@@ -4030,15 +4019,15 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
         while (true) {
             resetTxInputs(req, originalInputs);
 
-            Coin fees = req.fee == null ? Coin.ZERO : req.fee;
-            if (lastCalculatedSize > 0) {
-                // If the size is exactly 1000 bytes then we'll over-pay, but this should be rare.
-                fees = fees.add(req.feePerKb.multiply((lastCalculatedSize / 1000) + 1));
-            } else {
-                fees = fees.add(req.feePerKb);  // First time around the loop.
-            }
+            Coin fees = req.fee == null ? Transaction.REFERENCE_DEFAULT_MIN_TX_FEE : req.fee;
+            
+            // ppcoin: We always include the required fee
             if (fees.compareTo(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE) < 0)
                 fees = Transaction.REFERENCE_DEFAULT_MIN_TX_FEE;
+            
+            if (lastCalculatedSize > 0)
+                // If the size is exactly 1000 bytes then we'll over-pay, but this should be rare.
+                fees = fees.add(req.feePerKb.multiply(lastCalculatedSize / 1000));
 
             valueNeeded = value.add(fees);
             if (additionalValueForNextCategory != null)
@@ -4069,13 +4058,13 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
                 change = change.add(additionalValueSelected);
 
             // If change is < 0.01 PPC, we will need to discard the change
-            if (!change.equals(Coin.ZERO) && change.compareTo(Transaction.MIN_NONDUST_OUTPUT) < 0) {
+            if (!change.equals(Coin.ZERO) && change.compareTo(Transaction.MIN_OUTPUT_VALUE) < 0) {
                 isCategory2 = true;
                 // Want change to go up to the minimum output amount
                 if (additionalValueForNextCategory != null)
-                    additionalValueForNextCategory = additionalValueForNextCategory.add(Transaction.MIN_NONDUST_OUTPUT.subtract(change));
+                    additionalValueForNextCategory = additionalValueForNextCategory.add(Transaction.MIN_OUTPUT_VALUE.subtract(change));
                 else 
-                    additionalValueForNextCategory = Transaction.MIN_NONDUST_OUTPUT.subtract(change);
+                    additionalValueForNextCategory = Transaction.MIN_OUTPUT_VALUE.subtract(change);
                 // Change is discarded
                 change = Coin.ZERO;
             }

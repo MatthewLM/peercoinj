@@ -46,7 +46,7 @@ public class DefaultRiskAnalysis implements RiskAnalysis {
      * Any standard output smaller than this value (in satoshis) will be considered risky, as it's most likely be
      * rejected by the network. Currently it's 10000 satoshis.  
      */
-    public static final Coin MIN_ANALYSIS_NONDUST_OUTPUT = Transaction.MIN_NONDUST_OUTPUT;
+    public static final Coin MIN_ANALYSIS_NONDUST_OUTPUT = Transaction.MIN_OUTPUT_VALUE;
 
     protected final Transaction tx;
     protected final List<Transaction> dependencies;

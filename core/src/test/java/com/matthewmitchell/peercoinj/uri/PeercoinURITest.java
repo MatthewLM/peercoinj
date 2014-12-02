@@ -40,36 +40,36 @@ public class PeercoinURITest {
         Address goodAddress = new Address(MainNetParams.get(), MAINNET_GOOD_ADDRESS);
         
         // simple example
-        assertEquals("peercoin:" + MAINNET_GOOD_ADDRESS + "?amount=12.34&label=Hello&message=AMessage", PeercoinURI.convertToPeercoinURI(goodAddress, parseCoin("12.34"), "Hello", "AMessage"));
+        assertEquals("ppcoin:" + MAINNET_GOOD_ADDRESS + "?amount=12.34&label=Hello&message=AMessage", PeercoinURI.convertToPeercoinURI(goodAddress, parseCoin("12.34"), "Hello", "AMessage"));
         
         // example with spaces, ampersand and plus
-        assertEquals("peercoin:" + MAINNET_GOOD_ADDRESS + "?amount=12.34&label=Hello%20World&message=Mess%20%26%20age%20%2B%20hope", PeercoinURI.convertToPeercoinURI(goodAddress, parseCoin("12.34"), "Hello World", "Mess & age + hope"));
+        assertEquals("ppcoin:" + MAINNET_GOOD_ADDRESS + "?amount=12.34&label=Hello%20World&message=Mess%20%26%20age%20%2B%20hope", PeercoinURI.convertToPeercoinURI(goodAddress, parseCoin("12.34"), "Hello World", "Mess & age + hope"));
 
         // no amount, label present, message present
-        assertEquals("peercoin:" + MAINNET_GOOD_ADDRESS + "?label=Hello&message=glory", PeercoinURI.convertToPeercoinURI(goodAddress, null, "Hello", "glory"));
+        assertEquals("ppcoin:" + MAINNET_GOOD_ADDRESS + "?label=Hello&message=glory", PeercoinURI.convertToPeercoinURI(goodAddress, null, "Hello", "glory"));
         
         // amount present, no label, message present
-        assertEquals("peercoin:" + MAINNET_GOOD_ADDRESS + "?amount=0.1&message=glory", PeercoinURI.convertToPeercoinURI(goodAddress, parseCoin("0.1"), null, "glory"));
-        assertEquals("peercoin:" + MAINNET_GOOD_ADDRESS + "?amount=0.1&message=glory", PeercoinURI.convertToPeercoinURI(goodAddress, parseCoin("0.1"), "", "glory"));
+        assertEquals("ppcoin:" + MAINNET_GOOD_ADDRESS + "?amount=0.1&message=glory", PeercoinURI.convertToPeercoinURI(goodAddress, parseCoin("0.1"), null, "glory"));
+        assertEquals("ppcoin:" + MAINNET_GOOD_ADDRESS + "?amount=0.1&message=glory", PeercoinURI.convertToPeercoinURI(goodAddress, parseCoin("0.1"), "", "glory"));
 
         // amount present, label present, no message
-        assertEquals("peercoin:" + MAINNET_GOOD_ADDRESS + "?amount=12.34&label=Hello", PeercoinURI.convertToPeercoinURI(goodAddress, parseCoin("12.34"), "Hello", null));
-        assertEquals("peercoin:" + MAINNET_GOOD_ADDRESS + "?amount=12.34&label=Hello", PeercoinURI.convertToPeercoinURI(goodAddress, parseCoin("12.34"), "Hello", ""));
+        assertEquals("ppcoin:" + MAINNET_GOOD_ADDRESS + "?amount=12.34&label=Hello", PeercoinURI.convertToPeercoinURI(goodAddress, parseCoin("12.34"), "Hello", null));
+        assertEquals("ppcoin:" + MAINNET_GOOD_ADDRESS + "?amount=12.34&label=Hello", PeercoinURI.convertToPeercoinURI(goodAddress, parseCoin("12.34"), "Hello", ""));
               
         // amount present, no label, no message
-        assertEquals("peercoin:" + MAINNET_GOOD_ADDRESS + "?amount=1000", PeercoinURI.convertToPeercoinURI(goodAddress, parseCoin("1000"), null, null));
-        assertEquals("peercoin:" + MAINNET_GOOD_ADDRESS + "?amount=1000", PeercoinURI.convertToPeercoinURI(goodAddress, parseCoin("1000"), "", ""));
+        assertEquals("ppcoin:" + MAINNET_GOOD_ADDRESS + "?amount=1000", PeercoinURI.convertToPeercoinURI(goodAddress, parseCoin("1000"), null, null));
+        assertEquals("ppcoin:" + MAINNET_GOOD_ADDRESS + "?amount=1000", PeercoinURI.convertToPeercoinURI(goodAddress, parseCoin("1000"), "", ""));
         
         // no amount, label present, no message
-        assertEquals("peercoin:" + MAINNET_GOOD_ADDRESS + "?label=Hello", PeercoinURI.convertToPeercoinURI(goodAddress, null, "Hello", null));
+        assertEquals("ppcoin:" + MAINNET_GOOD_ADDRESS + "?label=Hello", PeercoinURI.convertToPeercoinURI(goodAddress, null, "Hello", null));
         
         // no amount, no label, message present
-        assertEquals("peercoin:" + MAINNET_GOOD_ADDRESS + "?message=Agatha", PeercoinURI.convertToPeercoinURI(goodAddress, null, null, "Agatha"));
-        assertEquals("peercoin:" + MAINNET_GOOD_ADDRESS + "?message=Agatha", PeercoinURI.convertToPeercoinURI(goodAddress, null, "", "Agatha"));
+        assertEquals("ppcoin:" + MAINNET_GOOD_ADDRESS + "?message=Agatha", PeercoinURI.convertToPeercoinURI(goodAddress, null, null, "Agatha"));
+        assertEquals("ppcoin:" + MAINNET_GOOD_ADDRESS + "?message=Agatha", PeercoinURI.convertToPeercoinURI(goodAddress, null, "", "Agatha"));
       
         // no amount, no label, no message
-        assertEquals("peercoin:" + MAINNET_GOOD_ADDRESS, PeercoinURI.convertToPeercoinURI(goodAddress, null, null, null));
-        assertEquals("peercoin:" + MAINNET_GOOD_ADDRESS, PeercoinURI.convertToPeercoinURI(goodAddress, null, "", ""));
+        assertEquals("ppcoin:" + MAINNET_GOOD_ADDRESS, PeercoinURI.convertToPeercoinURI(goodAddress, null, null, null));
+        assertEquals("ppcoin:" + MAINNET_GOOD_ADDRESS, PeercoinURI.convertToPeercoinURI(goodAddress, null, "", ""));
     }
 
     @Test
@@ -157,18 +157,18 @@ public class PeercoinURITest {
     public void testGood_Amount() throws PeercoinURIParseException {
         // Test the decimal parsing
         testObject = new PeercoinURI(MainNetParams.get(), PeercoinURI.PEERCOIN_SCHEME + ":" + MAINNET_GOOD_ADDRESS
-                + "?amount=6543210.12345678");
-        assertEquals("654321012345678", testObject.getAmount().toString());
+                + "?amount=6543210.123456");
+        assertEquals("6543210123456", testObject.getAmount().toString());
 
         // Test the decimal parsing
         testObject = new PeercoinURI(MainNetParams.get(), PeercoinURI.PEERCOIN_SCHEME + ":" + MAINNET_GOOD_ADDRESS
-                + "?amount=.12345678");
-        assertEquals("12345678", testObject.getAmount().toString());
+                + "?amount=.123456");
+        assertEquals("123456", testObject.getAmount().toString());
 
         // Test the integer parsing
         testObject = new PeercoinURI(MainNetParams.get(), PeercoinURI.PEERCOIN_SCHEME + ":" + MAINNET_GOOD_ADDRESS
                 + "?amount=6543210");
-        assertEquals("654321000000000", testObject.getAmount().toString());
+        assertEquals("6543210000000", testObject.getAmount().toString());
     }
 
     /**
@@ -241,7 +241,7 @@ public class PeercoinURITest {
         testObject = new PeercoinURI(MainNetParams.get(), PeercoinURI.PEERCOIN_SCHEME + ":" + MAINNET_GOOD_ADDRESS
                 + "?amount=6543210&label=Hello%20World&message=Be%20well");
         assertEquals(
-                "PeercoinURI['amount'='654321000000000','label'='Hello World','message'='Be well','address'='1KzTSfqjF2iKCduwz59nv2uqh1W2JsTxZH']",
+                "PeercoinURI['amount'='6543210000000','label'='Hello World','message'='Be well','address'='PKf1PvTHnNncWTigggeXPnt5GH6LuDsnM4']",
                 testObject.toString());
     }
 
@@ -318,7 +318,7 @@ public class PeercoinURITest {
         // Unknown not required field
         testObject = new PeercoinURI(MainNetParams.get(), PeercoinURI.PEERCOIN_SCHEME + ":" + MAINNET_GOOD_ADDRESS
                 + "?aardvark=true");
-        assertEquals("PeercoinURI['aardvark'='true','address'='1KzTSfqjF2iKCduwz59nv2uqh1W2JsTxZH']", testObject.toString());
+        assertEquals("PeercoinURI['aardvark'='true','address'='PKf1PvTHnNncWTigggeXPnt5GH6LuDsnM4']", testObject.toString());
 
         assertEquals("true", (String) testObject.getParameterByName("aardvark"));
 
@@ -344,9 +344,9 @@ public class PeercoinURITest {
     @Test
     public void brokenURIs() throws PeercoinURIParseException {
         // Check we can parse the incorrectly formatted URIs produced by blockchain.info and its iPhone app.
-        String str = "peercoin://1KzTSfqjF2iKCduwz59nv2uqh1W2JsTxZH?amount=0.01000000";
+        String str = "ppcoin://PKf1PvTHnNncWTigggeXPnt5GH6LuDsnM4?amount=0.01000000";
         PeercoinURI uri = new PeercoinURI(str);
-        assertEquals("1KzTSfqjF2iKCduwz59nv2uqh1W2JsTxZH", uri.getAddress().toString());
+        assertEquals("PKf1PvTHnNncWTigggeXPnt5GH6LuDsnM4", uri.getAddress().toString());
         assertEquals(CENT, uri.getAmount());
     }
 
@@ -365,15 +365,15 @@ public class PeercoinURITest {
     @Test(expected = PeercoinURIParseException.class)
     public void testBad_TooLargeAmount() throws PeercoinURIParseException {
         new PeercoinURI(MainNetParams.get(), PeercoinURI.PEERCOIN_SCHEME + ":" + MAINNET_GOOD_ADDRESS
-                + "?amount=100000000");
+                + "?amount=2000000001");
     }
 
     @Test
     public void testPaymentProtocolReq() throws Exception {
         // Non-backwards compatible form ...
-        PeercoinURI uri = new PeercoinURI(MainNetParams.get(), "peercoin:?r=https%3A%2F%2Fpeercoincore.org%2F%7Egavin%2Ff.php%3Fh%3Db0f02e7cea67f168e25ec9b9f9d584f9");
-        assertEquals("https://peercoincore.org/~gavin/f.php?h=b0f02e7cea67f168e25ec9b9f9d584f9", uri.getPaymentRequestUrl());
-        assertEquals(ImmutableList.of("https://peercoincore.org/~gavin/f.php?h=b0f02e7cea67f168e25ec9b9f9d584f9"),
+        PeercoinURI uri = new PeercoinURI(MainNetParams.get(), "ppcoin:?r=https%3A%2F%2Fppcoincore.org%2F%7Egavin%2Ff.php%3Fh%3Db0f02e7cea67f168e25ec9b9f9d584f9");
+        assertEquals("https://ppcoincore.org/~gavin/f.php?h=b0f02e7cea67f168e25ec9b9f9d584f9", uri.getPaymentRequestUrl());
+        assertEquals(ImmutableList.of("https://ppcoincore.org/~gavin/f.php?h=b0f02e7cea67f168e25ec9b9f9d584f9"),
                 uri.getPaymentRequestUrls());
         assertNull(uri.getAddress());
     }
@@ -381,14 +381,14 @@ public class PeercoinURITest {
     @Test
     public void testMultiplePaymentProtocolReq() throws Exception {
         PeercoinURI uri = new PeercoinURI(MainNetParams.get(),
-                "peercoin:?r=https%3A%2F%2Fpeercoincore.org%2F%7Egavin&r1=bt:112233445566");
-        assertEquals(ImmutableList.of("bt:112233445566", "https://peercoincore.org/~gavin"), uri.getPaymentRequestUrls());
-        assertEquals("https://peercoincore.org/~gavin", uri.getPaymentRequestUrl());
+                "ppcoin:?r=https%3A%2F%2Fppcoincore.org%2F%7Egavin&r1=bt:112233445566");
+        assertEquals(ImmutableList.of("bt:112233445566", "https://ppcoincore.org/~gavin"), uri.getPaymentRequestUrls());
+        assertEquals("https://ppcoincore.org/~gavin", uri.getPaymentRequestUrl());
     }
 
     @Test
     public void testNoPaymentProtocolReq() throws Exception {
-        PeercoinURI uri = new PeercoinURI(MainNetParams.get(), "peercoin:" + MAINNET_GOOD_ADDRESS);
+        PeercoinURI uri = new PeercoinURI(MainNetParams.get(), "ppcoin:" + MAINNET_GOOD_ADDRESS);
         assertNull(uri.getPaymentRequestUrl());
         assertEquals(ImmutableList.of(), uri.getPaymentRequestUrls());
         assertNotNull(uri.getAddress());
@@ -397,7 +397,7 @@ public class PeercoinURITest {
     @Test
     public void testUnescapedPaymentProtocolReq() throws Exception {
         PeercoinURI uri = new PeercoinURI(MainNetParams.get(),
-                "peercoin:?r=https://merchant.com/pay.php?h%3D2a8628fc2fbe");
+                "ppcoin:?r=https://merchant.com/pay.php?h%3D2a8628fc2fbe");
         assertEquals("https://merchant.com/pay.php?h=2a8628fc2fbe", uri.getPaymentRequestUrl());
         assertEquals(ImmutableList.of("https://merchant.com/pay.php?h=2a8628fc2fbe"), uri.getPaymentRequestUrls());
         assertNull(uri.getAddress());

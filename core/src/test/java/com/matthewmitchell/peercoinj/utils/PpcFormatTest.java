@@ -58,30 +58,24 @@ public class PpcFormatTest {
     @Test
     public void prefixTest() { // prefix b/c symbol is prefixed
         PpcFormat usFormat = PpcFormat.getSymbolInstance(Locale.US);
-        assertEquals("฿1.00", usFormat.format(COIN));
-        assertEquals("฿1.01", usFormat.format(101000000));
-        assertEquals("₥฿0.01", usFormat.format(1000));
-        assertEquals("₥฿1,011.00", usFormat.format(101100000));
-        assertEquals("₥฿1,000.01", usFormat.format(100001000));
-        assertEquals("µ฿1,000,001.00", usFormat.format(100000100));
-        assertEquals("µ฿1,000,000.10", usFormat.format(100000010));
-        assertEquals("µ฿1,000,000.01", usFormat.format(100000001));
-        assertEquals("µ฿1.00", usFormat.format(100));
-        assertEquals("µ฿0.10", usFormat.format(10));
-        assertEquals("µ฿0.01", usFormat.format(1));
+        assertEquals("Ꝑ1.00", usFormat.format(COIN));
+        assertEquals("Ꝑ1.01", usFormat.format(1010000));
+        assertEquals("₥Ꝑ0.01", usFormat.format(10));
+        assertEquals("₥Ꝑ1,011.00", usFormat.format(1011000));
+        assertEquals("₥Ꝑ1,000.01", usFormat.format(1000010));
+        assertEquals("µꝐ1,000,001", usFormat.format(1000001));
+        assertEquals("µꝐ1", usFormat.format(1));
     }
 
     @Test
     public void suffixTest() {
         PpcFormat deFormat = PpcFormat.getSymbolInstance(Locale.GERMANY);
         // int
-        assertEquals("1,00 ฿", deFormat.format(100000000));
-        assertEquals("1,01 ฿", deFormat.format(101000000));
-        assertEquals("1.011,00 ₥฿", deFormat.format(101100000));
-        assertEquals("1.000,01 ₥฿", deFormat.format(100001000));
-        assertEquals("1.000.001,00 µ฿", deFormat.format(100000100));
-        assertEquals("1.000.000,10 µ฿", deFormat.format(100000010));
-        assertEquals("1.000.000,01 µ฿", deFormat.format(100000001));
+        assertEquals("1,00 Ꝑ", deFormat.format(1000000));
+        assertEquals("1,01 Ꝑ", deFormat.format(1010000));
+        assertEquals("1.011,00 ₥Ꝑ", deFormat.format(1011000));
+        assertEquals("1.000,01 ₥Ꝑ", deFormat.format(1000010));
+        assertEquals("1.000.001 µꝐ", deFormat.format(1000001));
     }
 
     @Test
@@ -103,47 +97,47 @@ public class PpcFormatTest {
         for (int i = 0; i < locales.length; ++i) {
             String cs = ((DecimalFormat)NumberFormat.getCurrencyInstance(locales[i])).
                         getDecimalFormatSymbols().getCurrencySymbol();
-            if (cs.contains("฿")) {
+            if (cs.contains("Ꝑ")) {
                 PpcFormat bf = PpcFormat.getSymbolInstance(locales[i]);
                 String coin = bf.format(COIN);
-                assertTrue(coin.contains("Ƀ"));
-                assertFalse(coin.contains("฿"));
+                assertTrue(coin.contains("Ꝑ"));
+                assertFalse(coin.contains("Ꝑ"));
                 String milli = bf.format(valueOf(10000));
-                assertTrue(milli.contains("₥Ƀ"));
-                assertFalse(milli.contains("฿"));
+                assertTrue(milli.contains("₥Ꝑ"));
+                assertFalse(milli.contains("Ꝑ"));
                 String micro = bf.format(valueOf(100));
-                assertTrue(micro.contains("µɃ"));
-                assertFalse(micro.contains("฿"));
+                assertTrue(micro.contains("µꝐ"));
+                assertFalse(micro.contains("Ꝑ"));
                 PpcFormat ff = PpcFormat.builder().scale(0).locale(locales[i]).pattern("¤#.#").build();
-                assertEquals("Ƀ", ((PpcFixedFormat)ff).symbol());
-                assertEquals("Ƀ", ff.coinSymbol());
+                assertEquals("Ꝑ", ((PpcFixedFormat)ff).symbol());
+                assertEquals("Ꝑ", ff.coinSymbol());
                 coin = ff.format(COIN);
-                assertTrue(coin.contains("Ƀ"));
-                assertFalse(coin.contains("฿"));
+                assertTrue(coin.contains("Ꝑ"));
+                assertFalse(coin.contains("Ꝑ"));
                 PpcFormat mlff = PpcFormat.builder().scale(3).locale(locales[i]).pattern("¤#.#").build();
-                assertEquals("₥Ƀ", ((PpcFixedFormat)mlff).symbol());
-                assertEquals("Ƀ", mlff.coinSymbol());
+                assertEquals("₥Ꝑ", ((PpcFixedFormat)mlff).symbol());
+                assertEquals("Ꝑ", mlff.coinSymbol());
                 milli = mlff.format(valueOf(10000));
-                assertTrue(milli.contains("₥Ƀ"));
-                assertFalse(milli.contains("฿"));
+                assertTrue(milli.contains("₥Ꝑ"));
+                assertFalse(milli.contains("Ꝑ"));
                 PpcFormat mcff = PpcFormat.builder().scale(6).locale(locales[i]).pattern("¤#.#").build();
-                assertEquals("µɃ", ((PpcFixedFormat)mcff).symbol());
-                assertEquals("Ƀ", mcff.coinSymbol());
+                assertEquals("µꝐ", ((PpcFixedFormat)mcff).symbol());
+                assertEquals("Ꝑ", mcff.coinSymbol());
                 micro = mcff.format(valueOf(100));
-                assertTrue(micro.contains("µɃ"));
-                assertFalse(micro.contains("฿"));
+                assertTrue(micro.contains("µꝐ"));
+                assertFalse(micro.contains("Ꝑ"));
             }
-            if (cs.contains("Ƀ")) {  // NB: We don't know of any such existing locale, but check anyway.
+            if (cs.contains("Ꝑ")) {  // NB: We don't know of any such existing locale, but check anyway.
                 PpcFormat bf = PpcFormat.getInstance(locales[i]);
                 String coin = bf.format(COIN);
-                assertTrue(coin.contains("฿"));
-                assertFalse(coin.contains("Ƀ"));
+                assertTrue(coin.contains("Ꝑ"));
+                assertFalse(coin.contains("Ꝑ"));
                 String milli = bf.format(valueOf(10000));
-                assertTrue(milli.contains("₥฿"));
-                assertFalse(milli.contains("Ƀ"));
+                assertTrue(milli.contains("₥Ꝑ"));
+                assertFalse(milli.contains("Ꝑ"));
                 String micro = bf.format(valueOf(100));
-                assertTrue(micro.contains("µ฿"));
-                assertFalse(micro.contains("Ƀ"));
+                assertTrue(micro.contains("µꝐ"));
+                assertFalse(micro.contains("Ꝑ"));
             }
         }
     }
@@ -153,27 +147,19 @@ public class PpcFormatTest {
         PpcFormat usFormat = PpcFormat.getSymbolInstance(Locale.US);
         // longs are tested above
         // Coin
-        assertEquals("µ฿1,000,000.01", usFormat.format(COIN.add(valueOf(1))));
+        assertEquals("µꝐ1,000,001", usFormat.format(COIN.add(valueOf(1))));
         // Integer
-        assertEquals("µ฿21,474,836.47" ,usFormat.format(Integer.MAX_VALUE));
-        assertEquals("(µ฿21,474,836.48)" ,usFormat.format(Integer.MIN_VALUE));
+        assertEquals("µꝐ2,147,483,647" ,usFormat.format(Integer.MAX_VALUE));
+        assertEquals("(µꝐ2,147,483,648)" ,usFormat.format(Integer.MIN_VALUE));
         // Long
-        assertEquals("µ฿92,233,720,368,547,758.07" ,usFormat.format(Long.MAX_VALUE));
-        assertEquals("(µ฿92,233,720,368,547,758.08)" ,usFormat.format(Long.MIN_VALUE));
+        assertEquals("µꝐ9,223,372,036,854,775,807" ,usFormat.format(Long.MAX_VALUE));
+        assertEquals("(µꝐ9,223,372,036,854,775,808)" ,usFormat.format(Long.MIN_VALUE));
         // BigInteger
-        assertEquals("µ฿0.10" ,usFormat.format(java.math.BigInteger.TEN));
-        assertEquals("฿0.00" ,usFormat.format(java.math.BigInteger.ZERO));
+        assertEquals("₥Ꝑ0.01" ,usFormat.format(java.math.BigInteger.TEN));
+        assertEquals("Ꝑ0.00" ,usFormat.format(java.math.BigInteger.ZERO));
         // BigDecimal
-        assertEquals("฿1.00" ,usFormat.format(java.math.BigDecimal.ONE));
-        assertEquals("฿0.00" ,usFormat.format(java.math.BigDecimal.ZERO));
-        // use of Double not encouraged but no way to stop user from converting one to BigDecimal
-        assertEquals(
-            "฿179,769,313,486,231,570,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000.00",
-            usFormat.format(java.math.BigDecimal.valueOf(Double.MAX_VALUE)));
-        assertEquals("฿0.00", usFormat.format(java.math.BigDecimal.valueOf(Double.MIN_VALUE)));
-        assertEquals(
-            "฿340,282,346,638,528,860,000,000,000,000,000,000,000.00",
-            usFormat.format(java.math.BigDecimal.valueOf(Float.MAX_VALUE)));
+        assertEquals("Ꝑ1.00" ,usFormat.format(java.math.BigDecimal.ONE));
+        assertEquals("Ꝑ0.00" ,usFormat.format(java.math.BigDecimal.ZERO));
         // Bad type
         try {
             usFormat.format("1");
@@ -211,20 +197,20 @@ public class PpcFormatTest {
     public void repeatingPlaceTest() {
         PpcFormat mega = PpcFormat.getInstance(-6, US);
         Coin value = MAX_MONEY.subtract(SATOSHI);
-        assertEquals("20.99999999999999", mega.format(value, 0, PpcFixedFormat.REPEATING_PLACES));
-        assertEquals("20.99999999999999", mega.format(value, 0, PpcFixedFormat.REPEATING_PLACES));
-        assertEquals("20.99999999999999", mega.format(value, 1, PpcFixedFormat.REPEATING_PLACES));
-        assertEquals("20.99999999999999", mega.format(value, 2, PpcFixedFormat.REPEATING_PLACES));
-        assertEquals("20.99999999999999", mega.format(value, 3, PpcFixedFormat.REPEATING_PLACES));
-        assertEquals("20.99999999999999", mega.format(value, 0, PpcFixedFormat.REPEATING_DOUBLETS));
-        assertEquals("20.99999999999999", mega.format(value, 1, PpcFixedFormat.REPEATING_DOUBLETS));
-        assertEquals("20.99999999999999", mega.format(value, 2, PpcFixedFormat.REPEATING_DOUBLETS));
-        assertEquals("20.99999999999999", mega.format(value, 3, PpcFixedFormat.REPEATING_DOUBLETS));
-        assertEquals("20.99999999999999", mega.format(value, 0, PpcFixedFormat.REPEATING_TRIPLETS));
-        assertEquals("20.99999999999999", mega.format(value, 1, PpcFixedFormat.REPEATING_TRIPLETS));
-        assertEquals("20.99999999999999", mega.format(value, 2, PpcFixedFormat.REPEATING_TRIPLETS));
-        assertEquals("20.99999999999999", mega.format(value, 3, PpcFixedFormat.REPEATING_TRIPLETS));
-        assertEquals("1.00000005", PpcFormat.getCoinInstance(US).
+        assertEquals("1,999.999999999999", mega.format(value, 0, PpcFixedFormat.REPEATING_PLACES));
+        assertEquals("1,999.999999999999", mega.format(value, 0, PpcFixedFormat.REPEATING_PLACES));
+        assertEquals("1,999.999999999999", mega.format(value, 1, PpcFixedFormat.REPEATING_PLACES));
+        assertEquals("1,999.999999999999", mega.format(value, 2, PpcFixedFormat.REPEATING_PLACES));
+        assertEquals("1,999.999999999999", mega.format(value, 3, PpcFixedFormat.REPEATING_PLACES));
+        assertEquals("1,999.999999999999", mega.format(value, 0, PpcFixedFormat.REPEATING_DOUBLETS));
+        assertEquals("1,999.999999999999", mega.format(value, 1, PpcFixedFormat.REPEATING_DOUBLETS));
+        assertEquals("1,999.999999999999", mega.format(value, 2, PpcFixedFormat.REPEATING_DOUBLETS));
+        assertEquals("1,999.999999999999", mega.format(value, 3, PpcFixedFormat.REPEATING_DOUBLETS));
+        assertEquals("1,999.999999999999", mega.format(value, 0, PpcFixedFormat.REPEATING_TRIPLETS));
+        assertEquals("1,999.999999999999", mega.format(value, 1, PpcFixedFormat.REPEATING_TRIPLETS));
+        assertEquals("1,999.999999999999", mega.format(value, 2, PpcFixedFormat.REPEATING_TRIPLETS));
+        assertEquals("1,999.999999999999", mega.format(value, 3, PpcFixedFormat.REPEATING_TRIPLETS));
+        assertEquals("1.000005", PpcFormat.getCoinInstance(US).
                                    format(COIN.add(Coin.valueOf(5)), 0, PpcFixedFormat.REPEATING_PLACES));
     }
 
@@ -242,9 +228,9 @@ public class PpcFormatTest {
 
         char c;
         i = PpcFormat.getCodeInstance(Locale.US).formatToCharacterIterator(new BigDecimal("0.19246362747414458"));
-        // formatted as "µPPC 192,463.63"
+        // formatted as "µPPC 192,464"
         assertEquals(0, i.getBeginIndex());
-        assertEquals(15, i.getEndIndex());
+        assertEquals(12, i.getEndIndex());
         int n = 0;
         for(c = i.first(); i.getAttribute(NumberFormat.Field.CURRENCY) != null; c = i.next()) {
             n++;
@@ -261,13 +247,6 @@ public class PpcFormatTest {
             n++;
         }
         assertEquals(3, n);
-        assertEquals(NumberFormat.Field.DECIMAL_SEPARATOR, i.getAttribute(NumberFormat.Field.DECIMAL_SEPARATOR));
-        n = 0;
-        for(c = i.next(); c != CharacterIterator.DONE; c = i.next()) {
-            n++;
-            assertNotNull(i.getAttribute(NumberFormat.Field.FRACTION));
-        }
-        assertEquals(2,n);
 
         // immutability check
         PpcFormat fa = PpcFormat.getSymbolInstance(US);
@@ -287,203 +266,203 @@ public class PpcFormatTest {
         PpcFormat us = PpcFormat.getSymbolInstance(Locale.US);
         PpcFormat usCoded = PpcFormat.getCodeInstance(Locale.US);
         // Coins
-        assertEquals(valueOf(200000000), us.parseObject("PPC2"));
-        assertEquals(valueOf(200000000), us.parseObject("PPC2"));
-        assertEquals(valueOf(200000000), us.parseObject("฿2"));
-        assertEquals(valueOf(200000000), us.parseObject("Ƀ2"));
-        assertEquals(valueOf(200000000), us.parseObject("2"));
-        assertEquals(valueOf(200000000), usCoded.parseObject("PPC 2"));
-        assertEquals(valueOf(200000000), usCoded.parseObject("PPC 2"));
-        assertEquals(valueOf(200000000), us.parseObject("฿2.0"));
-        assertEquals(valueOf(200000000), us.parseObject("Ƀ2.0"));
-        assertEquals(valueOf(200000000), us.parseObject("2.0"));
-        assertEquals(valueOf(200000000), us.parseObject("PPC2.0"));
-        assertEquals(valueOf(200000000), us.parseObject("PPC2.0"));
-        assertEquals(valueOf(200000000), usCoded.parseObject("฿ 2"));
-        assertEquals(valueOf(200000000), usCoded.parseObject("Ƀ 2"));
-        assertEquals(valueOf(200000000), usCoded.parseObject(" 2"));
-        assertEquals(valueOf(200000000), usCoded.parseObject("PPC 2"));
-        assertEquals(valueOf(200000000), usCoded.parseObject("PPC 2"));
-        assertEquals(valueOf(202222420000000L), us.parseObject("2,022,224.20"));
-        assertEquals(valueOf(202222420000000L), us.parseObject("฿2,022,224.20"));
-        assertEquals(valueOf(202222420000000L), us.parseObject("Ƀ2,022,224.20"));
-        assertEquals(valueOf(202222420000000L), us.parseObject("PPC2,022,224.20"));
-        assertEquals(valueOf(202222420000000L), us.parseObject("PPC2,022,224.20"));
-        assertEquals(valueOf(220200000000L), us.parseObject("2,202.0"));
-        assertEquals(valueOf(2100000000000000L), us.parseObject("21000000.00000000"));
+        assertEquals(valueOf(2000000), us.parseObject("PPC2"));
+        assertEquals(valueOf(2000000), us.parseObject("PPC2"));
+        assertEquals(valueOf(2000000), us.parseObject("Ꝑ2"));
+        assertEquals(valueOf(2000000), us.parseObject("Ꝑ2"));
+        assertEquals(valueOf(2000000), us.parseObject("2"));
+        assertEquals(valueOf(2000000), usCoded.parseObject("PPC 2"));
+        assertEquals(valueOf(2000000), usCoded.parseObject("PPC 2"));
+        assertEquals(valueOf(2000000), us.parseObject("Ꝑ2.0"));
+        assertEquals(valueOf(2000000), us.parseObject("Ꝑ2.0"));
+        assertEquals(valueOf(2000000), us.parseObject("2.0"));
+        assertEquals(valueOf(2000000), us.parseObject("PPC2.0"));
+        assertEquals(valueOf(2000000), us.parseObject("PPC2.0"));
+        assertEquals(valueOf(2000000), usCoded.parseObject("Ꝑ 2"));
+        assertEquals(valueOf(2000000), usCoded.parseObject("Ꝑ 2"));
+        assertEquals(valueOf(2000000), usCoded.parseObject(" 2"));
+        assertEquals(valueOf(2000000), usCoded.parseObject("PPC 2"));
+        assertEquals(valueOf(2000000), usCoded.parseObject("PPC 2"));
+        assertEquals(valueOf(2022224200000L), us.parseObject("2,022,224.20"));
+        assertEquals(valueOf(2022224200000L), us.parseObject("Ꝑ2,022,224.20"));
+        assertEquals(valueOf(2022224200000L), us.parseObject("Ꝑ2,022,224.20"));
+        assertEquals(valueOf(2022224200000L), us.parseObject("PPC2,022,224.20"));
+        assertEquals(valueOf(2022224200000L), us.parseObject("PPC2,022,224.20"));
+        assertEquals(valueOf(2202000000L), us.parseObject("2,202.0"));
+        assertEquals(valueOf(21000000000000L), us.parseObject("21000000.000000"));
         // MilliCoins
-        assertEquals(valueOf(200000), usCoded.parseObject("mPPC 2"));
-        assertEquals(valueOf(200000), usCoded.parseObject("mPPC 2"));
-        assertEquals(valueOf(200000), usCoded.parseObject("m฿ 2"));
-        assertEquals(valueOf(200000), usCoded.parseObject("mɃ 2"));
-        assertEquals(valueOf(200000), us.parseObject("mPPC2"));
-        assertEquals(valueOf(200000), us.parseObject("mPPC2"));
-        assertEquals(valueOf(200000), us.parseObject("₥฿2"));
-        assertEquals(valueOf(200000), us.parseObject("₥Ƀ2"));
-        assertEquals(valueOf(200000), us.parseObject("₥2"));
-        assertEquals(valueOf(200000), usCoded.parseObject("₥PPC 2.00"));
-        assertEquals(valueOf(200000), usCoded.parseObject("₥PPC 2.00"));
-        assertEquals(valueOf(200000), usCoded.parseObject("₥PPC 2"));
-        assertEquals(valueOf(200000), usCoded.parseObject("₥PPC 2"));
-        assertEquals(valueOf(200000), usCoded.parseObject("₥฿ 2"));
-        assertEquals(valueOf(200000), usCoded.parseObject("₥Ƀ 2"));
-        assertEquals(valueOf(200000), usCoded.parseObject("₥ 2"));
-        assertEquals(valueOf(202222400000L), us.parseObject("₥฿2,022,224"));
-        assertEquals(valueOf(202222420000L), us.parseObject("₥Ƀ2,022,224.20"));
-        assertEquals(valueOf(202222400000L), us.parseObject("m฿2,022,224"));
-        assertEquals(valueOf(202222420000L), us.parseObject("mɃ2,022,224.20"));
-        assertEquals(valueOf(202222400000L), us.parseObject("₥PPC2,022,224"));
-        assertEquals(valueOf(202222400000L), us.parseObject("₥PPC2,022,224"));
-        assertEquals(valueOf(202222400000L), us.parseObject("mPPC2,022,224"));
-        assertEquals(valueOf(202222400000L), us.parseObject("mPPC2,022,224"));
-        assertEquals(valueOf(202222420000L), us.parseObject("₥2,022,224.20"));
-        assertEquals(valueOf(202222400000L), usCoded.parseObject("₥฿ 2,022,224"));
-        assertEquals(valueOf(202222420000L), usCoded.parseObject("₥Ƀ 2,022,224.20"));
-        assertEquals(valueOf(202222400000L), usCoded.parseObject("m฿ 2,022,224"));
-        assertEquals(valueOf(202222420000L), usCoded.parseObject("mɃ 2,022,224.20"));
-        assertEquals(valueOf(202222400000L), usCoded.parseObject("₥PPC 2,022,224"));
-        assertEquals(valueOf(202222400000L), usCoded.parseObject("₥PPC 2,022,224"));
-        assertEquals(valueOf(202222400000L), usCoded.parseObject("mPPC 2,022,224"));
-        assertEquals(valueOf(202222400000L), usCoded.parseObject("mPPC 2,022,224"));
-        assertEquals(valueOf(202222420000L), usCoded.parseObject("₥ 2,022,224.20"));
+        assertEquals(valueOf(2000), usCoded.parseObject("mPPC 2"));
+        assertEquals(valueOf(2000), usCoded.parseObject("mPPC 2"));
+        assertEquals(valueOf(2000), usCoded.parseObject("mꝐ 2"));
+        assertEquals(valueOf(2000), usCoded.parseObject("mꝐ 2"));
+        assertEquals(valueOf(2000), us.parseObject("mPPC2"));
+        assertEquals(valueOf(2000), us.parseObject("mPPC2"));
+        assertEquals(valueOf(2000), us.parseObject("₥Ꝑ2"));
+        assertEquals(valueOf(2000), us.parseObject("₥Ꝑ2"));
+        assertEquals(valueOf(2000), us.parseObject("₥2"));
+        assertEquals(valueOf(2000), usCoded.parseObject("₥PPC 2.00"));
+        assertEquals(valueOf(2000), usCoded.parseObject("₥PPC 2.00"));
+        assertEquals(valueOf(2000), usCoded.parseObject("₥PPC 2"));
+        assertEquals(valueOf(2000), usCoded.parseObject("₥PPC 2"));
+        assertEquals(valueOf(2000), usCoded.parseObject("₥Ꝑ 2"));
+        assertEquals(valueOf(2000), usCoded.parseObject("₥Ꝑ 2"));
+        assertEquals(valueOf(2000), usCoded.parseObject("₥ 2"));
+        assertEquals(valueOf(2022224000L), us.parseObject("₥Ꝑ2,022,224"));
+        assertEquals(valueOf(2022224200L), us.parseObject("₥Ꝑ2,022,224.20"));
+        assertEquals(valueOf(2022224000L), us.parseObject("mꝐ2,022,224"));
+        assertEquals(valueOf(2022224200L), us.parseObject("mꝐ2,022,224.20"));
+        assertEquals(valueOf(2022224000L), us.parseObject("₥PPC2,022,224"));
+        assertEquals(valueOf(2022224000L), us.parseObject("₥PPC2,022,224"));
+        assertEquals(valueOf(2022224000L), us.parseObject("mPPC2,022,224"));
+        assertEquals(valueOf(2022224000L), us.parseObject("mPPC2,022,224"));
+        assertEquals(valueOf(2022224200L), us.parseObject("₥2,022,224.20"));
+        assertEquals(valueOf(2022224000L), usCoded.parseObject("₥Ꝑ 2,022,224"));
+        assertEquals(valueOf(2022224200L), usCoded.parseObject("₥Ꝑ 2,022,224.20"));
+        assertEquals(valueOf(2022224000L), usCoded.parseObject("mꝐ 2,022,224"));
+        assertEquals(valueOf(2022224200L), usCoded.parseObject("mꝐ 2,022,224.20"));
+        assertEquals(valueOf(2022224000L), usCoded.parseObject("₥PPC 2,022,224"));
+        assertEquals(valueOf(2022224000L), usCoded.parseObject("₥PPC 2,022,224"));
+        assertEquals(valueOf(2022224000L), usCoded.parseObject("mPPC 2,022,224"));
+        assertEquals(valueOf(2022224000L), usCoded.parseObject("mPPC 2,022,224"));
+        assertEquals(valueOf(2022224200L), usCoded.parseObject("₥ 2,022,224.20"));
         // Microcoins
-        assertEquals(valueOf(435), us.parseObject("µ฿4.35"));
-        assertEquals(valueOf(435), us.parseObject("uɃ4.35"));
-        assertEquals(valueOf(435), us.parseObject("u฿4.35"));
-        assertEquals(valueOf(435), us.parseObject("µɃ4.35"));
-        assertEquals(valueOf(435), us.parseObject("uPPC4.35"));
-        assertEquals(valueOf(435), us.parseObject("uPPC4.35"));
-        assertEquals(valueOf(435), us.parseObject("µPPC4.35"));
-        assertEquals(valueOf(435), us.parseObject("µPPC4.35"));
-        assertEquals(valueOf(435), usCoded.parseObject("uPPC 4.35"));
-        assertEquals(valueOf(435), usCoded.parseObject("uPPC 4.35"));
-        assertEquals(valueOf(435), usCoded.parseObject("µPPC 4.35"));
-        assertEquals(valueOf(435), usCoded.parseObject("µPPC 4.35"));
+        assertEquals(valueOf(4), us.parseObject("µꝐ4"));
+        assertEquals(valueOf(4), us.parseObject("uꝐ4"));
+        assertEquals(valueOf(4), us.parseObject("uꝐ4"));
+        assertEquals(valueOf(4), us.parseObject("µꝐ4"));
+        assertEquals(valueOf(4), us.parseObject("uPPC4"));
+        assertEquals(valueOf(4), us.parseObject("uPPC4"));
+        assertEquals(valueOf(4), us.parseObject("µPPC4"));
+        assertEquals(valueOf(4), us.parseObject("µPPC4"));
+        assertEquals(valueOf(4), usCoded.parseObject("uPPC 4"));
+        assertEquals(valueOf(4), usCoded.parseObject("uPPC 4"));
+        assertEquals(valueOf(4), usCoded.parseObject("µPPC 4"));
+        assertEquals(valueOf(4), usCoded.parseObject("µPPC 4"));
         // fractional satoshi; round up
-        assertEquals(valueOf(435), us.parseObject("uPPC4.345"));
-        assertEquals(valueOf(435), us.parseObject("uPPC4.345"));
+        assertEquals(valueOf(5), us.parseObject("uPPC4.5"));
+        assertEquals(valueOf(5), us.parseObject("uPPC4.5"));
         // negative with mu symbol
-        assertEquals(valueOf(-1), usCoded.parseObject("(µ฿ 0.01)"));
-        assertEquals(valueOf(-10), us.parseObject("(µPPC0.100)"));
-        assertEquals(valueOf(-10), us.parseObject("(µPPC0.100)"));
+        assertEquals(valueOf(-1), usCoded.parseObject("(µꝐ 1)"));
+        assertEquals(valueOf(-10), us.parseObject("(µPPC10)"));
+        assertEquals(valueOf(-10), us.parseObject("(µPPC10)"));
 
         // Same thing with addition of custom code, symbol
         us = PpcFormat.builder().locale(US).style(SYMBOL).symbol("£").code("XYZ").build();
         usCoded = PpcFormat.builder().locale(US).scale(0).symbol("£").code("XYZ").
                             pattern("¤ #,##0.00").build();
         // Coins
-        assertEquals(valueOf(200000000), us.parseObject("XYZ2"));
-        assertEquals(valueOf(200000000), us.parseObject("PPC2"));
-        assertEquals(valueOf(200000000), us.parseObject("PPC2"));
-        assertEquals(valueOf(200000000), us.parseObject("£2"));
-        assertEquals(valueOf(200000000), us.parseObject("฿2"));
-        assertEquals(valueOf(200000000), us.parseObject("Ƀ2"));
-        assertEquals(valueOf(200000000), us.parseObject("2"));
-        assertEquals(valueOf(200000000), usCoded.parseObject("XYZ 2"));
-        assertEquals(valueOf(200000000), usCoded.parseObject("PPC 2"));
-        assertEquals(valueOf(200000000), usCoded.parseObject("PPC 2"));
-        assertEquals(valueOf(200000000), us.parseObject("£2.0"));
-        assertEquals(valueOf(200000000), us.parseObject("฿2.0"));
-        assertEquals(valueOf(200000000), us.parseObject("Ƀ2.0"));
-        assertEquals(valueOf(200000000), us.parseObject("2.0"));
-        assertEquals(valueOf(200000000), us.parseObject("XYZ2.0"));
-        assertEquals(valueOf(200000000), us.parseObject("PPC2.0"));
-        assertEquals(valueOf(200000000), us.parseObject("PPC2.0"));
-        assertEquals(valueOf(200000000), usCoded.parseObject("£ 2"));
-        assertEquals(valueOf(200000000), usCoded.parseObject("฿ 2"));
-        assertEquals(valueOf(200000000), usCoded.parseObject("Ƀ 2"));
-        assertEquals(valueOf(200000000), usCoded.parseObject(" 2"));
-        assertEquals(valueOf(200000000), usCoded.parseObject("XYZ 2"));
-        assertEquals(valueOf(200000000), usCoded.parseObject("PPC 2"));
-        assertEquals(valueOf(200000000), usCoded.parseObject("PPC 2"));
-        assertEquals(valueOf(202222420000000L), us.parseObject("2,022,224.20"));
-        assertEquals(valueOf(202222420000000L), us.parseObject("£2,022,224.20"));
-        assertEquals(valueOf(202222420000000L), us.parseObject("฿2,022,224.20"));
-        assertEquals(valueOf(202222420000000L), us.parseObject("Ƀ2,022,224.20"));
-        assertEquals(valueOf(202222420000000L), us.parseObject("XYZ2,022,224.20"));
-        assertEquals(valueOf(202222420000000L), us.parseObject("PPC2,022,224.20"));
-        assertEquals(valueOf(202222420000000L), us.parseObject("PPC2,022,224.20"));
-        assertEquals(valueOf(220200000000L), us.parseObject("2,202.0"));
-        assertEquals(valueOf(2100000000000000L), us.parseObject("21000000.00000000"));
+        assertEquals(valueOf(2000000), us.parseObject("XYZ2"));
+        assertEquals(valueOf(2000000), us.parseObject("PPC2"));
+        assertEquals(valueOf(2000000), us.parseObject("PPC2"));
+        assertEquals(valueOf(2000000), us.parseObject("£2"));
+        assertEquals(valueOf(2000000), us.parseObject("Ꝑ2"));
+        assertEquals(valueOf(2000000), us.parseObject("Ꝑ2"));
+        assertEquals(valueOf(2000000), us.parseObject("2"));
+        assertEquals(valueOf(2000000), usCoded.parseObject("XYZ 2"));
+        assertEquals(valueOf(2000000), usCoded.parseObject("PPC 2"));
+        assertEquals(valueOf(2000000), usCoded.parseObject("PPC 2"));
+        assertEquals(valueOf(2000000), us.parseObject("£2.0"));
+        assertEquals(valueOf(2000000), us.parseObject("Ꝑ2.0"));
+        assertEquals(valueOf(2000000), us.parseObject("Ꝑ2.0"));
+        assertEquals(valueOf(2000000), us.parseObject("2.0"));
+        assertEquals(valueOf(2000000), us.parseObject("XYZ2.0"));
+        assertEquals(valueOf(2000000), us.parseObject("PPC2.0"));
+        assertEquals(valueOf(2000000), us.parseObject("PPC2.0"));
+        assertEquals(valueOf(2000000), usCoded.parseObject("£ 2"));
+        assertEquals(valueOf(2000000), usCoded.parseObject("Ꝑ 2"));
+        assertEquals(valueOf(2000000), usCoded.parseObject("Ꝑ 2"));
+        assertEquals(valueOf(2000000), usCoded.parseObject(" 2"));
+        assertEquals(valueOf(2000000), usCoded.parseObject("XYZ 2"));
+        assertEquals(valueOf(2000000), usCoded.parseObject("PPC 2"));
+        assertEquals(valueOf(2000000), usCoded.parseObject("PPC 2"));
+        assertEquals(valueOf(2022224200000L), us.parseObject("2,022,224.20"));
+        assertEquals(valueOf(2022224200000L), us.parseObject("£2,022,224.20"));
+        assertEquals(valueOf(2022224200000L), us.parseObject("Ꝑ2,022,224.20"));
+        assertEquals(valueOf(2022224200000L), us.parseObject("Ꝑ2,022,224.20"));
+        assertEquals(valueOf(2022224200000L), us.parseObject("XYZ2,022,224.20"));
+        assertEquals(valueOf(2022224200000L), us.parseObject("PPC2,022,224.20"));
+        assertEquals(valueOf(2022224200000L), us.parseObject("PPC2,022,224.20"));
+        assertEquals(valueOf(2202000000L), us.parseObject("2,202.0"));
+        assertEquals(valueOf(21000000000000L), us.parseObject("21000000.00000000"));
         // MilliCoins
-        assertEquals(valueOf(200000), usCoded.parseObject("mXYZ 2"));
-        assertEquals(valueOf(200000), usCoded.parseObject("mPPC 2"));
-        assertEquals(valueOf(200000), usCoded.parseObject("mPPC 2"));
-        assertEquals(valueOf(200000), usCoded.parseObject("m£ 2"));
-        assertEquals(valueOf(200000), usCoded.parseObject("m฿ 2"));
-        assertEquals(valueOf(200000), usCoded.parseObject("mɃ 2"));
-        assertEquals(valueOf(200000), us.parseObject("mXYZ2"));
-        assertEquals(valueOf(200000), us.parseObject("mPPC2"));
-        assertEquals(valueOf(200000), us.parseObject("mPPC2"));
-        assertEquals(valueOf(200000), us.parseObject("₥£2"));
-        assertEquals(valueOf(200000), us.parseObject("₥฿2"));
-        assertEquals(valueOf(200000), us.parseObject("₥Ƀ2"));
-        assertEquals(valueOf(200000), us.parseObject("₥2"));
-        assertEquals(valueOf(200000), usCoded.parseObject("₥XYZ 2.00"));
-        assertEquals(valueOf(200000), usCoded.parseObject("₥PPC 2.00"));
-        assertEquals(valueOf(200000), usCoded.parseObject("₥PPC 2.00"));
-        assertEquals(valueOf(200000), usCoded.parseObject("₥XYZ 2"));
-        assertEquals(valueOf(200000), usCoded.parseObject("₥PPC 2"));
-        assertEquals(valueOf(200000), usCoded.parseObject("₥PPC 2"));
-        assertEquals(valueOf(200000), usCoded.parseObject("₥£ 2"));
-        assertEquals(valueOf(200000), usCoded.parseObject("₥฿ 2"));
-        assertEquals(valueOf(200000), usCoded.parseObject("₥Ƀ 2"));
-        assertEquals(valueOf(200000), usCoded.parseObject("₥ 2"));
-        assertEquals(valueOf(202222400000L), us.parseObject("₥£2,022,224"));
-        assertEquals(valueOf(202222400000L), us.parseObject("₥฿2,022,224"));
-        assertEquals(valueOf(202222420000L), us.parseObject("₥Ƀ2,022,224.20"));
-        assertEquals(valueOf(202222400000L), us.parseObject("m£2,022,224"));
-        assertEquals(valueOf(202222400000L), us.parseObject("m฿2,022,224"));
-        assertEquals(valueOf(202222420000L), us.parseObject("mɃ2,022,224.20"));
-        assertEquals(valueOf(202222400000L), us.parseObject("₥XYZ2,022,224"));
-        assertEquals(valueOf(202222400000L), us.parseObject("₥PPC2,022,224"));
-        assertEquals(valueOf(202222400000L), us.parseObject("₥PPC2,022,224"));
-        assertEquals(valueOf(202222400000L), us.parseObject("mXYZ2,022,224"));
-        assertEquals(valueOf(202222400000L), us.parseObject("mPPC2,022,224"));
-        assertEquals(valueOf(202222400000L), us.parseObject("mPPC2,022,224"));
-        assertEquals(valueOf(202222420000L), us.parseObject("₥2,022,224.20"));
-        assertEquals(valueOf(202222400000L), usCoded.parseObject("₥£ 2,022,224"));
-        assertEquals(valueOf(202222400000L), usCoded.parseObject("₥฿ 2,022,224"));
-        assertEquals(valueOf(202222420000L), usCoded.parseObject("₥Ƀ 2,022,224.20"));
-        assertEquals(valueOf(202222400000L), usCoded.parseObject("m£ 2,022,224"));
-        assertEquals(valueOf(202222400000L), usCoded.parseObject("m฿ 2,022,224"));
-        assertEquals(valueOf(202222420000L), usCoded.parseObject("mɃ 2,022,224.20"));
-        assertEquals(valueOf(202222400000L), usCoded.parseObject("₥XYZ 2,022,224"));
-        assertEquals(valueOf(202222400000L), usCoded.parseObject("₥PPC 2,022,224"));
-        assertEquals(valueOf(202222400000L), usCoded.parseObject("₥PPC 2,022,224"));
-        assertEquals(valueOf(202222400000L), usCoded.parseObject("mXYZ 2,022,224"));
-        assertEquals(valueOf(202222400000L), usCoded.parseObject("mPPC 2,022,224"));
-        assertEquals(valueOf(202222400000L), usCoded.parseObject("mPPC 2,022,224"));
-        assertEquals(valueOf(202222420000L), usCoded.parseObject("₥ 2,022,224.20"));
+        assertEquals(valueOf(2000), usCoded.parseObject("mXYZ 2"));
+        assertEquals(valueOf(2000), usCoded.parseObject("mPPC 2"));
+        assertEquals(valueOf(2000), usCoded.parseObject("mPPC 2"));
+        assertEquals(valueOf(2000), usCoded.parseObject("m£ 2"));
+        assertEquals(valueOf(2000), usCoded.parseObject("mꝐ 2"));
+        assertEquals(valueOf(2000), usCoded.parseObject("mꝐ 2"));
+        assertEquals(valueOf(2000), us.parseObject("mXYZ2"));
+        assertEquals(valueOf(2000), us.parseObject("mPPC2"));
+        assertEquals(valueOf(2000), us.parseObject("mPPC2"));
+        assertEquals(valueOf(2000), us.parseObject("₥£2"));
+        assertEquals(valueOf(2000), us.parseObject("₥Ꝑ2"));
+        assertEquals(valueOf(2000), us.parseObject("₥Ꝑ2"));
+        assertEquals(valueOf(2000), us.parseObject("₥2"));
+        assertEquals(valueOf(2000), usCoded.parseObject("₥XYZ 2.00"));
+        assertEquals(valueOf(2000), usCoded.parseObject("₥PPC 2.00"));
+        assertEquals(valueOf(2000), usCoded.parseObject("₥PPC 2.00"));
+        assertEquals(valueOf(2000), usCoded.parseObject("₥XYZ 2"));
+        assertEquals(valueOf(2000), usCoded.parseObject("₥PPC 2"));
+        assertEquals(valueOf(2000), usCoded.parseObject("₥PPC 2"));
+        assertEquals(valueOf(2000), usCoded.parseObject("₥£ 2"));
+        assertEquals(valueOf(2000), usCoded.parseObject("₥Ꝑ 2"));
+        assertEquals(valueOf(2000), usCoded.parseObject("₥Ꝑ 2"));
+        assertEquals(valueOf(2000), usCoded.parseObject("₥ 2"));
+        assertEquals(valueOf(2022224000L), us.parseObject("₥£2,022,224"));
+        assertEquals(valueOf(2022224000L), us.parseObject("₥Ꝑ2,022,224"));
+        assertEquals(valueOf(2022224200L), us.parseObject("₥Ꝑ2,022,224.20"));
+        assertEquals(valueOf(2022224000L), us.parseObject("m£2,022,224"));
+        assertEquals(valueOf(2022224000L), us.parseObject("mꝐ2,022,224"));
+        assertEquals(valueOf(2022224200L), us.parseObject("mꝐ2,022,224.20"));
+        assertEquals(valueOf(2022224000L), us.parseObject("₥XYZ2,022,224"));
+        assertEquals(valueOf(2022224000L), us.parseObject("₥PPC2,022,224"));
+        assertEquals(valueOf(2022224000L), us.parseObject("₥PPC2,022,224"));
+        assertEquals(valueOf(2022224000L), us.parseObject("mXYZ2,022,224"));
+        assertEquals(valueOf(2022224000L), us.parseObject("mPPC2,022,224"));
+        assertEquals(valueOf(2022224000L), us.parseObject("mPPC2,022,224"));
+        assertEquals(valueOf(2022224200L), us.parseObject("₥2,022,224.20"));
+        assertEquals(valueOf(2022224000L), usCoded.parseObject("₥£ 2,022,224"));
+        assertEquals(valueOf(2022224000L), usCoded.parseObject("₥Ꝑ 2,022,224"));
+        assertEquals(valueOf(2022224200L), usCoded.parseObject("₥Ꝑ 2,022,224.20"));
+        assertEquals(valueOf(2022224000L), usCoded.parseObject("m£ 2,022,224"));
+        assertEquals(valueOf(2022224000L), usCoded.parseObject("mꝐ 2,022,224"));
+        assertEquals(valueOf(2022224200L), usCoded.parseObject("mꝐ 2,022,224.20"));
+        assertEquals(valueOf(2022224000L), usCoded.parseObject("₥XYZ 2,022,224"));
+        assertEquals(valueOf(2022224000L), usCoded.parseObject("₥PPC 2,022,224"));
+        assertEquals(valueOf(2022224000L), usCoded.parseObject("₥PPC 2,022,224"));
+        assertEquals(valueOf(2022224000L), usCoded.parseObject("mXYZ 2,022,224"));
+        assertEquals(valueOf(2022224000L), usCoded.parseObject("mPPC 2,022,224"));
+        assertEquals(valueOf(2022224000L), usCoded.parseObject("mPPC 2,022,224"));
+        assertEquals(valueOf(2022224200L), usCoded.parseObject("₥ 2,022,224.20"));
         // Microcoins
-        assertEquals(valueOf(435), us.parseObject("µ£4.35"));
-        assertEquals(valueOf(435), us.parseObject("µ฿4.35"));
-        assertEquals(valueOf(435), us.parseObject("uɃ4.35"));
-        assertEquals(valueOf(435), us.parseObject("u£4.35"));
-        assertEquals(valueOf(435), us.parseObject("u฿4.35"));
-        assertEquals(valueOf(435), us.parseObject("µɃ4.35"));
-        assertEquals(valueOf(435), us.parseObject("uXYZ4.35"));
-        assertEquals(valueOf(435), us.parseObject("uPPC4.35"));
-        assertEquals(valueOf(435), us.parseObject("uPPC4.35"));
-        assertEquals(valueOf(435), us.parseObject("µXYZ4.35"));
-        assertEquals(valueOf(435), us.parseObject("µPPC4.35"));
-        assertEquals(valueOf(435), us.parseObject("µPPC4.35"));
-        assertEquals(valueOf(435), usCoded.parseObject("uXYZ 4.35"));
-        assertEquals(valueOf(435), usCoded.parseObject("uPPC 4.35"));
-        assertEquals(valueOf(435), usCoded.parseObject("uPPC 4.35"));
-        assertEquals(valueOf(435), usCoded.parseObject("µXYZ 4.35"));
-        assertEquals(valueOf(435), usCoded.parseObject("µPPC 4.35"));
-        assertEquals(valueOf(435), usCoded.parseObject("µPPC 4.35"));
+        assertEquals(valueOf(4), us.parseObject("µ£4"));
+        assertEquals(valueOf(4), us.parseObject("µꝐ4"));
+        assertEquals(valueOf(4), us.parseObject("uꝐ4"));
+        assertEquals(valueOf(4), us.parseObject("u£4"));
+        assertEquals(valueOf(4), us.parseObject("uꝐ4"));
+        assertEquals(valueOf(4), us.parseObject("µꝐ4"));
+        assertEquals(valueOf(4), us.parseObject("uXYZ4"));
+        assertEquals(valueOf(4), us.parseObject("uPPC4"));
+        assertEquals(valueOf(4), us.parseObject("uPPC4"));
+        assertEquals(valueOf(4), us.parseObject("µXYZ4"));
+        assertEquals(valueOf(4), us.parseObject("µPPC4"));
+        assertEquals(valueOf(4), us.parseObject("µPPC4"));
+        assertEquals(valueOf(4), usCoded.parseObject("uXYZ 4"));
+        assertEquals(valueOf(4), usCoded.parseObject("uPPC 4"));
+        assertEquals(valueOf(4), usCoded.parseObject("uPPC 4"));
+        assertEquals(valueOf(4), usCoded.parseObject("µXYZ 4"));
+        assertEquals(valueOf(4), usCoded.parseObject("µPPC 4"));
+        assertEquals(valueOf(4), usCoded.parseObject("µPPC 4"));
         // fractional satoshi; round up
-        assertEquals(valueOf(435), us.parseObject("uXYZ4.345"));
-        assertEquals(valueOf(435), us.parseObject("uPPC4.345"));
-        assertEquals(valueOf(435), us.parseObject("uPPC4.345"));
+        assertEquals(valueOf(5), us.parseObject("uXYZ4.5"));
+        assertEquals(valueOf(5), us.parseObject("uPPC4.5"));
+        assertEquals(valueOf(5), us.parseObject("uPPC4.5"));
         // negative with mu symbol
-        assertEquals(valueOf(-1), usCoded.parseObject("µ£ -0.01"));
-        assertEquals(valueOf(-1), usCoded.parseObject("µ฿ -0.01"));
-        assertEquals(valueOf(-10), us.parseObject("(µXYZ0.100)"));
-        assertEquals(valueOf(-10), us.parseObject("(µPPC0.100)"));
-        assertEquals(valueOf(-10), us.parseObject("(µPPC0.100)"));
+        assertEquals(valueOf(-1), usCoded.parseObject("µ£ -1"));
+        assertEquals(valueOf(-1), usCoded.parseObject("µꝐ -1"));
+        assertEquals(valueOf(-10), us.parseObject("(µXYZ10)"));
+        assertEquals(valueOf(-10), us.parseObject("(µPPC10)"));
+        assertEquals(valueOf(-10), us.parseObject("(µPPC10)"));
 
         // parse() method as opposed to parseObject
         try {
@@ -499,116 +478,116 @@ public class PpcFormatTest {
         // coin
         assertEquals(parseCoin("1"), cp.parseObject("PPC 1.00"));
         assertEquals(parseCoin("1"), sp.parseObject("PPC1.00"));
-        assertEquals(parseCoin("1"), cp.parseObject("฿ 1.00"));
-        assertEquals(parseCoin("1"), sp.parseObject("฿1.00"));
-        assertEquals(parseCoin("1"), cp.parseObject("B⃦ 1.00"));
-        assertEquals(parseCoin("1"), sp.parseObject("B⃦1.00"));
-        assertEquals(parseCoin("1"), cp.parseObject("Ƀ 1.00"));
-        assertEquals(parseCoin("1"), sp.parseObject("Ƀ1.00"));
+        assertEquals(parseCoin("1"), cp.parseObject("Ꝑ 1.00"));
+        assertEquals(parseCoin("1"), sp.parseObject("Ꝑ1.00"));
+        assertEquals(parseCoin("1"), cp.parseObject("Ꝑ 1.00"));
+        assertEquals(parseCoin("1"), sp.parseObject("Ꝑ1.00"));
+        assertEquals(parseCoin("1"), cp.parseObject("Ꝑ 1.00"));
+        assertEquals(parseCoin("1"), sp.parseObject("Ꝑ1.00"));
         // milli
         assertEquals(parseCoin("0.001"), cp.parseObject("mPPC 1.00"));
         assertEquals(parseCoin("0.001"), sp.parseObject("mPPC1.00"));
-        assertEquals(parseCoin("0.001"), cp.parseObject("m฿ 1.00"));
-        assertEquals(parseCoin("0.001"), sp.parseObject("m฿1.00"));
-        assertEquals(parseCoin("0.001"), cp.parseObject("mB⃦ 1.00"));
-        assertEquals(parseCoin("0.001"), sp.parseObject("mB⃦1.00"));
-        assertEquals(parseCoin("0.001"), cp.parseObject("mɃ 1.00"));
-        assertEquals(parseCoin("0.001"), sp.parseObject("mɃ1.00"));
+        assertEquals(parseCoin("0.001"), cp.parseObject("mꝐ 1.00"));
+        assertEquals(parseCoin("0.001"), sp.parseObject("mꝐ1.00"));
+        assertEquals(parseCoin("0.001"), cp.parseObject("mꝐ 1.00"));
+        assertEquals(parseCoin("0.001"), sp.parseObject("mꝐ1.00"));
+        assertEquals(parseCoin("0.001"), cp.parseObject("mꝐ 1.00"));
+        assertEquals(parseCoin("0.001"), sp.parseObject("mꝐ1.00"));
         assertEquals(parseCoin("0.001"), cp.parseObject("₥PPC 1.00"));
         assertEquals(parseCoin("0.001"), sp.parseObject("₥PPC1.00"));
-        assertEquals(parseCoin("0.001"), cp.parseObject("₥฿ 1.00"));
-        assertEquals(parseCoin("0.001"), sp.parseObject("₥฿1.00"));
-        assertEquals(parseCoin("0.001"), cp.parseObject("₥B⃦ 1.00"));
-        assertEquals(parseCoin("0.001"), sp.parseObject("₥B⃦1.00"));
-        assertEquals(parseCoin("0.001"), cp.parseObject("₥Ƀ 1.00"));
-        assertEquals(parseCoin("0.001"), sp.parseObject("₥Ƀ1.00"));
+        assertEquals(parseCoin("0.001"), cp.parseObject("₥Ꝑ 1.00"));
+        assertEquals(parseCoin("0.001"), sp.parseObject("₥Ꝑ1.00"));
+        assertEquals(parseCoin("0.001"), cp.parseObject("₥Ꝑ 1.00"));
+        assertEquals(parseCoin("0.001"), sp.parseObject("₥Ꝑ1.00"));
+        assertEquals(parseCoin("0.001"), cp.parseObject("₥Ꝑ 1.00"));
+        assertEquals(parseCoin("0.001"), sp.parseObject("₥Ꝑ1.00"));
         // micro
         assertEquals(parseCoin("0.000001"), cp.parseObject("uPPC 1.00"));
         assertEquals(parseCoin("0.000001"), sp.parseObject("uPPC1.00"));
-        assertEquals(parseCoin("0.000001"), cp.parseObject("u฿ 1.00"));
-        assertEquals(parseCoin("0.000001"), sp.parseObject("u฿1.00"));
-        assertEquals(parseCoin("0.000001"), cp.parseObject("uB⃦ 1.00"));
-        assertEquals(parseCoin("0.000001"), sp.parseObject("uB⃦1.00"));
-        assertEquals(parseCoin("0.000001"), cp.parseObject("uɃ 1.00"));
-        assertEquals(parseCoin("0.000001"), sp.parseObject("uɃ1.00"));
+        assertEquals(parseCoin("0.000001"), cp.parseObject("uꝐ 1.00"));
+        assertEquals(parseCoin("0.000001"), sp.parseObject("uꝐ1.00"));
+        assertEquals(parseCoin("0.000001"), cp.parseObject("uꝐ 1.00"));
+        assertEquals(parseCoin("0.000001"), sp.parseObject("uꝐ1.00"));
+        assertEquals(parseCoin("0.000001"), cp.parseObject("uꝐ 1.00"));
+        assertEquals(parseCoin("0.000001"), sp.parseObject("uꝐ1.00"));
         assertEquals(parseCoin("0.000001"), cp.parseObject("µPPC 1.00"));
         assertEquals(parseCoin("0.000001"), sp.parseObject("µPPC1.00"));
-        assertEquals(parseCoin("0.000001"), cp.parseObject("µ฿ 1.00"));
-        assertEquals(parseCoin("0.000001"), sp.parseObject("µ฿1.00"));
-        assertEquals(parseCoin("0.000001"), cp.parseObject("µB⃦ 1.00"));
-        assertEquals(parseCoin("0.000001"), sp.parseObject("µB⃦1.00"));
-        assertEquals(parseCoin("0.000001"), cp.parseObject("µɃ 1.00"));
-        assertEquals(parseCoin("0.000001"), sp.parseObject("µɃ1.00"));
+        assertEquals(parseCoin("0.000001"), cp.parseObject("µꝐ 1.00"));
+        assertEquals(parseCoin("0.000001"), sp.parseObject("µꝐ1.00"));
+        assertEquals(parseCoin("0.000001"), cp.parseObject("µꝐ 1.00"));
+        assertEquals(parseCoin("0.000001"), sp.parseObject("µꝐ1.00"));
+        assertEquals(parseCoin("0.000001"), cp.parseObject("µꝐ 1.00"));
+        assertEquals(parseCoin("0.000001"), sp.parseObject("µꝐ1.00"));
         // satoshi
-        assertEquals(parseCoin("0.00000001"), cp.parseObject("uPPC 0.01"));
-        assertEquals(parseCoin("0.00000001"), sp.parseObject("uPPC0.01"));
-        assertEquals(parseCoin("0.00000001"), cp.parseObject("u฿ 0.01"));
-        assertEquals(parseCoin("0.00000001"), sp.parseObject("u฿0.01"));
-        assertEquals(parseCoin("0.00000001"), cp.parseObject("uB⃦ 0.01"));
-        assertEquals(parseCoin("0.00000001"), sp.parseObject("uB⃦0.01"));
-        assertEquals(parseCoin("0.00000001"), cp.parseObject("uɃ 0.01"));
-        assertEquals(parseCoin("0.00000001"), sp.parseObject("uɃ0.01"));
-        assertEquals(parseCoin("0.00000001"), cp.parseObject("µPPC 0.01"));
-        assertEquals(parseCoin("0.00000001"), sp.parseObject("µPPC0.01"));
-        assertEquals(parseCoin("0.00000001"), cp.parseObject("µ฿ 0.01"));
-        assertEquals(parseCoin("0.00000001"), sp.parseObject("µ฿0.01"));
-        assertEquals(parseCoin("0.00000001"), cp.parseObject("µB⃦ 0.01"));
-        assertEquals(parseCoin("0.00000001"), sp.parseObject("µB⃦0.01"));
-        assertEquals(parseCoin("0.00000001"), cp.parseObject("µɃ 0.01"));
-        assertEquals(parseCoin("0.00000001"), sp.parseObject("µɃ0.01"));
+        assertEquals(parseCoin("0.000001"), cp.parseObject("uPPC 1"));
+        assertEquals(parseCoin("0.000001"), sp.parseObject("uPPC1"));
+        assertEquals(parseCoin("0.000001"), cp.parseObject("uꝐ 1"));
+        assertEquals(parseCoin("0.000001"), sp.parseObject("uꝐ1"));
+        assertEquals(parseCoin("0.000001"), cp.parseObject("uꝐ 1"));
+        assertEquals(parseCoin("0.000001"), sp.parseObject("uꝐ1"));
+        assertEquals(parseCoin("0.000001"), cp.parseObject("uꝐ 1"));
+        assertEquals(parseCoin("0.000001"), sp.parseObject("uꝐ1"));
+        assertEquals(parseCoin("0.000001"), cp.parseObject("µPPC 1"));
+        assertEquals(parseCoin("0.000001"), sp.parseObject("µPPC1"));
+        assertEquals(parseCoin("0.000001"), cp.parseObject("µꝐ 1"));
+        assertEquals(parseCoin("0.000001"), sp.parseObject("µꝐ1"));
+        assertEquals(parseCoin("0.000001"), cp.parseObject("µꝐ 1"));
+        assertEquals(parseCoin("0.000001"), sp.parseObject("µꝐ1"));
+        assertEquals(parseCoin("0.000001"), cp.parseObject("µꝐ 1"));
+        assertEquals(parseCoin("0.000001"), sp.parseObject("µꝐ1"));
         // cents
-        assertEquals(parseCoin("0.01234567"), cp.parseObject("cPPC 1.234567"));
-        assertEquals(parseCoin("0.01234567"), sp.parseObject("cPPC1.234567"));
-        assertEquals(parseCoin("0.01234567"), cp.parseObject("c฿ 1.234567"));
-        assertEquals(parseCoin("0.01234567"), sp.parseObject("c฿1.234567"));
-        assertEquals(parseCoin("0.01234567"), cp.parseObject("cB⃦ 1.234567"));
-        assertEquals(parseCoin("0.01234567"), sp.parseObject("cB⃦1.234567"));
-        assertEquals(parseCoin("0.01234567"), cp.parseObject("cɃ 1.234567"));
-        assertEquals(parseCoin("0.01234567"), sp.parseObject("cɃ1.234567"));
-        assertEquals(parseCoin("0.01234567"), cp.parseObject("¢PPC 1.234567"));
-        assertEquals(parseCoin("0.01234567"), sp.parseObject("¢PPC1.234567"));
-        assertEquals(parseCoin("0.01234567"), cp.parseObject("¢฿ 1.234567"));
-        assertEquals(parseCoin("0.01234567"), sp.parseObject("¢฿1.234567"));
-        assertEquals(parseCoin("0.01234567"), cp.parseObject("¢B⃦ 1.234567"));
-        assertEquals(parseCoin("0.01234567"), sp.parseObject("¢B⃦1.234567"));
-        assertEquals(parseCoin("0.01234567"), cp.parseObject("¢Ƀ 1.234567"));
-        assertEquals(parseCoin("0.01234567"), sp.parseObject("¢Ƀ1.234567"));
+        assertEquals(parseCoin("0.012345"), cp.parseObject("cPPC 1.2345"));
+        assertEquals(parseCoin("0.012345"), sp.parseObject("cPPC1.2345"));
+        assertEquals(parseCoin("0.012345"), cp.parseObject("cꝐ 1.2345"));
+        assertEquals(parseCoin("0.012345"), sp.parseObject("cꝐ1.2345"));
+        assertEquals(parseCoin("0.012345"), cp.parseObject("cꝐ 1.2345"));
+        assertEquals(parseCoin("0.012345"), sp.parseObject("cꝐ1.2345"));
+        assertEquals(parseCoin("0.012345"), cp.parseObject("cꝐ 1.2345"));
+        assertEquals(parseCoin("0.012345"), sp.parseObject("cꝐ1.2345"));
+        assertEquals(parseCoin("0.012345"), cp.parseObject("¢PPC 1.2345"));
+        assertEquals(parseCoin("0.012345"), sp.parseObject("¢PPC1.2345"));
+        assertEquals(parseCoin("0.012345"), cp.parseObject("¢Ꝑ 1.2345"));
+        assertEquals(parseCoin("0.012345"), sp.parseObject("¢Ꝑ1.2345"));
+        assertEquals(parseCoin("0.012345"), cp.parseObject("¢Ꝑ 1.2345"));
+        assertEquals(parseCoin("0.012345"), sp.parseObject("¢Ꝑ1.2345"));
+        assertEquals(parseCoin("0.012345"), cp.parseObject("¢Ꝑ 1.2345"));
+        assertEquals(parseCoin("0.012345"), sp.parseObject("¢Ꝑ1.2345"));
         // dekacoins
         assertEquals(parseCoin("12.34567"), cp.parseObject("daPPC 1.234567"));
         assertEquals(parseCoin("12.34567"), sp.parseObject("daPPC1.234567"));
-        assertEquals(parseCoin("12.34567"), cp.parseObject("da฿ 1.234567"));
-        assertEquals(parseCoin("12.34567"), sp.parseObject("da฿1.234567"));
-        assertEquals(parseCoin("12.34567"), cp.parseObject("daB⃦ 1.234567"));
-        assertEquals(parseCoin("12.34567"), sp.parseObject("daB⃦1.234567"));
-        assertEquals(parseCoin("12.34567"), cp.parseObject("daɃ 1.234567"));
-        assertEquals(parseCoin("12.34567"), sp.parseObject("daɃ1.234567"));
+        assertEquals(parseCoin("12.34567"), cp.parseObject("daꝐ 1.234567"));
+        assertEquals(parseCoin("12.34567"), sp.parseObject("daꝐ1.234567"));
+        assertEquals(parseCoin("12.34567"), cp.parseObject("daꝐ 1.234567"));
+        assertEquals(parseCoin("12.34567"), sp.parseObject("daꝐ1.234567"));
+        assertEquals(parseCoin("12.34567"), cp.parseObject("daꝐ 1.234567"));
+        assertEquals(parseCoin("12.34567"), sp.parseObject("daꝐ1.234567"));
         // hectocoins
         assertEquals(parseCoin("123.4567"), cp.parseObject("hPPC 1.234567"));
         assertEquals(parseCoin("123.4567"), sp.parseObject("hPPC1.234567"));
-        assertEquals(parseCoin("123.4567"), cp.parseObject("h฿ 1.234567"));
-        assertEquals(parseCoin("123.4567"), sp.parseObject("h฿1.234567"));
-        assertEquals(parseCoin("123.4567"), cp.parseObject("hB⃦ 1.234567"));
-        assertEquals(parseCoin("123.4567"), sp.parseObject("hB⃦1.234567"));
-        assertEquals(parseCoin("123.4567"), cp.parseObject("hɃ 1.234567"));
-        assertEquals(parseCoin("123.4567"), sp.parseObject("hɃ1.234567"));
+        assertEquals(parseCoin("123.4567"), cp.parseObject("hꝐ 1.234567"));
+        assertEquals(parseCoin("123.4567"), sp.parseObject("hꝐ1.234567"));
+        assertEquals(parseCoin("123.4567"), cp.parseObject("hꝐ 1.234567"));
+        assertEquals(parseCoin("123.4567"), sp.parseObject("hꝐ1.234567"));
+        assertEquals(parseCoin("123.4567"), cp.parseObject("hꝐ 1.234567"));
+        assertEquals(parseCoin("123.4567"), sp.parseObject("hꝐ1.234567"));
         // kilocoins
         assertEquals(parseCoin("1234.567"), cp.parseObject("kPPC 1.234567"));
         assertEquals(parseCoin("1234.567"), sp.parseObject("kPPC1.234567"));
-        assertEquals(parseCoin("1234.567"), cp.parseObject("k฿ 1.234567"));
-        assertEquals(parseCoin("1234.567"), sp.parseObject("k฿1.234567"));
-        assertEquals(parseCoin("1234.567"), cp.parseObject("kB⃦ 1.234567"));
-        assertEquals(parseCoin("1234.567"), sp.parseObject("kB⃦1.234567"));
-        assertEquals(parseCoin("1234.567"), cp.parseObject("kɃ 1.234567"));
-        assertEquals(parseCoin("1234.567"), sp.parseObject("kɃ1.234567"));
+        assertEquals(parseCoin("1234.567"), cp.parseObject("kꝐ 1.234567"));
+        assertEquals(parseCoin("1234.567"), sp.parseObject("kꝐ1.234567"));
+        assertEquals(parseCoin("1234.567"), cp.parseObject("kꝐ 1.234567"));
+        assertEquals(parseCoin("1234.567"), sp.parseObject("kꝐ1.234567"));
+        assertEquals(parseCoin("1234.567"), cp.parseObject("kꝐ 1.234567"));
+        assertEquals(parseCoin("1234.567"), sp.parseObject("kꝐ1.234567"));
         // megacoins
         assertEquals(parseCoin("1234567"), cp.parseObject("MPPC 1.234567"));
         assertEquals(parseCoin("1234567"), sp.parseObject("MPPC1.234567"));
-        assertEquals(parseCoin("1234567"), cp.parseObject("M฿ 1.234567"));
-        assertEquals(parseCoin("1234567"), sp.parseObject("M฿1.234567"));
-        assertEquals(parseCoin("1234567"), cp.parseObject("MB⃦ 1.234567"));
-        assertEquals(parseCoin("1234567"), sp.parseObject("MB⃦1.234567"));
-        assertEquals(parseCoin("1234567"), cp.parseObject("MɃ 1.234567"));
-        assertEquals(parseCoin("1234567"), sp.parseObject("MɃ1.234567"));
+        assertEquals(parseCoin("1234567"), cp.parseObject("MꝐ 1.234567"));
+        assertEquals(parseCoin("1234567"), sp.parseObject("MꝐ1.234567"));
+        assertEquals(parseCoin("1234567"), cp.parseObject("MꝐ 1.234567"));
+        assertEquals(parseCoin("1234567"), sp.parseObject("MꝐ1.234567"));
+        assertEquals(parseCoin("1234567"), cp.parseObject("MꝐ 1.234567"));
+        assertEquals(parseCoin("1234567"), sp.parseObject("MꝐ1.234567"));
     }
 
     @Test
@@ -617,14 +596,14 @@ public class PpcFormatTest {
         // Test the field constants
         FieldPosition intField = new FieldPosition(NumberFormat.Field.INTEGER);
         assertEquals(
-          "987,654,321",
-          usCoded.format(valueOf(98765432123L), new StringBuffer(), intField).
+          "987",
+          usCoded.format(valueOf(987650000L), new StringBuffer(), intField).
           substring(intField.getBeginIndex(), intField.getEndIndex())
         );
         FieldPosition fracField = new FieldPosition(NumberFormat.Field.FRACTION);
         assertEquals(
-          "23",
-          usCoded.format(valueOf(98765432123L), new StringBuffer(), fracField).
+          "65",
+          usCoded.format(valueOf(987650000L), new StringBuffer(), fracField).
           substring(fracField.getBeginIndex(), fracField.getEndIndex())
         );
 
@@ -633,33 +612,33 @@ public class PpcFormatTest {
         PpcFormat deCoded = PpcFormat.getCodeInstance(Locale.GERMANY);
         FieldPosition currField = new FieldPosition(NumberFormat.Field.CURRENCY);
         assertEquals(
-          "µ฿",
-          de.format(valueOf(98765432123L), new StringBuffer(), currField).
+          "µꝐ",
+          de.format(valueOf(987654321L), new StringBuffer(), currField).
           substring(currField.getBeginIndex(), currField.getEndIndex())
         );
         assertEquals(
           "µPPC",
-          deCoded.format(valueOf(98765432123L), new StringBuffer(), currField).
+          deCoded.format(valueOf(987654321L), new StringBuffer(), currField).
           substring(currField.getBeginIndex(), currField.getEndIndex())
         );
         assertEquals(
-          "₥฿",
-          de.format(valueOf(98765432000L), new StringBuffer(), currField).
+          "₥Ꝑ",
+          de.format(valueOf(987654000L), new StringBuffer(), currField).
           substring(currField.getBeginIndex(), currField.getEndIndex())
         );
         assertEquals(
           "mPPC",
-          deCoded.format(valueOf(98765432000L), new StringBuffer(), currField).
+          deCoded.format(valueOf(987654000L), new StringBuffer(), currField).
           substring(currField.getBeginIndex(), currField.getEndIndex())
         );
         assertEquals(
-          "฿",
-          de.format(valueOf(98765000000L), new StringBuffer(), currField).
+          "Ꝑ",
+          de.format(valueOf(987000000L), new StringBuffer(), currField).
           substring(currField.getBeginIndex(), currField.getEndIndex())
         );
         assertEquals(
           "PPC",
-          deCoded.format(valueOf(98765000000L), new StringBuffer(), currField).
+          deCoded.format(valueOf(987000000L), new StringBuffer(), currField).
           substring(currField.getBeginIndex(), currField.getEndIndex())
         );
     }
@@ -668,19 +647,19 @@ public class PpcFormatTest {
     public void currencyCodeTest() {
         /* Insert needed space AFTER currency-code */
         PpcFormat usCoded = PpcFormat.getCodeInstance(Locale.US);
-        assertEquals("µPPC 0.01", usCoded.format(1));
+        assertEquals("µPPC 1", usCoded.format(1));
         assertEquals("PPC 1.00", usCoded.format(COIN));
 
         /* Do not insert unneeded space BEFORE currency-code */
         PpcFormat frCoded = PpcFormat.getCodeInstance(Locale.FRANCE);
-        assertEquals("0,01 µPPC", frCoded.format(1));
+        assertEquals("1 µPPC", frCoded.format(1));
         assertEquals("1,00 PPC", frCoded.format(COIN));
 
         /* Insert needed space BEFORE currency-code: no known currency pattern does this? */
 
         /* Do not insert unneeded space AFTER currency-code */
         PpcFormat deCoded = PpcFormat.getCodeInstance(Locale.ITALY);
-        assertEquals("µPPC 0,01", deCoded.format(1));
+        assertEquals("µPPC 1", deCoded.format(1));
         assertEquals("PPC 1,00", deCoded.format(COIN));
     }
 
@@ -690,7 +669,7 @@ public class PpcFormatTest {
         assertEquals("1.00", coinFormat.format(Coin.COIN));
         assertEquals("-1.00", coinFormat.format(Coin.COIN.negate()));
         assertEquals(Coin.parseCoin("1"), coinFormat.parseObject("1.00"));
-        assertEquals(valueOf(1000000), coinFormat.parseObject("0.01"));
+        assertEquals(valueOf(10000), coinFormat.parseObject("0.01"));
         assertEquals(Coin.parseCoin("1000"), coinFormat.parseObject("1,000.00"));
         assertEquals(Coin.parseCoin("1000"), coinFormat.parseObject("1000"));
     }
@@ -701,7 +680,7 @@ public class PpcFormatTest {
         assertEquals("1,000.00", coinFormat.format(Coin.COIN));
         assertEquals("-1,000.00", coinFormat.format(Coin.COIN.negate()));
         assertEquals(Coin.parseCoin("0.001"), coinFormat.parseObject("1.00"));
-        assertEquals(valueOf(1000), coinFormat.parseObject("0.01"));
+        assertEquals(valueOf(10), coinFormat.parseObject("0.01"));
         assertEquals(Coin.parseCoin("1"), coinFormat.parseObject("1,000.00"));
         assertEquals(Coin.parseCoin("1"), coinFormat.parseObject("1000"));
     }
@@ -709,12 +688,12 @@ public class PpcFormatTest {
     @Test
     public void microcoinScaleTest() throws Exception {
         PpcFormat coinFormat = PpcFormat.getMicroInstance(Locale.US);
-        assertEquals("1,000,000.00", coinFormat.format(Coin.COIN));
-        assertEquals("-1,000,000.00", coinFormat.format(Coin.COIN.negate()));
-        assertEquals("1,000,000.10", coinFormat.format(Coin.COIN.add(valueOf(10))));
+        assertEquals("1,000,000", coinFormat.format(Coin.COIN));
+        assertEquals("-1,000,000", coinFormat.format(Coin.COIN.negate()));
+        assertEquals("1,000,010", coinFormat.format(Coin.COIN.add(valueOf(10))));
         assertEquals(Coin.parseCoin("0.000001"), coinFormat.parseObject("1.00"));
-        assertEquals(valueOf(1), coinFormat.parseObject("0.01"));
-        assertEquals(Coin.parseCoin("0.001"), coinFormat.parseObject("1,000.00"));
+        assertEquals(valueOf(1), coinFormat.parseObject("1"));
+        assertEquals(Coin.parseCoin("0.001"), coinFormat.parseObject("1,000"));
         assertEquals(Coin.parseCoin("0.001"), coinFormat.parseObject("1000"));
     }
 
@@ -736,13 +715,13 @@ public class PpcFormatTest {
         assertEquals("0.010", usMilli.format(Coin.parseCoin("0.00001")));
         assertEquals("0.001", usMilli.format(Coin.parseCoin("0.000001")));
         // even though last group is 3, that would result in fractional satoshis, which we don't do
-        assertEquals("0.00010", usMilli.format(Coin.valueOf(10)));
-        assertEquals("0.00001", usMilli.format(Coin.valueOf(1)));
+        assertEquals("0.010", usMilli.format(Coin.valueOf(10)));
+        assertEquals("0.001", usMilli.format(Coin.valueOf(1)));
 
         PpcFormat usMicro = PpcFormat.getInstance(6, Locale.US, 1, 2, 3);
-        assertEquals("0.1", usMicro.format(Coin.valueOf(10)));
+        assertEquals("10", usMicro.format(Coin.valueOf(10)));
         // even though second group is 2, that would result in fractional satoshis, which we don't do
-        assertEquals("0.01", usMicro.format(Coin.valueOf(1)));
+        assertEquals("1", usMicro.format(Coin.valueOf(1)));
     }
 
 
@@ -808,77 +787,67 @@ public class PpcFormatTest {
     public void autoDecimalTest() {
         PpcFormat codedZero = PpcFormat.getCodeInstance(Locale.US, 0);
         PpcFormat symbolZero = PpcFormat.getSymbolInstance(Locale.US, 0);
-        assertEquals("฿1", symbolZero.format(COIN));
+        assertEquals("Ꝑ1", symbolZero.format(COIN));
         assertEquals("PPC 1", codedZero.format(COIN));
-        assertEquals("µ฿1,000,000", symbolZero.format(COIN.subtract(SATOSHI)));
-        assertEquals("µPPC 1,000,000", codedZero.format(COIN.subtract(SATOSHI)));
-        assertEquals("µ฿1,000,000", symbolZero.format(COIN.subtract(Coin.valueOf(50))));
-        assertEquals("µPPC 1,000,000", codedZero.format(COIN.subtract(Coin.valueOf(50))));
-        assertEquals("µ฿999,999", symbolZero.format(COIN.subtract(Coin.valueOf(51))));
-        assertEquals("µPPC 999,999", codedZero.format(COIN.subtract(Coin.valueOf(51))));
-        assertEquals("฿1,000", symbolZero.format(COIN.multiply(1000)));
+        assertEquals("µꝐ999,999", symbolZero.format(COIN.subtract(SATOSHI)));
+        assertEquals("µPPC 999,999", codedZero.format(COIN.subtract(SATOSHI)));
+        assertEquals("µꝐ999,950", symbolZero.format(COIN.subtract(Coin.valueOf(50))));
+        assertEquals("µPPC 999,950", codedZero.format(COIN.subtract(Coin.valueOf(50))));
+        assertEquals("µꝐ999,949", symbolZero.format(COIN.subtract(Coin.valueOf(51))));
+        assertEquals("µPPC 999,949", codedZero.format(COIN.subtract(Coin.valueOf(51))));
+        assertEquals("Ꝑ1,000", symbolZero.format(COIN.multiply(1000)));
         assertEquals("PPC 1,000", codedZero.format(COIN.multiply(1000)));
-        assertEquals("µ฿1", symbolZero.format(Coin.valueOf(100)));
-        assertEquals("µPPC 1", codedZero.format(Coin.valueOf(100)));
-        assertEquals("µ฿1", symbolZero.format(Coin.valueOf(50)));
-        assertEquals("µPPC 1", codedZero.format(Coin.valueOf(50)));
-        assertEquals("µ฿0", symbolZero.format(Coin.valueOf(49)));
-        assertEquals("µPPC 0", codedZero.format(Coin.valueOf(49)));
-        assertEquals("µ฿0", symbolZero.format(Coin.valueOf(1)));
-        assertEquals("µPPC 0", codedZero.format(Coin.valueOf(1)));
-        assertEquals("µ฿500,000", symbolZero.format(Coin.valueOf(49999999)));
-        assertEquals("µPPC 500,000", codedZero.format(Coin.valueOf(49999999)));
+        assertEquals("µꝐ100", symbolZero.format(Coin.valueOf(100)));
+        assertEquals("µPPC 100", codedZero.format(Coin.valueOf(100)));
+        assertEquals("µꝐ50", symbolZero.format(Coin.valueOf(50)));
+        assertEquals("µPPC 50", codedZero.format(Coin.valueOf(50)));
+        assertEquals("µꝐ49", symbolZero.format(Coin.valueOf(49)));
+        assertEquals("µPPC 49", codedZero.format(Coin.valueOf(49)));
+        assertEquals("µꝐ1", symbolZero.format(Coin.valueOf(1)));
+        assertEquals("µPPC 1", codedZero.format(Coin.valueOf(1)));
+        assertEquals("µꝐ49,999,999", symbolZero.format(Coin.valueOf(49999999)));
+        assertEquals("µPPC 49,999,999", codedZero.format(Coin.valueOf(49999999)));
 
-        assertEquals("µ฿499,500", symbolZero.format(Coin.valueOf(49950000)));
-        assertEquals("µPPC 499,500", codedZero.format(Coin.valueOf(49950000)));
-        assertEquals("µ฿499,500", symbolZero.format(Coin.valueOf(49949999)));
-        assertEquals("µPPC 499,500", codedZero.format(Coin.valueOf(49949999)));
-        assertEquals("µ฿500,490", symbolZero.format(Coin.valueOf(50049000)));
-        assertEquals("µPPC 500,490", codedZero.format(Coin.valueOf(50049000)));
-        assertEquals("µ฿500,490", symbolZero.format(Coin.valueOf(50049001)));
-        assertEquals("µPPC 500,490", codedZero.format(Coin.valueOf(50049001)));
-        assertEquals("µ฿500,000", symbolZero.format(Coin.valueOf(49999950)));
-        assertEquals("µPPC 500,000", codedZero.format(Coin.valueOf(49999950)));
-        assertEquals("µ฿499,999", symbolZero.format(Coin.valueOf(49999949)));
-        assertEquals("µPPC 499,999", codedZero.format(Coin.valueOf(49999949)));
-        assertEquals("µ฿500,000", symbolZero.format(Coin.valueOf(50000049)));
-        assertEquals("µPPC 500,000", codedZero.format(Coin.valueOf(50000049)));
-        assertEquals("µ฿500,001", symbolZero.format(Coin.valueOf(50000050)));
-        assertEquals("µPPC 500,001", codedZero.format(Coin.valueOf(50000050)));
+        assertEquals("µꝐ499,500", symbolZero.format(Coin.valueOf(499500)));
+        assertEquals("µPPC 499,500", codedZero.format(Coin.valueOf(499500)));
+        assertEquals("µꝐ499,499", symbolZero.format(Coin.valueOf(499499)));
+        assertEquals("µPPC 499,499", codedZero.format(Coin.valueOf(499499)));
+        assertEquals("µꝐ500,490", symbolZero.format(Coin.valueOf(500490)));
+        assertEquals("µPPC 500,490", codedZero.format(Coin.valueOf(500490)));
 
         PpcFormat codedTwo = PpcFormat.getCodeInstance(Locale.US, 2);
         PpcFormat symbolTwo = PpcFormat.getSymbolInstance(Locale.US, 2);
-        assertEquals("฿1.00", symbolTwo.format(COIN));
+        assertEquals("Ꝑ1.00", symbolTwo.format(COIN));
         assertEquals("PPC 1.00", codedTwo.format(COIN));
-        assertEquals("µ฿999,999.99", symbolTwo.format(COIN.subtract(SATOSHI)));
-        assertEquals("µPPC 999,999.99", codedTwo.format(COIN.subtract(SATOSHI)));
-        assertEquals("฿1,000.00", symbolTwo.format(COIN.multiply(1000)));
+        assertEquals("µꝐ999,999", symbolTwo.format(COIN.subtract(SATOSHI)));
+        assertEquals("µPPC 999,999", codedTwo.format(COIN.subtract(SATOSHI)));
+        assertEquals("Ꝑ1,000.00", symbolTwo.format(COIN.multiply(1000)));
         assertEquals("PPC 1,000.00", codedTwo.format(COIN.multiply(1000)));
-        assertEquals("µ฿1.00", symbolTwo.format(Coin.valueOf(100)));
-        assertEquals("µPPC 1.00", codedTwo.format(Coin.valueOf(100)));
-        assertEquals("µ฿0.50", symbolTwo.format(Coin.valueOf(50)));
-        assertEquals("µPPC 0.50", codedTwo.format(Coin.valueOf(50)));
-        assertEquals("µ฿0.49", symbolTwo.format(Coin.valueOf(49)));
-        assertEquals("µPPC 0.49", codedTwo.format(Coin.valueOf(49)));
-        assertEquals("µ฿0.01", symbolTwo.format(Coin.valueOf(1)));
-        assertEquals("µPPC 0.01", codedTwo.format(Coin.valueOf(1)));
+        assertEquals("₥Ꝑ0.10", symbolTwo.format(Coin.valueOf(100)));
+        assertEquals("mPPC 0.10", codedTwo.format(Coin.valueOf(100)));
+        assertEquals("₥Ꝑ0.05", symbolTwo.format(Coin.valueOf(50)));
+        assertEquals("mPPC 0.05", codedTwo.format(Coin.valueOf(50)));
+        assertEquals("µꝐ49", symbolTwo.format(Coin.valueOf(49)));
+        assertEquals("µPPC 49", codedTwo.format(Coin.valueOf(49)));
+        assertEquals("µꝐ1", symbolTwo.format(Coin.valueOf(1)));
+        assertEquals("µPPC 1", codedTwo.format(Coin.valueOf(1)));
 
         PpcFormat codedThree = PpcFormat.getCodeInstance(Locale.US, 3);
         PpcFormat symbolThree = PpcFormat.getSymbolInstance(Locale.US, 3);
-        assertEquals("฿1.000", symbolThree.format(COIN));
+        assertEquals("Ꝑ1.000", symbolThree.format(COIN));
         assertEquals("PPC 1.000", codedThree.format(COIN));
-        assertEquals("µ฿999,999.99", symbolThree.format(COIN.subtract(SATOSHI)));
-        assertEquals("µPPC 999,999.99", codedThree.format(COIN.subtract(SATOSHI)));
-        assertEquals("฿1,000.000", symbolThree.format(COIN.multiply(1000)));
+        assertEquals("₥Ꝑ999.999", symbolThree.format(COIN.subtract(SATOSHI)));
+        assertEquals("mPPC 999.999", codedThree.format(COIN.subtract(SATOSHI)));
+        assertEquals("Ꝑ1,000.000", symbolThree.format(COIN.multiply(1000)));
         assertEquals("PPC 1,000.000", codedThree.format(COIN.multiply(1000)));
-        assertEquals("₥฿0.001", symbolThree.format(Coin.valueOf(100)));
-        assertEquals("mPPC 0.001", codedThree.format(Coin.valueOf(100)));
-        assertEquals("µ฿0.50", symbolThree.format(Coin.valueOf(50)));
-        assertEquals("µPPC 0.50", codedThree.format(Coin.valueOf(50)));
-        assertEquals("µ฿0.49", symbolThree.format(Coin.valueOf(49)));
-        assertEquals("µPPC 0.49", codedThree.format(Coin.valueOf(49)));
-        assertEquals("µ฿0.01", symbolThree.format(Coin.valueOf(1)));
-        assertEquals("µPPC 0.01", codedThree.format(Coin.valueOf(1)));
+        assertEquals("₥Ꝑ0.100", symbolThree.format(Coin.valueOf(100)));
+        assertEquals("mPPC 0.100", codedThree.format(Coin.valueOf(100)));
+        assertEquals("₥Ꝑ0.050", symbolThree.format(Coin.valueOf(50)));
+        assertEquals("mPPC 0.050", codedThree.format(Coin.valueOf(50)));
+        assertEquals("₥Ꝑ0.049", symbolThree.format(Coin.valueOf(49)));
+        assertEquals("mPPC 0.049", codedThree.format(Coin.valueOf(49)));
+        assertEquals("₥Ꝑ0.001", symbolThree.format(Coin.valueOf(1)));
+        assertEquals("mPPC 0.001", codedThree.format(Coin.valueOf(1)));
     }
 
 
@@ -886,28 +855,28 @@ public class PpcFormatTest {
     public void symbolsCodesTest() {
         PpcFixedFormat coin = (PpcFixedFormat)PpcFormat.getCoinInstance(US);
         assertEquals("PPC", coin.code());
-        assertEquals("฿", coin.symbol());
+        assertEquals("Ꝑ", coin.symbol());
         PpcFixedFormat cent = (PpcFixedFormat)PpcFormat.getInstance(2, US);
         assertEquals("cPPC", cent.code());
-        assertEquals("¢฿", cent.symbol());
+        assertEquals("¢Ꝑ", cent.symbol());
         PpcFixedFormat milli = (PpcFixedFormat)PpcFormat.getInstance(3, US);
         assertEquals("mPPC", milli.code());
-        assertEquals("₥฿", milli.symbol());
+        assertEquals("₥Ꝑ", milli.symbol());
         PpcFixedFormat micro = (PpcFixedFormat)PpcFormat.getInstance(6, US);
         assertEquals("µPPC", micro.code());
-        assertEquals("µ฿", micro.symbol());
+        assertEquals("µꝐ", micro.symbol());
         PpcFixedFormat deka = (PpcFixedFormat)PpcFormat.getInstance(-1, US);
         assertEquals("daPPC", deka.code());
-        assertEquals("da฿", deka.symbol());
+        assertEquals("daꝐ", deka.symbol());
         PpcFixedFormat hecto = (PpcFixedFormat)PpcFormat.getInstance(-2, US);
         assertEquals("hPPC", hecto.code());
-        assertEquals("h฿", hecto.symbol());
+        assertEquals("hꝐ", hecto.symbol());
         PpcFixedFormat kilo = (PpcFixedFormat)PpcFormat.getInstance(-3, US);
         assertEquals("kPPC", kilo.code());
-        assertEquals("k฿", kilo.symbol());
+        assertEquals("kꝐ", kilo.symbol());
         PpcFixedFormat mega = (PpcFixedFormat)PpcFormat.getInstance(-6, US);
         assertEquals("MPPC", mega.code());
-        assertEquals("M฿", mega.symbol());
+        assertEquals("MꝐ", mega.symbol());
         PpcFixedFormat noSymbol = (PpcFixedFormat)PpcFormat.getInstance(4, US);
         try {
             noSymbol.symbol();
@@ -919,103 +888,103 @@ public class PpcFormatTest {
         } catch (IllegalStateException e) {}
 
         PpcFixedFormat symbolCoin = (PpcFixedFormat)PpcFormat.builder().locale(US).scale(0).
-                                                              symbol("B\u20e6").build();
+                                                              symbol("\uA750").build();
         assertEquals("PPC", symbolCoin.code());
-        assertEquals("B⃦", symbolCoin.symbol());
+        assertEquals("Ꝑ", symbolCoin.symbol());
         PpcFixedFormat symbolCent = (PpcFixedFormat)PpcFormat.builder().locale(US).scale(2).
-                                                              symbol("B\u20e6").build();
+                                                              symbol("\uA750").build();
         assertEquals("cPPC", symbolCent.code());
-        assertEquals("¢B⃦", symbolCent.symbol());
+        assertEquals("¢Ꝑ", symbolCent.symbol());
         PpcFixedFormat symbolMilli = (PpcFixedFormat)PpcFormat.builder().locale(US).scale(3).
-                                                               symbol("B\u20e6").build();
+                                                               symbol("\uA750").build();
         assertEquals("mPPC", symbolMilli.code());
-        assertEquals("₥B⃦", symbolMilli.symbol());
+        assertEquals("₥Ꝑ", symbolMilli.symbol());
         PpcFixedFormat symbolMicro = (PpcFixedFormat)PpcFormat.builder().locale(US).scale(6).
-                                                               symbol("B\u20e6").build();
+                                                               symbol("\uA750").build();
         assertEquals("µPPC", symbolMicro.code());
-        assertEquals("µB⃦", symbolMicro.symbol());
+        assertEquals("µꝐ", symbolMicro.symbol());
         PpcFixedFormat symbolDeka = (PpcFixedFormat)PpcFormat.builder().locale(US).scale(-1).
-                                                              symbol("B\u20e6").build();
+                                                              symbol("\uA750").build();
         assertEquals("daPPC", symbolDeka.code());
-        assertEquals("daB⃦", symbolDeka.symbol());
+        assertEquals("daꝐ", symbolDeka.symbol());
         PpcFixedFormat symbolHecto = (PpcFixedFormat)PpcFormat.builder().locale(US).scale(-2).
-                                                               symbol("B\u20e6").build();
+                                                               symbol("\uA750").build();
         assertEquals("hPPC", symbolHecto.code());
-        assertEquals("hB⃦", symbolHecto.symbol());
+        assertEquals("hꝐ", symbolHecto.symbol());
         PpcFixedFormat symbolKilo = (PpcFixedFormat)PpcFormat.builder().locale(US).scale(-3).
-                                                              symbol("B\u20e6").build();
+                                                              symbol("\uA750").build();
         assertEquals("kPPC", symbolKilo.code());
-        assertEquals("kB⃦", symbolKilo.symbol());
+        assertEquals("kꝐ", symbolKilo.symbol());
         PpcFixedFormat symbolMega = (PpcFixedFormat)PpcFormat.builder().locale(US).scale(-6).
-                                                              symbol("B\u20e6").build();
+                                                              symbol("\uA750").build();
         assertEquals("MPPC", symbolMega.code());
-        assertEquals("MB⃦", symbolMega.symbol());
+        assertEquals("MꝐ", symbolMega.symbol());
 
         PpcFixedFormat codeCoin = (PpcFixedFormat)PpcFormat.builder().locale(US).scale(0).
                                                             code("PPC").build();
         assertEquals("PPC", codeCoin.code());
-        assertEquals("฿", codeCoin.symbol());
+        assertEquals("Ꝑ", codeCoin.symbol());
         PpcFixedFormat codeCent = (PpcFixedFormat)PpcFormat.builder().locale(US).scale(2).
                                                             code("PPC").build();
         assertEquals("cPPC", codeCent.code());
-        assertEquals("¢฿", codeCent.symbol());
+        assertEquals("¢Ꝑ", codeCent.symbol());
         PpcFixedFormat codeMilli = (PpcFixedFormat)PpcFormat.builder().locale(US).scale(3).
                                                              code("PPC").build();
         assertEquals("mPPC", codeMilli.code());
-        assertEquals("₥฿", codeMilli.symbol());
+        assertEquals("₥Ꝑ", codeMilli.symbol());
         PpcFixedFormat codeMicro = (PpcFixedFormat)PpcFormat.builder().locale(US).scale(6).
                                                              code("PPC").build();
         assertEquals("µPPC", codeMicro.code());
-        assertEquals("µ฿", codeMicro.symbol());
+        assertEquals("µꝐ", codeMicro.symbol());
         PpcFixedFormat codeDeka = (PpcFixedFormat)PpcFormat.builder().locale(US).scale(-1).
                                                             code("PPC").build();
         assertEquals("daPPC", codeDeka.code());
-        assertEquals("da฿", codeDeka.symbol());
+        assertEquals("daꝐ", codeDeka.symbol());
         PpcFixedFormat codeHecto = (PpcFixedFormat)PpcFormat.builder().locale(US).scale(-2).
                                                              code("PPC").build();
         assertEquals("hPPC", codeHecto.code());
-        assertEquals("h฿", codeHecto.symbol());
+        assertEquals("hꝐ", codeHecto.symbol());
         PpcFixedFormat codeKilo = (PpcFixedFormat)PpcFormat.builder().locale(US).scale(-3).
                                                             code("PPC").build();
         assertEquals("kPPC", codeKilo.code());
-        assertEquals("k฿", codeKilo.symbol());
+        assertEquals("kꝐ", codeKilo.symbol());
         PpcFixedFormat codeMega = (PpcFixedFormat)PpcFormat.builder().locale(US).scale(-6).
                                                             code("PPC").build();
         assertEquals("MPPC", codeMega.code());
-        assertEquals("M฿", codeMega.symbol());
+        assertEquals("MꝐ", codeMega.symbol());
 
         PpcFixedFormat symbolCodeCoin = (PpcFixedFormat)PpcFormat.builder().locale(US).scale(0).
-                                                                  symbol("B\u20e6").code("PPC").build();
+                                                                  symbol("\uA750").code("PPC").build();
         assertEquals("PPC", symbolCodeCoin.code());
-        assertEquals("B⃦", symbolCodeCoin.symbol());
+        assertEquals("Ꝑ", symbolCodeCoin.symbol());
         PpcFixedFormat symbolCodeCent = (PpcFixedFormat)PpcFormat.builder().locale(US).scale(2).
-                                                                  symbol("B\u20e6").code("PPC").build();
+                                                                  symbol("\uA750").code("PPC").build();
         assertEquals("cPPC", symbolCodeCent.code());
-        assertEquals("¢B⃦", symbolCodeCent.symbol());
+        assertEquals("¢Ꝑ", symbolCodeCent.symbol());
         PpcFixedFormat symbolCodeMilli = (PpcFixedFormat)PpcFormat.builder().locale(US).scale(3).
-                                                                   symbol("B\u20e6").code("PPC").build();
+                                                                   symbol("\uA750").code("PPC").build();
         assertEquals("mPPC", symbolCodeMilli.code());
-        assertEquals("₥B⃦", symbolCodeMilli.symbol());
+        assertEquals("₥Ꝑ", symbolCodeMilli.symbol());
         PpcFixedFormat symbolCodeMicro = (PpcFixedFormat)PpcFormat.builder().locale(US).scale(6).
-                                                                   symbol("B\u20e6").code("PPC").build();
+                                                                   symbol("\uA750").code("PPC").build();
         assertEquals("µPPC", symbolCodeMicro.code());
-        assertEquals("µB⃦", symbolCodeMicro.symbol());
+        assertEquals("µꝐ", symbolCodeMicro.symbol());
         PpcFixedFormat symbolCodeDeka = (PpcFixedFormat)PpcFormat.builder().locale(US).scale(-1).
-                                                                  symbol("B\u20e6").code("PPC").build();
+                                                                  symbol("\uA750").code("PPC").build();
         assertEquals("daPPC", symbolCodeDeka.code());
-        assertEquals("daB⃦", symbolCodeDeka.symbol());
+        assertEquals("daꝐ", symbolCodeDeka.symbol());
         PpcFixedFormat symbolCodeHecto = (PpcFixedFormat)PpcFormat.builder().locale(US).scale(-2).
-                                                                   symbol("B\u20e6").code("PPC").build();
+                                                                   symbol("\uA750").code("PPC").build();
         assertEquals("hPPC", symbolCodeHecto.code());
-        assertEquals("hB⃦", symbolCodeHecto.symbol());
+        assertEquals("hꝐ", symbolCodeHecto.symbol());
         PpcFixedFormat symbolCodeKilo = (PpcFixedFormat)PpcFormat.builder().locale(US).scale(-3).
-                                                                  symbol("B\u20e6").code("PPC").build();
+                                                                  symbol("\uA750").code("PPC").build();
         assertEquals("kPPC", symbolCodeKilo.code());
-        assertEquals("kB⃦", symbolCodeKilo.symbol());
+        assertEquals("kꝐ", symbolCodeKilo.symbol());
         PpcFixedFormat symbolCodeMega = (PpcFixedFormat)PpcFormat.builder().locale(US).scale(-6).
-                                                                  symbol("B\u20e6").code("PPC").build();
+                                                                  symbol("\uA750").code("PPC").build();
         assertEquals("MPPC", symbolCodeMega.code());
-        assertEquals("MB⃦", symbolCodeMega.symbol());
+        assertEquals("MꝐ", symbolCodeMega.symbol());
     }
 
     /* copied from CoinFormatTest.java and modified */
@@ -1082,21 +1051,21 @@ public class PpcFormatTest {
         assertEquals("1", coinFormat.format(justNot, 0));
         assertEquals("1.0", PpcFormat.getCoinInstance(US, 1).format(justNot));
         assertEquals("1.0", coinFormat.format(justNot, 1));
-        final Coin justNotUnder = Coin.valueOf(99995000);
+        final Coin justNotUnder = Coin.valueOf(999950);
         assertEquals("1.00", PpcFormat.getCoinInstance(US, 2, 2).format(justNot));
         assertEquals("1.00", coinFormat.format(justNot, 2, 2));
         assertEquals("1.00", PpcFormat.getCoinInstance(US, 2, 2).format(justNotUnder));
         assertEquals("1.00", coinFormat.format(justNotUnder, 2, 2));
-        assertEquals("1.00", PpcFormat.getCoinInstance(US, 2, 2, 2).format(justNot));
-        assertEquals("1.00", coinFormat.format(justNot, 2, 2, 2));
+        assertEquals("1.00", PpcFormat.getCoinInstance(US, 2, 2).format(justNot));
+        assertEquals("1.00", coinFormat.format(justNot, 2, 2));
         assertEquals("0.999950", PpcFormat.getCoinInstance(US, 2, 2, 2).format(justNotUnder));
         assertEquals("0.999950", coinFormat.format(justNotUnder, 2, 2, 2));
-        assertEquals("0.99999999", PpcFormat.getCoinInstance(US, 2, 2, 2, 2).format(justNot));
-        assertEquals("0.99999999", coinFormat.format(justNot, 2, 2, 2, 2));
-        assertEquals("0.99999999", PpcFormat.getCoinInstance(US, 2, REPEATING_DOUBLETS).format(justNot));
-        assertEquals("0.99999999", coinFormat.format(justNot, 2, REPEATING_DOUBLETS));
-        assertEquals("0.999950", PpcFormat.getCoinInstance(US, 2, 2, 2, 2).format(justNotUnder));
-        assertEquals("0.999950", coinFormat.format(justNotUnder, 2, 2, 2, 2));
+        assertEquals("0.999999", PpcFormat.getCoinInstance(US, 2, 2, 2).format(justNot));
+        assertEquals("0.999999", coinFormat.format(justNot, 2, 2, 2));
+        assertEquals("0.999999", PpcFormat.getCoinInstance(US, 2, REPEATING_DOUBLETS).format(justNot));
+        assertEquals("0.999999", coinFormat.format(justNot, 2, REPEATING_DOUBLETS));
+        assertEquals("0.999950", PpcFormat.getCoinInstance(US, 2, 2, 2).format(justNotUnder));
+        assertEquals("0.999950", coinFormat.format(justNotUnder, 2, 2, 2));
         assertEquals("0.999950", PpcFormat.getCoinInstance(US, 2, REPEATING_DOUBLETS).format(justNotUnder));
         assertEquals("0.999950", coinFormat.format(justNotUnder, 2, REPEATING_DOUBLETS));
         assertEquals("1.000", PpcFormat.getCoinInstance(US, 3).format(justNot));
@@ -1111,64 +1080,53 @@ public class PpcFormatTest {
         assertEquals("1.0", coinFormat.format(slightlyMore, 1));
         assertEquals("1.00", PpcFormat.getCoinInstance(US, 2, 2).format(slightlyMore));
         assertEquals("1.00", coinFormat.format(slightlyMore, 2, 2));
-        assertEquals("1.00", PpcFormat.getCoinInstance(US, 2, 2, 2).format(slightlyMore));
-        assertEquals("1.00", coinFormat.format(slightlyMore, 2, 2, 2));
-        assertEquals("1.00000001", PpcFormat.getCoinInstance(US, 2, 2, 2, 2).format(slightlyMore));
-        assertEquals("1.00000001", coinFormat.format(slightlyMore, 2, 2, 2, 2));
-        assertEquals("1.00000001", PpcFormat.getCoinInstance(US, 2, REPEATING_DOUBLETS).format(slightlyMore));
-        assertEquals("1.00000001", coinFormat.format(slightlyMore, 2, REPEATING_DOUBLETS));
+        assertEquals("1.000001", PpcFormat.getCoinInstance(US, 2, 2, 2).format(slightlyMore));
+        assertEquals("1.000001", coinFormat.format(slightlyMore, 2, 2, 2));
         assertEquals("1.000", PpcFormat.getCoinInstance(US, 3).format(slightlyMore));
         assertEquals("1.000", coinFormat.format(slightlyMore, 3));
         assertEquals("1.0000", PpcFormat.getCoinInstance(US, 4).format(slightlyMore));
         assertEquals("1.0000", coinFormat.format(slightlyMore, 4));
 
         final Coin pivot = COIN.add(SATOSHI.multiply(5));
-        assertEquals("1.00000005", PpcFormat.getCoinInstance(US, 8).format(pivot));
-        assertEquals("1.00000005", coinFormat.format(pivot, 8));
-        assertEquals("1.00000005", PpcFormat.getCoinInstance(US, 7, 1).format(pivot));
-        assertEquals("1.00000005", coinFormat.format(pivot, 7, 1));
-        assertEquals("1.0000001", PpcFormat.getCoinInstance(US, 7).format(pivot));
-        assertEquals("1.0000001", coinFormat.format(pivot, 7));
+        assertEquals("1.000005", PpcFormat.getCoinInstance(US, 6).format(pivot));
+        assertEquals("1.000005", coinFormat.format(pivot, 6));
+        assertEquals("1.000005", PpcFormat.getCoinInstance(US, 5, 1).format(pivot));
+        assertEquals("1.000005", coinFormat.format(pivot, 5, 1));
+        assertEquals("1.00001", PpcFormat.getCoinInstance(US, 5).format(pivot));
+        assertEquals("1.00001", coinFormat.format(pivot, 5));
 
-        final Coin value = Coin.valueOf(1122334455667788l);
+        final Coin value = Coin.valueOf(11223344556677l);
         assertEquals("11,223,345", PpcFormat.getCoinInstance(US, 0).format(value));
         assertEquals("11,223,345", coinFormat.format(value, 0));
         assertEquals("11,223,344.6", PpcFormat.getCoinInstance(US, 1).format(value));
         assertEquals("11,223,344.6", coinFormat.format(value, 1));
         assertEquals("11,223,344.5567", PpcFormat.getCoinInstance(US, 2, 2).format(value));
         assertEquals("11,223,344.5567", coinFormat.format(value, 2, 2));
-        assertEquals("11,223,344.556678", PpcFormat.getCoinInstance(US, 2, 2, 2).format(value));
-        assertEquals("11,223,344.556678", coinFormat.format(value, 2, 2, 2));
-        assertEquals("11,223,344.55667788", PpcFormat.getCoinInstance(US, 2, 2, 2, 2).format(value));
-        assertEquals("11,223,344.55667788", coinFormat.format(value, 2, 2, 2, 2));
-        assertEquals("11,223,344.55667788", PpcFormat.getCoinInstance(US, 2, REPEATING_DOUBLETS).format(value));
-        assertEquals("11,223,344.55667788", coinFormat.format(value, 2, REPEATING_DOUBLETS));
+        assertEquals("11,223,344.556677", PpcFormat.getCoinInstance(US, 2, 2, 2).format(value));
+        assertEquals("11,223,344.556677", coinFormat.format(value, 2, 2, 2));
         assertEquals("11,223,344.557", PpcFormat.getCoinInstance(US, 3).format(value));
         assertEquals("11,223,344.557", coinFormat.format(value, 3));
         assertEquals("11,223,344.5567", PpcFormat.getCoinInstance(US, 4).format(value));
         assertEquals("11,223,344.5567", coinFormat.format(value, 4));
 
         PpcFormat megaFormat = PpcFormat.getInstance(-6, US);
-        assertEquals("21.00", megaFormat.format(MAX_MONEY));
-        assertEquals("21", megaFormat.format(MAX_MONEY, 0));
-        assertEquals("11.22334455667788", megaFormat.format(value, 0, REPEATING_DOUBLETS));
-        assertEquals("11.223344556677", megaFormat.format(Coin.valueOf(1122334455667700l), 0, REPEATING_DOUBLETS));
-        assertEquals("11.22334455667788", megaFormat.format(value, 0, REPEATING_TRIPLETS));
-        assertEquals("11.223344556677", megaFormat.format(Coin.valueOf(1122334455667700l), 0, REPEATING_TRIPLETS));
+        assertEquals("2,000.00", megaFormat.format(MAX_MONEY));
+        assertEquals("2,000", megaFormat.format(MAX_MONEY, 0));
+        assertEquals("11.223344556677", megaFormat.format(value, 0, REPEATING_DOUBLETS));
     }
 
     @Test
     public void negativeTest() throws Exception {
         assertEquals("-1,00 PPC", PpcFormat.getInstance(FRANCE).format(COIN.multiply(-1)));
         assertEquals("PPC -1,00", PpcFormat.getInstance(ITALY).format(COIN.multiply(-1)));
-        assertEquals("฿ -1,00", PpcFormat.getSymbolInstance(ITALY).format(COIN.multiply(-1)));
+        assertEquals("Ꝑ -1,00", PpcFormat.getSymbolInstance(ITALY).format(COIN.multiply(-1)));
         assertEquals("PPC -1.00", PpcFormat.getInstance(JAPAN).format(COIN.multiply(-1)));
-        assertEquals("฿-1.00", PpcFormat.getSymbolInstance(JAPAN).format(COIN.multiply(-1)));
+        assertEquals("Ꝑ-1.00", PpcFormat.getSymbolInstance(JAPAN).format(COIN.multiply(-1)));
         assertEquals("(PPC 1.00)", PpcFormat.getInstance(US).format(COIN.multiply(-1)));
-        assertEquals("(฿1.00)", PpcFormat.getSymbolInstance(US).format(COIN.multiply(-1)));
+        assertEquals("(Ꝑ1.00)", PpcFormat.getSymbolInstance(US).format(COIN.multiply(-1)));
         // assertEquals("PPC -१.००", PpcFormat.getInstance(Locale.forLanguageTag("hi-IN")).format(COIN.multiply(-1)));
         assertEquals("PPC -๑.๐๐", PpcFormat.getInstance(new Locale("th","TH","TH")).format(COIN.multiply(-1)));
-        assertEquals("Ƀ-๑.๐๐", PpcFormat.getSymbolInstance(new Locale("th","TH","TH")).format(COIN.multiply(-1)));
+        assertEquals("Ꝑ-๑.๐๐", PpcFormat.getSymbolInstance(new Locale("th","TH","TH")).format(COIN.multiply(-1)));
     }
 
     /* Warning: these tests assume the state of Locale data extant on the platform on which
@@ -1211,7 +1169,7 @@ public class PpcFormatTest {
         a.parseObject("mPPC2");
         assertEquals(a, b);
         assertEquals(a.hashCode(), b.hashCode());
-        b.parseObject("µ฿4.35");
+        b.parseObject("µꝐ4.35");
         assertEquals(a, b);
         assertEquals(a.hashCode(), b.hashCode());
 
@@ -1269,12 +1227,12 @@ public class PpcFormatTest {
     @Test
     public void attributeTest() throws Exception {
         String codePat = PpcFormat.getCodeInstance(Locale.US).pattern();
-        assertTrue(codePat.contains("PPC") && ! codePat.contains("(^|[^฿])฿([^฿]|$)") && ! codePat.contains("(^|[^¤])¤([^¤]|$)"));
+        assertTrue(codePat.contains("PPC") && ! codePat.contains("(^|[^Ꝑ])Ꝑ([^Ꝑ]|$)") && ! codePat.contains("(^|[^¤])¤([^¤]|$)"));
         String symPat = PpcFormat.getSymbolInstance(Locale.US).pattern();
-        assertTrue(symPat.contains("฿") && !symPat.contains("PPC") && !symPat.contains("¤¤"));
+        assertTrue(symPat.contains("Ꝑ") && !symPat.contains("PPC") && !symPat.contains("¤¤"));
 
         assertEquals("PPC #,##0.00;(PPC #,##0.00)", PpcFormat.getCodeInstance(Locale.US).pattern());
-        assertEquals("฿#,##0.00;(฿#,##0.00)", PpcFormat.getSymbolInstance(Locale.US).pattern());
+        assertEquals("Ꝑ#,##0.00;(Ꝑ#,##0.00)", PpcFormat.getSymbolInstance(Locale.US).pattern());
         assertEquals('0', PpcFormat.getInstance(Locale.US).symbols().getZeroDigit());
         // assertEquals('०', PpcFormat.getInstance(Locale.forLanguageTag("hi-IN")).symbols().getZeroDigit());
         // TODO will this next line work with other JREs?
@@ -1283,8 +1241,8 @@ public class PpcFormatTest {
 
     @Test
     public void toStringTest() {
-        assertEquals("Auto-format ฿#,##0.00;(฿#,##0.00)", PpcFormat.getSymbolInstance(Locale.US).toString());
-        assertEquals("Auto-format ฿#,##0.0000;(฿#,##0.0000)", PpcFormat.getSymbolInstance(Locale.US, 4).toString());
+        assertEquals("Auto-format Ꝑ#,##0.00;(Ꝑ#,##0.00)", PpcFormat.getSymbolInstance(Locale.US).toString());
+        assertEquals("Auto-format Ꝑ#,##0.0000;(Ꝑ#,##0.0000)", PpcFormat.getSymbolInstance(Locale.US, 4).toString());
         assertEquals("Auto-format PPC #,##0.00;(PPC #,##0.00)", PpcFormat.getCodeInstance(Locale.US).toString());
         assertEquals("Auto-format PPC #,##0.0000;(PPC #,##0.0000)", PpcFormat.getCodeInstance(Locale.US, 4).toString());
         assertEquals("Coin-format #,##0.00", PpcFormat.getCoinInstance(Locale.US).toString());
@@ -1307,17 +1265,17 @@ public class PpcFormatTest {
         assertEquals("Fixed (-4) format #,##0.000(####)(#######)",
                      PpcFormat.getInstance(-4, Locale.US, 3, 4, 7).toString());
 
-        assertEquals("Auto-format ฿#,##0.00;(฿#,##0.00)",
+        assertEquals("Auto-format Ꝑ#,##0.00;(Ꝑ#,##0.00)",
                      PpcFormat.builder().style(SYMBOL).code("USD").locale(US).build().toString());
         assertEquals("Auto-format #.##0,00 $",
                      PpcFormat.builder().style(SYMBOL).symbol("$").locale(GERMANY).build().toString());
         assertEquals("Auto-format #.##0,0000 $",
                      PpcFormat.builder().style(SYMBOL).symbol("$").fractionDigits(4).locale(GERMANY).build().toString());
-        assertEquals("Auto-format PPC#,00฿;PPC-#,00฿",
+        assertEquals("Auto-format PPC#,00Ꝑ;PPC-#,00Ꝑ",
                      PpcFormat.builder().style(SYMBOL).locale(GERMANY).pattern("¤¤#¤").build().toString());
-        assertEquals("Coin-format PPC#,00฿;PPC-#,00฿",
+        assertEquals("Coin-format PPC#,00Ꝑ;PPC-#,00Ꝑ",
                      PpcFormat.builder().scale(0).locale(GERMANY).pattern("¤¤#¤").build().toString());
-        assertEquals("Millicoin-format PPC#.00฿;PPC-#.00฿",
+        assertEquals("Millicoin-format PPC#.00Ꝑ;PPC-#.00Ꝑ",
                      PpcFormat.builder().scale(3).locale(US).pattern("¤¤#¤").build().toString());
     }
 
@@ -1379,21 +1337,21 @@ public class PpcFormatTest {
         built = PpcFormat.builder().fractionGroups(3,4).scale(6).build();
         assertEquals(built, PpcFormat.getMicroInstance(2,3,4));
 
-        built = PpcFormat.builder().pattern("#,####.#").scale(6).locale(GERMANY).build();
-        assertEquals("100.0000,00", built.format(COIN));
-        built = PpcFormat.builder().pattern("#,####.#").scale(6).locale(GERMANY).build();
-        assertEquals("-100.0000,00", built.format(COIN.multiply(-1)));
-        built = PpcFormat.builder().localizedPattern("#.####,#").scale(6).locale(GERMANY).build();
-        assertEquals("100.0000,00", built.format(COIN));
+        built = PpcFormat.builder().pattern("#,###.#").scale(3).locale(GERMANY).build();
+        assertEquals("1.000,00", built.format(COIN));
+        built = PpcFormat.builder().pattern("#,###.#").scale(3).locale(GERMANY).build();
+        assertEquals("-1.000,00", built.format(COIN.multiply(-1)));
+        built = PpcFormat.builder().localizedPattern("#.###,#").scale(3).locale(GERMANY).build();
+        assertEquals("1.000,00", built.format(COIN));
 
-        built = PpcFormat.builder().pattern("¤#,####.#").style(CODE).locale(GERMANY).build();
-        assertEquals("฿-1,00", built.format(COIN.multiply(-1)));
-        built = PpcFormat.builder().pattern("¤¤ #,####.#").style(SYMBOL).locale(GERMANY).build();
+        built = PpcFormat.builder().pattern("¤#,###.#").style(CODE).locale(GERMANY).build();
+        assertEquals("Ꝑ-1,00", built.format(COIN.multiply(-1)));
+        built = PpcFormat.builder().pattern("¤¤ #,###.#").style(SYMBOL).locale(GERMANY).build();
         assertEquals("PPC -1,00", built.format(COIN.multiply(-1)));
         built = PpcFormat.builder().pattern("¤¤##,###.#").scale(3).locale(US).build();
         assertEquals("mPPC1,000.00", built.format(COIN));
         built = PpcFormat.builder().pattern("¤ ##,###.#").scale(3).locale(US).build();
-        assertEquals("₥฿ 1,000.00", built.format(COIN));
+        assertEquals("₥Ꝑ 1,000.00", built.format(COIN));
 
         try {
             PpcFormat.builder().pattern("¤¤##,###.#").scale(4).locale(US).build().format(COIN);
@@ -1405,48 +1363,48 @@ public class PpcFormatTest {
             fail("Localized pattern with currency sign and non-standard denomination should raise exception");
         } catch (IllegalStateException e) {}
 
-        built = PpcFormat.builder().style(SYMBOL).symbol("B\u20e6").locale(US).build();
-        assertEquals("B⃦1.00", built.format(COIN));
+        built = PpcFormat.builder().style(SYMBOL).symbol("\uA750").locale(US).build();
+        assertEquals("Ꝑ1.00", built.format(COIN));
         built = PpcFormat.builder().style(CODE).code("PPC").locale(US).build();
         assertEquals("PPC 1.00", built.format(COIN));
         built = PpcFormat.builder().style(SYMBOL).symbol("$").locale(GERMANY).build();
         assertEquals("1,00 $", built.format(COIN));
         // Setting the currency code on a DecimalFormatSymbols object can affect the currency symbol.
         built = PpcFormat.builder().style(SYMBOL).code("USD").locale(US).build();
-        assertEquals("฿1.00", built.format(COIN));
+        assertEquals("Ꝑ1.00", built.format(COIN));
 
-        built = PpcFormat.builder().style(SYMBOL).symbol("B\u20e6").locale(US).build();
-        assertEquals("₥B⃦1.00", built.format(COIN.divide(1000)));
+        built = PpcFormat.builder().style(SYMBOL).symbol("\uA750").locale(US).build();
+        assertEquals("₥Ꝑ1.00", built.format(COIN.divide(1000)));
         built = PpcFormat.builder().style(CODE).code("PPC").locale(US).build();
         assertEquals("mPPC 1.00", built.format(COIN.divide(1000)));
 
-        built = PpcFormat.builder().style(SYMBOL).symbol("B\u20e6").locale(US).build();
-        assertEquals("µB⃦1.00", built.format(valueOf(100)));
+        built = PpcFormat.builder().style(SYMBOL).symbol("\uA750").locale(US).build();
+        assertEquals("₥Ꝑ0.10", built.format(valueOf(100)));
         built = PpcFormat.builder().style(CODE).code("PPC").locale(US).build();
-        assertEquals("µPPC 1.00", built.format(valueOf(100)));
+        assertEquals("mPPC 0.10", built.format(valueOf(100)));
 
         /* The prefix of a pattern can have number symbols in quotes.
          * Make sure our custom negative-subpattern creator handles this. */
         built = PpcFormat.builder().pattern("'#'¤#0").scale(0).locale(US).build();
-        assertEquals("#฿-1.00", built.format(COIN.multiply(-1)));
+        assertEquals("#Ꝑ-1.00", built.format(COIN.multiply(-1)));
         built = PpcFormat.builder().pattern("'#0'¤#0").scale(0).locale(US).build();
-        assertEquals("#0฿-1.00", built.format(COIN.multiply(-1)));
+        assertEquals("#0Ꝑ-1.00", built.format(COIN.multiply(-1)));
         // this is an escaped quote between two hash marks in one set of quotes, not
         // two adjacent quote-enclosed hash-marks:
         built = PpcFormat.builder().pattern("'#''#'¤#0").scale(0).locale(US).build();
-        assertEquals("#'#฿-1.00", built.format(COIN.multiply(-1)));
+        assertEquals("#'#Ꝑ-1.00", built.format(COIN.multiply(-1)));
         built = PpcFormat.builder().pattern("'#0''#'¤#0").scale(0).locale(US).build();
-        assertEquals("#0'#฿-1.00", built.format(COIN.multiply(-1)));
+        assertEquals("#0'#Ꝑ-1.00", built.format(COIN.multiply(-1)));
         built = PpcFormat.builder().pattern("'#0#'¤#0").scale(0).locale(US).build();
-        assertEquals("#0#฿-1.00", built.format(COIN.multiply(-1)));
+        assertEquals("#0#Ꝑ-1.00", built.format(COIN.multiply(-1)));
         built = PpcFormat.builder().pattern("'#0'E'#'¤#0").scale(0).locale(US).build();
-        assertEquals("#0E#฿-1.00", built.format(COIN.multiply(-1)));
+        assertEquals("#0E#Ꝑ-1.00", built.format(COIN.multiply(-1)));
         built = PpcFormat.builder().pattern("E'#0''#'¤#0").scale(0).locale(US).build();
-        assertEquals("E#0'#฿-1.00", built.format(COIN.multiply(-1)));
+        assertEquals("E#0'#Ꝑ-1.00", built.format(COIN.multiply(-1)));
         built = PpcFormat.builder().pattern("E'#0#'¤#0").scale(0).locale(US).build();
-        assertEquals("E#0#฿-1.00", built.format(COIN.multiply(-1)));
+        assertEquals("E#0#Ꝑ-1.00", built.format(COIN.multiply(-1)));
         built = PpcFormat.builder().pattern("E'#0''''#'¤#0").scale(0).locale(US).build();
-        assertEquals("E#0''#฿-1.00", built.format(COIN.multiply(-1)));
+        assertEquals("E#0''#Ꝑ-1.00", built.format(COIN.multiply(-1)));
         built = PpcFormat.builder().pattern("''#0").scale(0).locale(US).build();
         assertEquals("'-1.00", built.format(COIN.multiply(-1)));
 

@@ -424,7 +424,7 @@ public abstract class AbstractBlockChain {
             	// Determine if centrally trusted hash
                 // Wait a while for the server if the block is less than three hours old
     		    try {
-    				if (!validHashStore.isValidHash(block.getHash(), this, block.getTimeSeconds() > System.currentTimeMillis()/1000 - 60*60*3)) {
+    				if (validHashStore != null && !validHashStore.isValidHash(block.getHash(), this, block.getTimeSeconds() > Utils.currentTimeSeconds() - 60*60*3)) {
     				   throw new VerificationException("Invalid hash received");
     				}
     			} catch (IOException e) {

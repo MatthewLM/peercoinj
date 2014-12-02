@@ -126,7 +126,7 @@ public abstract class NetworkParameters implements Serializable {
      */
     public static final int BIP16_ENFORCE_TIME = 1333238400;
 
-    public static final long MAX_COINS = 2000000000;
+    public static final long MAX_COINS = 2000000000L;
     public static final Coin MAX_MONEY = COIN.multiply(MAX_COINS);
 
     /** Alias for MainNetParams.get(), use that instead */

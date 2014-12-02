@@ -22,31 +22,32 @@ import org.junit.Test;
 
 import static com.matthewmitchell.peercoinj.core.Utils.HEX;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 public class VersionMessageTest {
     @Test
     // Test that we can decode version messages which miss data which some old nodes may not include
     public void testDecode() throws Exception {
         NetworkParameters params = UnitTestParams.get();
-        
-        VersionMessage ver = new VersionMessage(params, HEX.decode("71110100000000000000000048e5e95000000000000000000000000000000000000000000000ffff7f000001479d000000000000000000000000000000000000ffff7f000001479d0000000000000000172f426974436f696e4a3a302e372d534e415053484f542f0004000000"));
+
+        VersionMessage ver = new VersionMessage(params, HEX.decode("71110100000000000000000048e5e95000000000000000000000000000000000000000000000ffff7f000001479d000000000000000000000000000000000000ffff7f000001479d0000000000000000122f50656572636f696e4a3a302e31322e322f0004000000"));
         assertTrue(!ver.relayTxesBeforeFilter);
-        assertTrue(ver.bestHeight == 1024);
+        assertEquals(ver.bestHeight, 1024);
         assertTrue(ver.subVer.equals("/PeercoinJ:0.12.2/"));
-        
-        ver = new VersionMessage(params, HEX.decode("71110100000000000000000048e5e95000000000000000000000000000000000000000000000ffff7f000001479d000000000000000000000000000000000000ffff7f000001479d0000000000000000172f426974436f696e4a3a302e372d534e415053484f542f00040000"));
+
+        ver = new VersionMessage(params, HEX.decode("71110100000000000000000048e5e95000000000000000000000000000000000000000000000ffff7f000001479d000000000000000000000000000000000000ffff7f000001479d0000000000000000122f50656572636f696e4a3a302e31322e322f00040000"));
         assertTrue(ver.relayTxesBeforeFilter);
-        assertTrue(ver.bestHeight == 1024);
+        assertEquals(ver.bestHeight, 1024);
         assertTrue(ver.subVer.equals("/PeercoinJ:0.12.2/"));
-        
-        ver = new VersionMessage(params, HEX.decode("71110100000000000000000048e5e95000000000000000000000000000000000000000000000ffff7f000001479d000000000000000000000000000000000000ffff7f000001479d0000000000000000172f426974436f696e4a3a302e372d534e415053484f542f"));
+
+        ver = new VersionMessage(params, HEX.decode("71110100000000000000000048e5e95000000000000000000000000000000000000000000000ffff7f000001479d000000000000000000000000000000000000ffff7f000001479d0000000000000000122f50656572636f696e4a3a302e31322e322f"));
         assertTrue(ver.relayTxesBeforeFilter);
-        assertTrue(ver.bestHeight == 0);
+        assertEquals(ver.bestHeight, 0);
         assertTrue(ver.subVer.equals("/PeercoinJ:0.12.2/"));
-        
+
         ver = new VersionMessage(params, HEX.decode("71110100000000000000000048e5e95000000000000000000000000000000000000000000000ffff7f000001479d000000000000000000000000000000000000ffff7f000001479d0000000000000000"));
         assertTrue(ver.relayTxesBeforeFilter);
-        assertTrue(ver.bestHeight == 0);
+        assertEquals(ver.bestHeight, 0);
         assertTrue(ver.subVer.equals(""));
     }
 }

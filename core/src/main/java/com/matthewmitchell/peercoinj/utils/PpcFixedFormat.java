@@ -108,7 +108,7 @@ public final class PpcFixedFormat extends PpcFormat {
     /**
      * Return the currency symbol that identifies the units in which values formatted by this
      * instance are denominated. For example, when invoked on an instance denominated in
-     * millipeercoins, this method by default returns <code>"₥฿"</code>, depending on the
+     * millipeercoins, this method by default returns <code>"₥Ꝑ"</code>, depending on the
      * locale.  */
     public String symbol() { return prefixSymbol(coinSymbol(), scale); }
 

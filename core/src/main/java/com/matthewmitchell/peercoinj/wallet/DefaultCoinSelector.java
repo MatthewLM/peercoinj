@@ -5,6 +5,7 @@ import com.matthewmitchell.peercoinj.core.NetworkParameters;
 import com.matthewmitchell.peercoinj.core.Transaction;
 import com.matthewmitchell.peercoinj.core.TransactionConfidence;
 import com.matthewmitchell.peercoinj.core.TransactionOutput;
+import com.matthewmitchell.peercoinj.params.UnitTestParams;
 import com.google.common.annotations.VisibleForTesting;
 
 import java.math.BigInteger;
@@ -85,8 +86,8 @@ public class DefaultCoinSelector implements CoinSelector {
 
                type.equals(TransactionConfidence.ConfidenceType.PENDING) &&
                confidence.getSource().equals(TransactionConfidence.Source.SELF) &&
-               // In regtest mode we expect to have only one peer, so we won't see transactions propagate.
+               // In unittest mode we expect to have only one peer, so we won't see transactions propagate.
                // TODO: The value 1 below dates from a time when transactions we broadcast *to* were counted, set to 0
-               (confidence.numBroadcastPeers() > 1);
+               (confidence.numBroadcastPeers() > 1 || tx.getParams() == UnitTestParams.get());
     }
 }

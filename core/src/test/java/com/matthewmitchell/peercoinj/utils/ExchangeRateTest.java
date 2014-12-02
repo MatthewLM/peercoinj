@@ -54,13 +54,13 @@ public class ExchangeRateTest {
     @Test(expected = ArithmeticException.class)
     public void fiatToCoinTooLarge() throws Exception {
         ExchangeRate rate = new ExchangeRate(Fiat.parseFiat("XXX", "1"));
-        rate.fiatToCoin(Fiat.parseFiat("XXX", "21000001"));
+        rate.fiatToCoin(Fiat.parseFiat("XXX", "2000000001"));
     }
 
     @Test(expected = ArithmeticException.class)
     public void fiatToCoinTooSmall() throws Exception {
         ExchangeRate rate = new ExchangeRate(Fiat.parseFiat("XXX", "1"));
-        rate.fiatToCoin(Fiat.parseFiat("XXX", "-21000001"));
+        rate.fiatToCoin(Fiat.parseFiat("XXX", "-2000000001"));
     }
 
     @Test(expected = ArithmeticException.class)

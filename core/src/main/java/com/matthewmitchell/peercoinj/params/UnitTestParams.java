@@ -30,8 +30,8 @@ public class UnitTestParams extends NetworkParameters {
         super();
         id = ID_UNITTESTNET;
         packetMagic = 0x0b110907;
-        addressHeader = 111;
-        p2shHeader = 196;
+        addressHeader = 55;
+        p2shHeader = 117;
         acceptableAddressCodes = new int[] { addressHeader, p2shHeader };
         maxTarget = new BigInteger("00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", 16);
         genesisBlock.setTime(System.currentTimeMillis() / 1000);

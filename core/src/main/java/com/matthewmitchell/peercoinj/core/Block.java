@@ -87,7 +87,7 @@ public class Block extends Message {
     public List<Transaction> transactions;
     
     //Peercoin
-    private byte[] blockSig = null;
+    private byte[] blockSig;
 
     /** Stores the hash of the block. If null, getHash() will recalculate it. */
     private transient Sha256Hash hash;
@@ -113,6 +113,9 @@ public class Block extends Message {
         prevBlockHash = Sha256Hash.ZERO_HASH;
 
         length = 80;
+        
+        blockSig = null;
+        
     }
 
     /** Constructs a block object from the Peercoin wire format. */
@@ -159,6 +162,7 @@ public class Block extends Message {
         this.nonce = nonce;
         this.transactions = new LinkedList<Transaction>();
         this.transactions.addAll(transactions);
+        blockSig = null;
     }
 
     private void readObject(ObjectInputStream ois) throws ClassNotFoundException, IOException {
@@ -190,10 +194,11 @@ public class Block extends Message {
 
         cursor = offset + HEADER_SIZE;
         optimalEncodingMessageSize = HEADER_SIZE;
-        if (payload.length == cursor || payload.length - 1 == cursor) { // Include the -1 case for the null byte. Bitcoinj forgets this? Odd...
+        if (payload.length == cursor || payload.length - 1 == cursor) { // Include the -1 case for the null byte which is required for peercoin
             // This message is just a header, it has no transactions.
             transactionsParsed = true;
             transactionBytesValid = false;
+            blockSig = null;
             return;
         }
 
@@ -214,11 +219,11 @@ public class Block extends Message {
         transactionsParsed = true;
         transactionBytesValid = parseRetain;
         
-	if (! getHashAsString().equals("3cdd9c2facce405f5cc220fb21a10e493041451c463a22e1ff6fe903fc5769fc")) {
-		// Obtain signature
-		int sigLen = (int) readVarInt();
-		blockSig = readBytes(sigLen);
-	}
+		if (cursor != length && !getHashAsString().equals("3cdd9c2facce405f5cc220fb21a10e493041451c463a22e1ff6fe903fc5769fc")) {
+			// Obtain signature
+			int sigLen = (int) readVarInt();
+			blockSig = readBytes(sigLen);
+		}
         
     }
 
@@ -410,9 +415,9 @@ public class Block extends Message {
         // Finally write block signature
        
        	if (blockSig != null) {	
-		stream.write(new VarInt(blockSig.length).encode());
-		stream.write(blockSig);
-	}
+            stream.write(new VarInt(blockSig.length).encode());
+            stream.write(blockSig);
+        }
     }
 
     /**

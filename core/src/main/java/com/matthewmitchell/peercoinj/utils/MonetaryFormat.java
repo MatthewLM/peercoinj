@@ -49,7 +49,7 @@ public final class MonetaryFormat {
     /** Standard format for the PPC denomination. */
     public static final MonetaryFormat PPC = new MonetaryFormat().shift(0).minDecimals(2).repeatOptionalDecimals(2, 2);
     /** Standard format for the mPPC denomination. */
-    public static final MonetaryFormat MPPC = new MonetaryFormat().shift(3).minDecimals(2).optionalDecimals(2);
+    public static final MonetaryFormat MPPC = new MonetaryFormat().shift(3).minDecimals(2).optionalDecimals(1);
     /** Standard format for the µPPC denomination. */
     public static final MonetaryFormat UPPC = new MonetaryFormat().shift(6).minDecimals(0).optionalDecimals(0);
     /** Standard format for fiat amounts. */
@@ -344,23 +344,36 @@ public final class MonetaryFormat {
         long decimals = satoshis % shiftDivisor;
 
         // formatting
-        String decimalsStr = String.format(Locale.US, "%0" + (monetary.smallestUnitExponent() - shift) + "d", decimals);
-        StringBuilder str = new StringBuilder(decimalsStr);
-        while (str.length() > minDecimals && str.charAt(str.length() - 1) == '0')
-            str.setLength(str.length() - 1); // trim trailing zero
-        int i = minDecimals;
-        if (decimalGroups != null) {
-            for (int group : decimalGroups) {
-                if (str.length() > i && str.length() < i + group) {
-                    while (str.length() < i + group)
-                        str.append('0');
-                    break;
-                }
-                i += group;
-            }
-        }
-        if (str.length() > 0)
-            str.insert(0, decimalMark);
+        
+        StringBuilder str;
+        
+        // Only do decimals if we need any.
+        
+        int decLen = monetary.smallestUnitExponent() - shift;
+        
+        if (decLen > 0) {
+        	
+	        String decimalsStr = String.format(Locale.US, "%0" + decLen + "d", decimals);
+	        str = new StringBuilder(decimalsStr);
+	        while (str.length() > minDecimals && str.charAt(str.length() - 1) == '0')
+	            str.setLength(str.length() - 1); // trim trailing zero
+	        int i = minDecimals;
+	        if (decimalGroups != null) {
+	            for (int group : decimalGroups) {
+	                if (str.length() > i && str.length() < i + group) {
+	                    while (str.length() < i + group)
+	                        str.append('0');
+	                    break;
+	                }
+	                i += group;
+	            }
+	        }
+	        if (str.length() > 0)
+	            str.insert(0, decimalMark);
+	        
+        }else
+        	str = new StringBuilder();
+        
         str.insert(0, numbers);
         if (monetary.getValue() < 0)
             str.insert(0, negativeSign);

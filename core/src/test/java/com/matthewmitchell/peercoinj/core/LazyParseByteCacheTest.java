@@ -37,30 +37,38 @@ import static org.junit.Assert.*;
 public class LazyParseByteCacheTest {
 
     private final byte[] txMessage = HEX.withSeparator(" ", 2).decode(
-            "f9 be b4 d9 74 78 00 00  00 00 00 00 00 00 00 00" +
-            "02 01 00 00 e2 93 cd be  01 00 00 00 01 6d bd db" +
-            "08 5b 1d 8a f7 51 84 f0  bc 01 fa d5 8d 12 66 e9" +
-            "b6 3b 50 88 19 90 e4 b4  0d 6a ee 36 29 00 00 00" +
-            "00 8b 48 30 45 02 21 00  f3 58 1e 19 72 ae 8a c7" +
-            "c7 36 7a 7a 25 3b c1 13  52 23 ad b9 a4 68 bb 3a" +
-            "59 23 3f 45 bc 57 83 80  02 20 59 af 01 ca 17 d0" +
-            "0e 41 83 7a 1d 58 e9 7a  a3 1b ae 58 4e de c2 8d" +
-            "35 bd 96 92 36 90 91 3b  ae 9a 01 41 04 9c 02 bf" +
-            "c9 7e f2 36 ce 6d 8f e5  d9 40 13 c7 21 e9 15 98" +
-            "2a cd 2b 12 b6 5d 9b 7d  59 e2 0a 84 20 05 f8 fc" +
-            "4e 02 53 2e 87 3d 37 b9  6f 09 d6 d4 51 1a da 8f" +
-            "14 04 2f 46 61 4a 4c 70  c0 f1 4b ef f5 ff ff ff" +
-            "ff 02 40 4b 4c 00 00 00  00 00 19 76 a9 14 1a a0" +
-            "cd 1c be a6 e7 45 8a 7a  ba d5 12 a9 d9 ea 1a fb" +
-            "22 5e 88 ac 80 fa e9 c7  00 00 00 00 19 76 a9 14" +
-            "0e ab 5b ea 43 6a 04 84  cf ab 12 48 5e fd a0 b7" +
-            "8b 4e cc 52 88 ac 00 00  00 00");
+            "e6 e8 e9 e5 74 78 00 00  00 00 00 00 00 00 00 00" +
+            "79 01 00 00 60 b3 19 26" +
+            "01 00 00 00 aa 3d 0b 54  02 a0 46 88 b5 c7 bf 97" +
+            "a7 2b 6c 3d 28 b8 4a 6c  5e a0 fd cd 3b f1 7a 19" +
+            "c0 4e d3 55 92 60 44 51  d1 01 00 00 00 6a 47 30" +
+            "44 02 20 5f 96 12 2a 91  ce 63 00 81 12 c5 d2 8e" +
+            "03 7d 25 a5 20 53 72 81  8c 82 6c 76 a0 4b ae 6a" +
+            "7b 1c 64 02 20 30 fb 26  59 83 5c 84 6c 2f fc c1" +
+            "84 8f aa 07 9f 67 2a ca  39 6f bb 18 07 0e 0e 54" +
+            "c7 fd b4 59 a3 01 21 02  d6 bb 69 ba 37 bf 00 53" +
+            "81 5c f0 2b 8b 09 df 01  81 17 8a 2f 64 3a 9b 43" +
+            "91 87 fb e5 72 50 ab 2a  ff ff ff ff db bf 69 88" +
+            "38 13 d8 8f ca d8 61 10  58 c1 ee ce b5 19 53 66" +
+            "1c 4c 02 f6 9c d3 f2 96  35 26 53 5a 01 00 00 00" +
+            "6b 48 30 45 02 21 00 e2  76 9a db 5c d4 07 04 49" +
+            "6d cd f4 ac 21 a3 c7 d9  de 0a 67 dc 2f 01 d3 8a" +
+            "3d de 3e e6 40 dd 37 02  20 6d cb bb 70 1a e3 28" +
+            "1f dc 5b fe a7 75 ba 46  2d 34 6f d1 a7 c5 9b 38" +
+            "bf 77 c4 12 64 07 a5 11  40 01 21 02 d6 bb 69 ba" +
+            "37 bf 00 53 81 5c f0 2b  8b 09 df 01 81 17 8a 2f" +
+            "64 3a 9b 43 91 87 fb e5  72 50 ab 2a ff ff ff ff" +
+            "02 80 8d 5b 00 00 00 00  00 19 76 a9 14 98 fe 16" +
+            "32 33 99 f6 61 1f a4 22  51 f8 3a ac 83 0d e0 02" +
+            "b3 88 ac 10 7a 07 00 00  00 00 00 19 76 a9 14 94" +
+            "df 70 c3 6d 3a 90 ea c8  b5 1a e6 ab 16 af 5d 22" +
+            "69 fc 74 88 ac 00 00 00  00");
     
     private final byte[] txMessagePart = HEX.withSeparator(" ", 2).decode(
-            "08 5b 1d 8a f7 51 84 f0  bc 01 fa d5 8d 12 66 e9" +
-            "b6 3b 50 88 19 90 e4 b4  0d 6a ee 36 29 00 00 00" +
-            "00 8b 48 30 45 02 21 00  f3 58 1e 19 72 ae 8a c7" +
-            "c7 36 7a 7a 25 3b c1 13  52 23 ad b9 a4 68 bb 3a");
+            "3d de 3e e6 40 dd 37 02  20 6d cb bb 70 1a e3 28" +
+            "1f dc 5b fe a7 75 ba 46  2d 34 6f d1 a7 c5 9b 38" +
+            "bf 77 c4 12 64 07 a5 11  40 01 21 02 d6 bb 69 ba" +
+            "37 bf 00 53 81 5c f0 2b  8b 09 df 01 81 17 8a 2f"); 
     
     private Wallet wallet;
     private BlockStore blockStore;

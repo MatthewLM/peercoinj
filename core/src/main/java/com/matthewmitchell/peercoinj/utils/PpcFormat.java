@@ -78,7 +78,7 @@ import java.util.regex.Pattern;
  * String c = f.format(Coin.COIN);                <strong>// "PPC 1.00"</strong>
  * String k = f.format(Coin.COIN.multiply(1000)); <strong>// "PPC 1,000.00"</strong>
  * String m = f.format(Coin.COIN.divide(1000));   <strong>// "mPPC 1.00"</strong>
- * Coin all = f.parseObject("M฿ 21");             <strong>// All the money in the world</strong>
+ * Coin all = f.parseObject("MꝐ 21");             <strong>// All the money in the world</strong>
  * </pre></blockquote>
  *
  * <h3>Auto-Denomination versus Fixed-Denomination</h3>
@@ -97,13 +97,13 @@ import java.util.regex.Pattern;
  * difference is that the <code>CODE</code> style uses an internationally-distinct currency
  * code, such as <code>"PPC"</code>, to indicate the units of denomination, while the
  * <code>SYMBOL</code> style uses a possibly-ambiguous currency symbol such as
- * <code>"฿"</code>.
+ * <code>"Ꝑ"</code>.
  *
  * <p>The denomination used when formatting will be either peercoin, millicoin
  * or microcoin, depending on the value being represented, chosen so as to minimize the number
  * of consecutive zeros displayed without losing precision.  For example, depending on the
- * locale, a value of one peercoin might be formatted as <pre>฿1.00</pre> where a value
- * exceeding that by one satoshi would be <pre>µ฿1,000,000.01</pre>
+ * locale, a value of one peercoin might be formatted as <pre>Ꝑ1.00</pre> where a value
+ * exceeding that by one satoshi would be <pre>µꝐ1,000,000.01</pre>
  *
  * <h5>Fixed Denomination</h5>
  * 
@@ -175,8 +175,8 @@ import java.util.regex.Pattern;
  * <blockquote><pre>
  * PpcFormat s = PpcFormat.getInstance(SYMBOL);
  * Coin value = Coin.parseCoin("0.1234");
- * String mil = s.format(value);              <strong>// "₥฿123.40"</strong>
- * String mic = s.format(value.divide(1000)); <strong>// "µ฿123.40"</strong>
+ * String mil = s.format(value);              <strong>// "₥Ꝑ123.40"</strong>
+ * String mic = s.format(value.divide(1000)); <strong>// "µꝐ123.40"</strong>
  * </blockquote>
  *
  * <p>An alternative way to specify whether you want an auto- or fixed-denomination formatter
@@ -199,7 +199,7 @@ import java.util.regex.Pattern;
  * <blockquote><pre>
  * <strong>// Next line returns "1,00 PPC"</strong>
  * PpcFormat.getInstance(Locale.GERMANY).format(Coin.COIN);
- * <strong>// Next line returns "1,00 ฿"</strong>
+ * <strong>// Next line returns "1,00 Ꝑ"</strong>
  * PpcFormat.getInstance(SYMBOL, Locale.GERMANY).format(Coin.COIN);
  * <strong>// Next line returns "1.000,00"</strong>
  * PpcFormat.getMilliInstance(Locale.GERMANY).format(Coin.COIN);
@@ -243,7 +243,7 @@ import java.util.regex.Pattern;
  * builder.style(SYMBOL);
  * builder.symbol("B&#x5c;u20e6"); <strong>// unicode char "double vertical stroke overlay"</strong>
  * PpcFormat f = builder.build();
- * String out = f.format(COIN); <strong>// "B⃦1.00" depending on locale</strong>
+ * String out = f.format(COIN); <strong>// "Ꝑ1.00" depending on locale</strong>
  * </pre></blockquote>
  *
  * The <code>Builder</code> methods are chainable.  So, for example, if you are
@@ -337,7 +337,7 @@ import java.util.regex.Pattern;
  * Coin value = Coin.parseCoin("1230");
  * <strong>// variable coded will be set to "kPPC 1.23"</strong>
  * String coded = kilo.code() + " " + kilo.format(value);
- * <strong>// variable symbolic will be set to "k฿1.23"</strong>
+ * <strong>// variable symbolic will be set to "kꝐ1.23"</strong>
  * String symbolic = kilo.symbol() + kilo.format(value);
  * PpcFormat(4).code(); <strong>// unnamed denomination has no code; raises exception</strong>
  * </pre></blockquote>
@@ -406,7 +406,7 @@ import java.util.regex.Pattern;
  * {@link PpcAutoFormat} configured with applicable non-default pattern) will recognize a
  * variety of currency symbols and codes, including all standard international (metric)
  * prefixes from micro to mega.  For example, denominational units of microcoins may be
- * specified by <code>µ฿</code>, <code>u฿</code>, <code>µB⃦</code>, <code>µɃ</code>,
+ * specified by <code>µꝐ</code>, <code>uꝐ</code>, <code>µꝐ</code>, <code>µꝐ</code>,
  * <code>µPPC</code> or other appropriate permutations of those characters.  Additionally, if
  * either or both of a custom currency code or symbol is configured using {@link
  * PpcFormat.Builder#code()} or {@link PpcFormat.Builder.code()}, then such code or symbol will
@@ -494,9 +494,9 @@ public abstract class PpcFormat extends Format {
     /** The conventional international currency code for peercoins: "PPC" */
     private static final String COIN_CODE = "PPC";
     /** The default currency symbols for peercoins */
-    private static final String COIN_SYMBOL = "฿";
+    private static final String COIN_SYMBOL = "Ꝑ";
     /** An alternative currency symbol to use in locales where the default symbol is used for the national currency. */
-    protected static final String COIN_SYMBOL_ALT = "Ƀ";
+    protected static final String COIN_SYMBOL_ALT = "Ꝑ";
 
     protected final DecimalFormat numberFormat; // warning: mutable
     protected final int minimumFractionDigits;
@@ -767,7 +767,7 @@ public abstract class PpcFormat extends Format {
 
     /**
      * Return a new auto-denominating instance that will indicate units using a currency
-     * symbol, for example, <code>"฿"</code>.  Formatting and parsing will be done
+     * symbol, for example, <code>"Ꝑ"</code>.  Formatting and parsing will be done
      * according to the default locale.
      */
     public static PpcFormat getSymbolInstance() { return getSymbolInstance(defaultLocale()); }
@@ -782,7 +782,7 @@ public abstract class PpcFormat extends Format {
     /**
      * Return a new symbol-style auto-formatter with the given number of fractional decimal
      * places.  Denominational units will be indicated using a currency symbol, for example,
-     * <code>"฿"</code>.  The returned object will format the fraction-part of numbers using
+     * <code>"Ꝑ"</code>.  The returned object will format the fraction-part of numbers using
      * the given number of decimal places, or fewer as necessary to avoid giving a place to
      * fractional satoshis.  Formatting and parsing will be done according to the default
      * locale.
@@ -844,7 +844,7 @@ public abstract class PpcFormat extends Format {
     /**
      * Return a new symbol-style auto-formatter for the given locale.  The returned object will
      * select denominational units based on each value being formatted, and will indicate those
-     * units using a currency symbol, for example, <code>"µ฿"</code>.
+     * units using a currency symbol, for example, <code>"µꝐ"</code>.
      */
     public static PpcFormat getSymbolInstance(Locale locale) {
 	return getInstance(SYMBOL, locale);
@@ -854,7 +854,7 @@ public abstract class PpcFormat extends Format {
      * Return a new symbol-style auto-formatter for the given locale with the given number of
      * fraction places.  The returned object will select denominational units based on each
      * value being formatted, and will indicate those units using a currency symbol, for example,
-     * <code>"µ฿"</code>.  The returned object will format the fraction-part of numbers using
+     * <code>"µꝐ"</code>.  The returned object will format the fraction-part of numbers using
      * the given number of decimal places, or fewer as necessary to avoid giving a place to
      * fractional satoshis.
      */
@@ -865,7 +865,7 @@ public abstract class PpcFormat extends Format {
     /**
      * Return a new auto-denominating formatter.  The returned object will indicate the
      * denominational units of formatted values using either a currency symbol, such as,
-     * <code>"฿"</code>, or code, such as <code>"mPPC"</code>, depending on the value of
+     * <code>"Ꝑ"</code>, or code, such as <code>"mPPC"</code>, depending on the value of
      * the argument.  Formatting and parsing will be done according to the default locale.
      */
     public static PpcFormat getInstance(Style style) { return getInstance(style, defaultLocale()); }
@@ -873,7 +873,7 @@ public abstract class PpcFormat extends Format {
     /**
      * Return a new auto-denominating formatter with the given number of fractional decimal
      * places.  The returned object will indicate the denominational units of formatted values
-     * using either a currency symbol, such as, <code>"฿"</code>, or code, such as
+     * using either a currency symbol, such as, <code>"Ꝑ"</code>, or code, such as
      * <code>"mPPC"</code>, depending on the value of the first argument.  The returned object
      * will format the fraction-part of numbers using the given number of decimal places, or
      * fewer as necessary to avoid giving a place to fractional satoshis.  Formatting and
@@ -887,7 +887,7 @@ public abstract class PpcFormat extends Format {
      * Return a new auto-formatter with the given style for the given locale.
      * The returned object that will auto-denominate each formatted value, and
      * will indicate that denomination using either a currency code, such as
-     * "<code>PPC</code>", or symbol, such as "<code>฿</code>", depending on the value
+     * "<code>PPC</code>", or symbol, such as "<code>Ꝑ</code>", depending on the value
      * of the first argument. 
      * <p>The number of fractional decimal places in formatted number will be two, or fewer
      * as necessary to avoid giving a place to fractional satoshis.
@@ -900,7 +900,7 @@ public abstract class PpcFormat extends Format {
      * Return a new auto-formatter for the given locale with the given number of fraction places.
      * The returned object will automatically-denominate each formatted
      * value, and will indicate that denomination using either a currency code,
-     * such as <code>"mPPC"</code>, or symbol, such as "<code>฿</code>",
+     * such as <code>"mPPC"</code>, or symbol, such as "<code>Ꝑ</code>",
      * according to the given style argument.  It will format each number
      * according to the given locale.
      *
@@ -1312,7 +1312,7 @@ public abstract class PpcFormat extends Format {
 
     /* Lazy initialization;  No reason to create all these objects unless needed for parsing */
     // coin indicator regex String; TODO: does this need to be volatile?
-    private volatile String ci = "(" + COIN_SYMBOL + "|" + COIN_SYMBOL_ALT + "|B⃦|" + COIN_CODE + "|PPC)";
+    private volatile String ci = "(" + COIN_SYMBOL + "|" + COIN_SYMBOL_ALT + "|Ꝑ|" + COIN_CODE + "|PPC)";
     private Pattern coinPattern;
     private volatile ScaleMatcher[] denoms;
     ScaleMatcher[] denomMatchers() {

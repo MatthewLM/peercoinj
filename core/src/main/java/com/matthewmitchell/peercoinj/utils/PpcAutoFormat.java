@@ -94,7 +94,7 @@ public final class PpcAutoFormat extends PpcFormat {
             }
         },
 
-        /** Constant for the formatting style that uses a currency symbol, e.g., "฿". */
+        /** Constant for the formatting style that uses a currency symbol, e.g., "Ꝑ". */
         SYMBOL {
             @Override void apply(DecimalFormat decimalFormat) {
                 /* To make certain we are using symbols rather than codes, we replace

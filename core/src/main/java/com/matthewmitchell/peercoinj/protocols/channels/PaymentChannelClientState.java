@@ -245,7 +245,7 @@ public class PaymentChannelClientState {
         // format which one is the change. If we start obfuscating the change output better in future this may
         // be worth revisiting.
         TransactionOutput multisigOutput = template.addOutput(totalValue, ScriptBuilder.createMultiSigOutputScript(2, keys));
-        if (multisigOutput.getMinNonDustValue().compareTo(totalValue) > 0)
+        if (Transaction.MIN_OUTPUT_VALUE.compareTo(totalValue) > 0)
             throw new ValueOutOfRangeException("totalValue too small to use");
         Wallet.SendRequest req = Wallet.SendRequest.forTx(template);
         req.coinSelector = AllowUnconfirmedCoinSelector.get();
@@ -266,7 +266,7 @@ public class PaymentChannelClientState {
         if (totalValue.compareTo(Coin.CENT) < 0) {
             // Must pay min fee.
             final Coin valueAfterFee = totalValue.subtract(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE);
-            if (Transaction.MIN_NONDUST_OUTPUT.compareTo(valueAfterFee) > 0)
+            if (Transaction.MIN_OUTPUT_VALUE.compareTo(valueAfterFee) > 0)
                 throw new ValueOutOfRangeException("totalValue too small to use");
             refundTx.addOutput(valueAfterFee, myKey.toAddress(params));
             refundFees = multisigFee.add(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE);
@@ -397,7 +397,7 @@ public class PaymentChannelClientState {
         if (size.signum() < 0)
             throw new ValueOutOfRangeException("Tried to decrement payment");
         Coin newValueToMe = valueToMe.subtract(size);
-        if (newValueToMe.compareTo(Transaction.MIN_NONDUST_OUTPUT) < 0 && newValueToMe.signum() > 0) {
+        if (newValueToMe.compareTo(Transaction.MIN_OUTPUT_VALUE) < 0 && newValueToMe.signum() > 0) {
             log.info("New value being sent back as change was smaller than minimum nondust output, sending all");
             size = valueToMe;
             newValueToMe = Coin.ZERO;

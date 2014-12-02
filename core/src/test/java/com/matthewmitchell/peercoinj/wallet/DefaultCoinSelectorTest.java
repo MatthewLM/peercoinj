@@ -17,6 +17,7 @@
 package com.matthewmitchell.peercoinj.wallet;
 
 import com.matthewmitchell.peercoinj.core.*;
+import com.matthewmitchell.peercoinj.params.MainNetParams;
 import com.matthewmitchell.peercoinj.params.UnitTestParams;
 import com.matthewmitchell.peercoinj.testing.FakeTxBuilder;
 import com.matthewmitchell.peercoinj.testing.TestWithWallet;
@@ -52,7 +53,7 @@ public class DefaultCoinSelectorTest extends TestWithWallet {
     @Test
     public void selectable() throws Exception {
         Transaction t;
-        t = new Transaction(params);
+        t = new Transaction(MainNetParams.get());
         t.getConfidence().setConfidenceType(TransactionConfidence.ConfidenceType.PENDING);
         assertFalse(DefaultCoinSelector.isSelectable(t));
         t.getConfidence().setSource(TransactionConfidence.Source.SELF);
@@ -61,7 +62,7 @@ public class DefaultCoinSelectorTest extends TestWithWallet {
         assertFalse(DefaultCoinSelector.isSelectable(t));
         t.getConfidence().markBroadcastBy(new PeerAddress(InetAddress.getByName("5.6.7.8")));
         assertTrue(DefaultCoinSelector.isSelectable(t));
-        t = new Transaction(params);
+        t = new Transaction(MainNetParams.get());
         t.getConfidence().setConfidenceType(TransactionConfidence.ConfidenceType.BUILDING);
         assertTrue(DefaultCoinSelector.isSelectable(t));
         t = new Transaction(params);

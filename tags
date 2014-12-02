@@ -796,8 +796,8 @@ MINING_PRIVATE_KEY	core/src/test/java/com/peercoin/peercoin/core/CoinbaseBlockTe
 MINOR_FIELD_NUMBER	core/src/main/java/org/peercoin/paymentchannel/Protos.java	/^    public static final int MINOR_FIELD_NUMBER = 2;$/;"	f	class:Protos.ClientVersion
 MINOR_FIELD_NUMBER	core/src/main/java/org/peercoin/paymentchannel/Protos.java	/^    public static final int MINOR_FIELD_NUMBER = 2;$/;"	f	class:Protos.ServerVersion
 MIN_ACCEPTED_CHANNEL_SIZE_FIELD_NUMBER	core/src/main/java/org/peercoin/paymentchannel/Protos.java	/^    public static final int MIN_ACCEPTED_CHANNEL_SIZE_FIELD_NUMBER = 2;$/;"	f	class:Protos.Initiate
-MIN_ANALYSIS_NONDUST_OUTPUT	core/src/main/java/com/matthewmitchell/peercoinj/wallet/DefaultRiskAnalysis.java	/^    public static final Coin MIN_ANALYSIS_NONDUST_OUTPUT = Transaction.MIN_NONDUST_OUTPUT;$/;"	f	class:DefaultRiskAnalysis
-MIN_NONDUST_OUTPUT	core/src/main/java/com/matthewmitchell/peercoinj/core/Transaction.java	/^    public static final BigInteger MIN_NONDUST_OUTPUT = Coin.valueOf(10000);$/;"	f	class:Transaction
+MIN_ANALYSIS_NONDUST_OUTPUT	core/src/main/java/com/matthewmitchell/peercoinj/wallet/DefaultRiskAnalysis.java	/^    public static final Coin MIN_ANALYSIS_NONDUST_OUTPUT = Transaction.MIN_OUTPUT_VALUE;$/;"	f	class:DefaultRiskAnalysis
+MIN_OUTPUT_VALUE	core/src/main/java/com/matthewmitchell/peercoinj/core/Transaction.java	/^    public static final BigInteger MIN_OUTPUT_VALUE = Coin.valueOf(10000);$/;"	f	class:Transaction
 MIN_PAYMENT_FIELD_NUMBER	core/src/main/java/org/peercoin/paymentchannel/Protos.java	/^    public static final int MIN_PAYMENT_FIELD_NUMBER = 4;$/;"	f	class:Protos.Initiate
 MIN_PAYMENT_TOO_LARGE	core/src/main/java/org/peercoin/paymentchannel/Protos.java	/^      MIN_PAYMENT_TOO_LARGE(6, 7),$/;"	e	enum:Protos.Error.ErrorCode	file:
 MIN_PAYMENT_TOO_LARGE_VALUE	core/src/main/java/org/peercoin/paymentchannel/Protos.java	/^      public static final int MIN_PAYMENT_TOO_LARGE_VALUE = 7;$/;"	f	class:Protos.Error.ErrorCode

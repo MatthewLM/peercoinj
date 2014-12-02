@@ -96,11 +96,10 @@ public class Transaction extends ChildMessage implements Serializable {
     public static final Coin REFERENCE_DEFAULT_MIN_TX_FEE = Coin.valueOf(10000);
 
     /**
-     * Any standard (ie pay-to-address) output smaller than this value (in satoshis) will most likely be rejected by the network.
-     * This is calculated by assuming a standard output will be 34 bytes, and then using the formula used in
-     * {@link TransactionOutput#getMinNonDustValue(BigInteger)}. Currently it's 10000 satoshis.
+     * Any standard (ie pay-to-address) output smaller than this value (in satoshis) will be rejected by the network.
+     * Currently it's 10000 satoshis.
      */
-    public static final Coin MIN_NONDUST_OUTPUT = Coin.valueOf(10000);
+    public static final Coin MIN_OUTPUT_VALUE = Coin.valueOf(10000);
 
     // These are serialized in both peercoin and java serialization.
     private long version;
@@ -523,8 +522,8 @@ public class Transaction extends ChildMessage implements Serializable {
 
     protected static int calcLength(byte[] buf, int offset) {
         VarInt varint;
-        // jump past version (uint32)
-        int cursor = offset + 4;
+        // jump past version (uint32) and time (uint32)
+        int cursor = offset + 8;
 
         int i;
         long scriptLen;
