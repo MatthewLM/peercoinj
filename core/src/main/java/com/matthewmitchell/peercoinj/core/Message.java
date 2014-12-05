@@ -275,13 +275,13 @@ public abstract class Message implements Serializable {
     }
 
     /**
-     * Returns a copy of the array returned by {@link Message#unsafepeercoinSerialize()}, which is safe to mutate.
+     * Returns a copy of the array returned by {@link Message#unsafePeercoinSerialize()}, which is safe to mutate.
      * If you need extra performance and can guarantee you won't write to the array, you can use the unsafe version.
      *
      * @return a freshly allocated serialized byte array
      */
     public byte[] peercoinSerialize() {
-        byte[] payload = unsafepeercoinSerialize();
+        byte[] payload = unsafePeercoinSerialize();
         byte[] copy = new byte[payload.length];
         System.arraycopy(payload, 0, copy, 0, payload.length);
         return copy;
@@ -304,7 +304,7 @@ public abstract class Message implements Serializable {
      *
      * @return a byte array owned by this object, do NOT mutate it.
      */
-    public byte[] unsafepeercoinSerialize() {
+    public byte[] unsafePeercoinSerialize() {
         // 1st attempt to use a cached array.
         if (payload != null) {
             if (offset == 0 && length == payload.length) {

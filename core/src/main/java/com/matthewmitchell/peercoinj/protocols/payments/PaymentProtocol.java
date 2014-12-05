@@ -316,7 +316,7 @@ public class PaymentProtocol {
         Protos.Payment.Builder builder = Protos.Payment.newBuilder();
         for (Transaction transaction : transactions) {
             transaction.verify();
-            builder.addTransactions(ByteString.copyFrom(transaction.unsafepeercoinSerialize()));
+            builder.addTransactions(ByteString.copyFrom(transaction.unsafePeercoinSerialize()));
         }
         if (refundOutputs != null) {
             for (Protos.Output output : refundOutputs)

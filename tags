@@ -8548,7 +8548,7 @@ unknownFields	core/src/main/java/org/peercoinj/wallet/Protos.java	/^    private 
 unknownFields	core/src/main/java/org/peercoinj/wallet/Protos.java	/^    private final com.google.protobuf.UnknownFieldSet unknownFields;$/;"	f	class:Protos.TransactionOutput	file:
 unknownFields	core/src/main/java/org/peercoinj/wallet/Protos.java	/^    private final com.google.protobuf.UnknownFieldSet unknownFields;$/;"	f	class:Protos.Wallet	file:
 unregister	core/src/main/java/com/matthewmitchell/peercoinj/params/Networks.java	/^    public static void unregister(NetworkParameters network) {$/;"	m	class:Networks
-unsafepeercoinSerialize	core/src/main/java/com/matthewmitchell/peercoinj/core/Message.java	/^    public byte[] unsafepeercoinSerialize() {$/;"	m	class:Message
+unsafePeercoinSerialize	core/src/main/java/com/matthewmitchell/peercoinj/core/Message.java	/^    public byte[] unsafePeercoinSerialize() {$/;"	m	class:Message
 unspent	core/src/main/java/com/matthewmitchell/peercoinj/core/Wallet.java	/^    @VisibleForTesting final Map<Sha256Hash, Transaction> unspent;$/;"	f	class:Wallet
 updateChannelInWallet	core/src/main/java/com/matthewmitchell/peercoinj/protocols/channels/PaymentChannelClientState.java	/^    private synchronized void updateChannelInWallet() {$/;"	m	class:PaymentChannelClientState	file:
 updateChannelInWallet	core/src/main/java/com/matthewmitchell/peercoinj/protocols/channels/PaymentChannelServerState.java	/^    private synchronized void updateChannelInWallet() {$/;"	m	class:PaymentChannelServerState	file:

@@ -1920,9 +1920,9 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
                     // so the exact nature of the mutation can be examined.
                     log.warn("Saw two pending transactions double spend each other");
                     log.warn("  offending input is input {}", tx.getInputs().indexOf(input));
-                    log.warn("{}: {}", tx.getHash(), Utils.HEX.encode(tx.unsafepeercoinSerialize()));
+                    log.warn("{}: {}", tx.getHash(), Utils.HEX.encode(tx.unsafePeercoinSerialize()));
                     Transaction other = input.getConnectedOutput().getSpentBy().getParentTransaction();
-                    log.warn("{}: {}", other.getHash(), Utils.HEX.encode(tx.unsafepeercoinSerialize()));
+                    log.warn("{}: {}", other.getHash(), Utils.HEX.encode(tx.unsafePeercoinSerialize()));
                 }
             } else if (result == TransactionInput.ConnectionResult.SUCCESS) {
                 // Otherwise we saw a transaction spend our coins, but we didn't try and spend them ourselves yet.
