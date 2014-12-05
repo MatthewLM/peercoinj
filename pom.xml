@@ -20,12 +20,6 @@
     <version>7</version>
   </parent>
 
-  <scm>
-    <connection>scm:git:https://code.google.com/p/peercoinj/</connection>
-    <developerConnection>scm:git:https://code.google.com/p/peercoinj/</developerConnection>
-    <url>http://code.google.com/p/peercoinj/source/browse</url>
-  </scm>
-
   <name>peercoinj Parent</name>
   <description>Provides the common configuration for the PeercoinJ modules</description>
   <url>https://github.com/MatthewLM/peercoinj/</url>
@@ -40,7 +34,7 @@
   </licenses>
 
   <issueManagement>
-    <system>Google Code</system>
+    <system>Github Issues</system>
     <url>https://github.com/MatthewLM/peercoinj/issues</url>
   </issueManagement>
 
