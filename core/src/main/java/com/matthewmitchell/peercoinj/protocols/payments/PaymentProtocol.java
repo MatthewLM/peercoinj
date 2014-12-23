@@ -36,20 +36,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * <p>Utility methods and constants for working with <a href="https://github.com/bitcoin/bips/blob/master/bip-0070.mediawiki">
+ * <p>Utility methods and constants for working with <a href="https://github.com/peercoin/bips/blob/master/bip-0070.mediawiki">
  * BIP 70 aka the payment protocol</a>. These are low level wrappers around the protocol buffers. If you're implementing
  * a wallet app, look at {@link PaymentSession} for a higher level API that should simplify working with the protocol.</p>
  *
  * <p>BIP 70 defines a binary, protobuf based protocol that runs directly between sender and receiver of funds. Payment
- * protocol data does not flow over the Bitcoin P2P network or enter the block chain. It's instead for data that is only
+ * protocol data does not flow over the Peercoin P2P network or enter the block chain. It's instead for data that is only
  * of interest to the parties involved but isn't otherwise needed for consensus.</p>
  */
 public class PaymentProtocol {
 
     // MIME types as defined in BIP71.
-    public static final String MIMETYPE_PAYMENTREQUEST = "application/bitcoin-paymentrequest";
-    public static final String MIMETYPE_PAYMENT = "application/bitcoin-payment";
-    public static final String MIMETYPE_PAYMENTACK = "application/bitcoin-paymentack";
+    public static final String MIMETYPE_PAYMENTREQUEST = "application/peercoin-paymentrequest";
+    public static final String MIMETYPE_PAYMENT = "application/peercoin-payment";
+    public static final String MIMETYPE_PAYMENTACK = "application/peercoin-paymentack";
 
     /**
      * Create a payment request with one standard pay to address output. You may want to sign the request using

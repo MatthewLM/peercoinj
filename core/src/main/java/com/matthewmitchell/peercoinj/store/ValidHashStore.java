@@ -17,34 +17,32 @@
 
 package com.matthewmitchell.peercoinj.store;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.BufferedOutputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-
-import java.lang.reflect.Array;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-
-import org.omg.CORBA_2_3.portable.OutputStream;
-import org.spongycastle.util.encoders.Hex;
 
 import com.google.common.base.Objects;
+import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.io.Files;
 import com.google.common.primitives.Bytes;
 import com.matthewmitchell.peercoinj.core.AbstractBlockChain;
 import com.matthewmitchell.peercoinj.core.Sha256Hash;
 import com.matthewmitchell.peercoinj.core.StoredBlock;
 import com.matthewmitchell.peercoinj.core.Utils;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Array;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import org.omg.CORBA_2_3.portable.OutputStream;
+import org.spongycastle.util.encoders.Hex;
 
 public class ValidHashStore {
 	
@@ -129,12 +127,27 @@ public class ValidHashStore {
 		return false;
 		
 	}
+	
+	private byte[] getHashFromInputStream(InputStream is) throws IOException {
+		
+		byte[] hash = new byte[16];
+		int x = 0, res;
+		
+		while (x < 16 && (res = is.read()) != -1)
+			hash[x++] = (byte) res;
+		
+		if (x != 16)
+			return null;
+		
+		return hash;
+		
+	}
 
 	public boolean isValidHash(Sha256Hash hash, AbstractBlockChain blockChain, boolean waitForServer) throws IOException {
 		
 		// Get 16 bytes only
 		byte[] cmpHash = new byte[16];
-	    System.arraycopy(Utils.reverseBytes(hash.getBytes()), 0, cmpHash, 0, 16);
+		System.arraycopy(Utils.reverseBytes(hash.getBytes()), 0, cmpHash, 0, 16);
 	    
 		// First check the existing hashes
 		if (isInValidHashes(cmpHash))
@@ -146,69 +159,74 @@ public class ValidHashStore {
 		
 		byte[] locator = new byte[3200];
 		
-        BlockStore store = checkNotNull(blockChain).getBlockStore();
-        StoredBlock chainHead = blockChain.getChainHead();
+		BlockStore store = checkNotNull(blockChain).getBlockStore();
+		StoredBlock chainHead = blockChain.getChainHead();
 
-        StoredBlock cursor = chainHead;
-        int offset = 0;
-        
-        for (int i = 100; cursor != null && i > 0; i--, offset += 32) {
-        	System.arraycopy(Utils.reverseBytes(cursor.getHeader().getHash().getBytes()), 0, locator, offset, 32);
+		StoredBlock cursor = chainHead;
+		int offset = 0;
 
-            try {
-                cursor = cursor.getPrev(store);
-            } catch (BlockStoreException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        
-        // Now download hashes from server.
-        
-        // But if waitForServer is true, first wait a while in case the server hasn't received or processed this block yet.
-        // We assume the server is well connected and 30 seconds would therefore be more than enough in most cases.
-        if (waitForServer)
-        	Utils.sleep(30000);
-        
-        HttpURLConnection connection = (HttpURLConnection) VALID_HASHES_URL.openConnection();
-        connection.setUseCaches(false);
-        connection.setInstanceFollowRedirects(false);
+		for (int i = 100; cursor != null && i > 0; i--, offset += 32) {
+			System.arraycopy(Utils.reverseBytes(cursor.getHeader().getHash().getBytes()), 0, locator, offset, 32);
+
+		    try {
+			cursor = cursor.getPrev(store);
+		    } catch (BlockStoreException e) {
+			throw new RuntimeException(e);
+		    }
+		}
+
+		// Now download hashes from server.
+
+		// But if waitForServer is true, first wait a while in case the server hasn't received or processed this block yet.
+		// We assume the server is well connected and 30 seconds would therefore be more than enough in most cases.
+		if (waitForServer)
+			Utils.sleep(30000);
+
+		HttpURLConnection connection = (HttpURLConnection) VALID_HASHES_URL.openConnection();
+		connection.setUseCaches(false);
+		connection.setInstanceFollowRedirects(false);
 		connection.setConnectTimeout(8000);
 		connection.setReadTimeout(8000);
 		connection.setRequestMethod("POST");
 		connection.setRequestProperty("Content-Type", "application/octet-stream");
+		connection.setRequestProperty( "Accept-Encoding", "" ); 
 		connection.setDoOutput(true);
 		java.io.OutputStream os = connection.getOutputStream();
 		os.write(locator, 0, offset);
 		os.flush();
 		os.close();
 		connection.connect();
-		
-		final int responseCode = connection.getResponseCode();
-		if (responseCode == HttpURLConnection.HTTP_OK) {
-			
+
+		try {		
+
+		    final int responseCode = connection.getResponseCode();
+		    if (responseCode == HttpURLConnection.HTTP_OK) {
+
 			InputStream is = new BufferedInputStream(connection.getInputStream(), 1024);
-			
+
 			// We are going to replace the valid hashes with the new ones
-			
+
 			BufferedOutputStream file = getOutputStream();
 			validHashesArray.clear();
 			index = 0;
 			initialFind = true;
-			
+
 			// Write new hashes. Ensure a limit of 50,000 hashes.
+
+			byte[] b;
 			
-			byte[] b = new byte[16];
-			
-			for (int x = 0; is.read(b) == 16 && x < 50000; x++) {
+			for (int x = 0; (b = getHashFromInputStream(is)) != null && x < 50000; x++)
 				writeHash(b, file);
-				b = new byte[16];
-			}
-			
+
 			file.flush();
 			file.close();
-			
-		} else throw new IOException("Bad response code from server when downloading hashes");
-		
+
+		    } else throw new IOException("Bad response code from server when downloading hashes");
+
+		}finally{
+		    connection.disconnect();
+		}
+
 		// Lastly check valid hashes again
 		return isInValidHashes(cmpHash);
 		

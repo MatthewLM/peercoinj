@@ -188,7 +188,6 @@ public class SPVBlockStore implements BlockStore {
     public StoredBlock get(Sha256Hash hash) throws BlockStoreException {
         final MappedByteBuffer buffer = this.buffer;
         if (buffer == null) throw new BlockStoreException("Store closed");
-        if (hash.equals(Sha256Hash.ZERO_HASH)) return null;
 
         lock.lock();
         try {

@@ -57,12 +57,12 @@ import java.util.concurrent.Callable;
  *
  * <p>Call sendPayment with a list of transactions that will be broadcast. A {@link Protos.Payment} message will be sent
  * to the merchant if a payment url is provided in the PaymentRequest. NOTE: sendPayment does NOT broadcast the
- * transactions to the bitcoin network. Instead it returns a ListenableFuture that will be notified when a
+ * transactions to the peercoin network. Instead it returns a ListenableFuture that will be notified when a
  * {@link Protos.PaymentACK} is received from the merchant. Typically a wallet will show the message to the user
  * as a confirmation message that the payment is now "processing" or that an error occurred, and then broadcast the
  * tx itself later if needed.</p>
  *
- * @see <a href="https://github.com/bitcoin/bips/blob/master/bip-0070.mediawiki">BIP 0070</a>
+ * @see <a href="https://github.com/peercoin/bips/blob/master/bip-0070.mediawiki">BIP 0070</a>
  */
 public class PaymentSession {
     private static ListeningExecutorService executor = Threading.THREAD_POOL;

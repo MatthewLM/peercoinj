@@ -183,7 +183,12 @@ public class Peer extends PeerSocketHandler {
      */
     public Peer(NetworkParameters params, VersionMessage ver, PeerAddress remoteAddress,
                 @Nullable AbstractBlockChain chain, @Nullable MemoryPool mempool) {
-        this(params, ver, remoteAddress, chain, mempool, true);
+        this(params, ver, remoteAddress, chain, mempool, true, null);
+    }
+
+    public Peer(NetworkParameters params, VersionMessage ver, PeerAddress remoteAddress,
+                @Nullable AbstractBlockChain chain, @Nullable MemoryPool mempool, PeerGroup peerGroup) {
+        this(params, ver, remoteAddress, chain, mempool, true, peerGroup);
     }
 
     /**
@@ -201,7 +206,7 @@ public class Peer extends PeerSocketHandler {
      * used to keep track of which peers relayed transactions and offer more descriptive logging.</p>
      */
     public Peer(NetworkParameters params, VersionMessage ver, PeerAddress remoteAddress,
-                @Nullable AbstractBlockChain chain, @Nullable MemoryPool mempool, boolean downloadTxDependencies) {
+                @Nullable AbstractBlockChain chain, @Nullable MemoryPool mempool, boolean downloadTxDependencies, PeerGroup peerGroup) {
         super(params, remoteAddress);
         this.params = Preconditions.checkNotNull(params);
         this.versionMessage = Preconditions.checkNotNull(ver);
@@ -216,6 +221,7 @@ public class Peer extends PeerSocketHandler {
         this.wallets = new CopyOnWriteArrayList<Wallet>();
         this.memoryPool = mempool;
         this.gaveAddrs = false;
+        this.peerGroup = peerGroup;
     }
 
     /**
@@ -236,13 +242,6 @@ public class Peer extends PeerSocketHandler {
         this(params, new VersionMessage(params, blockChain.getBestChainHeight()), blockChain, peerAddress);
         this.versionMessage.appendToSubVer(thisSoftwareName, thisSoftwareVersion, null);
     }
-
-    public Peer(NetworkParameters params, VersionMessage ver,
-			PeerAddress address, AbstractBlockChain chain,
-			MemoryPool memoryPool, PeerGroup peerGroup) {
-		this(params, ver, address, chain, memoryPool);
-		this.peerGroup = peerGroup;
-	}
 
 	/**
      * Registers the given object as an event listener that will be invoked on the user thread. Note that listeners

@@ -1116,7 +1116,7 @@ public class PeerGroup extends AbstractExecutionThreadService implements Transac
         ver.bestHeight = chain == null ? 0 : chain.getBestChainHeight();
         ver.time = Utils.currentTimeSeconds();
 
-        Peer peer = new Peer(params, ver, address, chain, memoryPool, downloadTxDependencies);
+        Peer peer = new Peer(params, ver, address, chain, memoryPool, downloadTxDependencies, this);
         peer.addEventListener(startupListener, Threading.SAME_THREAD);
         peer.setMinProtocolVersion(vMinRequiredProtocolVersion);
         pendingPeers.add(peer);
