@@ -185,8 +185,8 @@ public class ValidHashStore {
 		HttpURLConnection connection = (HttpURLConnection) VALID_HASHES_URL.openConnection();
 		connection.setUseCaches(false);
 		connection.setInstanceFollowRedirects(false);
-		connection.setConnectTimeout(8000);
-		connection.setReadTimeout(8000);
+		connection.setConnectTimeout(30000);
+		connection.setReadTimeout(30000);
 		connection.setRequestMethod("POST");
 		connection.setRequestProperty("Content-Type", "application/octet-stream");
 		connection.setRequestProperty( "Accept-Encoding", "" ); 
@@ -202,7 +202,7 @@ public class ValidHashStore {
 		    final int responseCode = connection.getResponseCode();
 		    if (responseCode == HttpURLConnection.HTTP_OK) {
 
-			InputStream is = new BufferedInputStream(connection.getInputStream(), 1024);
+			InputStream is = new BufferedInputStream(connection.getInputStream());
 
 			// We are going to replace the valid hashes with the new ones
 

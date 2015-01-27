@@ -16,31 +16,32 @@
 
 package com.matthewmitchell.peercoinj.core;
 
-import com.matthewmitchell.peercoinj.store.BlockStore;
-import com.matthewmitchell.peercoinj.store.BlockStoreException;
-import com.matthewmitchell.peercoinj.utils.ListenerRegistration;
-import com.matthewmitchell.peercoinj.utils.Threading;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
-import net.jcip.annotations.GuardedBy;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nullable;
+import com.matthewmitchell.peercoinj.net.AbstractTimeoutHandler;
+import com.matthewmitchell.peercoinj.store.BlockStore;
+import com.matthewmitchell.peercoinj.store.BlockStoreException;
+import com.matthewmitchell.peercoinj.utils.ListenerRegistration;
+import com.matthewmitchell.peercoinj.utils.Threading;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
+import javax.annotation.Nullable;
+import net.jcip.annotations.GuardedBy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>A Peer handles the high level communication with a Peercoin node, extending a {@link PeerSocketHandler} which
@@ -341,6 +342,9 @@ public class Peer extends PeerSocketHandler {
             endFilteredBlock(currentFilteredBlock);
             currentFilteredBlock = null;
         }
+	
+	// If we have a block and we expected one then we reset the timeout for the next block.
+	blockResponseTimeout.processMessage(m);
 
         if (m instanceof Ping) {
             if (((Ping) m).hasNonce())
@@ -853,8 +857,14 @@ public class Peer extends PeerSocketHandler {
         try {
             // Otherwise it's a block sent to us because the peer thought we needed it, so add it to the block chain.
             if (blockChain.add(m)) {
+		
                 // The block was successfully linked into the chain. Notify the user of our progress.
                 invokeOnBlocksDownloaded(m);
+		
+		// Expect more responses if there are more blocks remaining
+		if (vPeerVersionMessage.bestHeight > checkNotNull(blockChain).getBestChainHeight())
+		    blockResponseTimeout.setTimeoutEnabled(true);
+		
             } else {
                 // This block is an orphan - we don't know how to get from it back to the genesis block yet. That
                 // must mean that there are blocks we are missing, so do another getblocks with a new block locator
@@ -1021,6 +1031,7 @@ public class Peer extends PeerSocketHandler {
         // since the time we first connected to the peer. However, it's weird and unexpected to receive a callback
         // with negative "blocks left" in this case, so we clamp to zero so the API user doesn't have to think about it.
         final int blocksLeft = Math.max(0, (int) vPeerVersionMessage.bestHeight - checkNotNull(blockChain).getBestChainHeight());
+	
         for (final ListenerRegistration<PeerEventListener> registration : eventListeners) {
             registration.executor.execute(new Runnable() {
                 @Override
@@ -1246,12 +1257,68 @@ public class Peer extends PeerSocketHandler {
     public void removeWallet(Wallet wallet) {
         wallets.remove(wallet);
     }
+    
+    // Timeout for receiving headers or block response
+    
+    static int blockTimeout = 10000;
+    
+    class BlockTimeoutHandler extends AbstractTimeoutHandler {
+
+	boolean expectFull;
+	boolean hadSuccess = false;
+	
+	public void setSocketTimeout(boolean expectFull) {
+	    
+	    setSocketTimeout(blockTimeout);
+	    setTimeoutEnabled(true);
+	    this.expectFull = expectFull;
+	
+	}
+	
+	public void processMessage(Message m) {
+	    
+	    if ((expectFull && (m instanceof Block || m instanceof FilteredBlock))
+		    || (!expectFull && (m instanceof HeadersMessage))) {
+		
+		setTimeoutEnabled(false); // No timeout until we are ready for the next message
+		
+		if (!hadSuccess) {
+		    
+		    // As this is a success we should decrease the timeout so we progressively expect faster block times.
+		    blockTimeout *= 0.9;
+		    if (blockTimeout < 1000)
+			blockTimeout = 1000;
+
+		    hadSuccess = true;
+		    
+		}
+		
+	    }
+	    
+	}
+	
+	@Override
+	protected void timeoutOccurred() {
+	    
+	    // Need to download from a new peer! Close this one
+	    close();
+	    
+	    // Increase timeout gradually in case this is our fault
+	    blockTimeout *= 1.2;
+	    if (blockTimeout > 60000)
+		blockTimeout = 60000;
+	    
+	}
+	
+    };
+    
+    BlockTimeoutHandler blockResponseTimeout = new BlockTimeoutHandler(); 
 
     // Keep track of the last request we made to the peer in blockChainDownloadLocked so we can avoid redundant and harmful
     // getblocks requests.
     @GuardedBy("lock")
     private Sha256Hash lastGetBlocksBegin, lastGetBlocksEnd;
-
+    
     @GuardedBy("lock")
     private void blockChainDownloadLocked(Sha256Hash toHash) {
         checkState(lock.isHeldByCurrentThread());
@@ -1329,10 +1396,12 @@ public class Peer extends PeerSocketHandler {
 
         if (downloadBlockBodies) {
             GetBlocksMessage message = new GetBlocksMessage(params, blockLocator, toHash);
+	    blockResponseTimeout.setSocketTimeout(true);
             sendMessage(message);
         } else {
             // Downloading headers for a while instead of full blocks.
             GetHeadersMessage message = new GetHeadersMessage(params, blockLocator, toHash);
+	    blockResponseTimeout.setSocketTimeout(false);
             sendMessage(message);
         }
     }
@@ -1346,7 +1415,7 @@ public class Peer extends PeerSocketHandler {
         // TODO: peer might still have blocks that we don't have, and even have a heavier
         // chain even if the chain block count is lower.
         final int blocksLeft = getPeerBlockHeightDifference();
-        if (blocksLeft >= 0) {
+        if (blocksLeft > 0) {
             for (final ListenerRegistration<PeerEventListener> registration : eventListeners) {
                 registration.executor.execute(new Runnable() {
                     @Override
