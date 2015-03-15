@@ -834,7 +834,6 @@ public class PeerGroup extends AbstractExecutionThreadService implements Transac
 	            if (!haveReadyInactivePeer(nowMillis)) {
 	            	Utils.sleep(100); // Prevent too many requests.
 	                discoverPeers();
-	                groupBackoff.trackSuccess();
 	                nowMillis = Utils.currentTimeMillis();
 	            }
 	            if (inactives.size() == 0) {
