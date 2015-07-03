@@ -154,6 +154,19 @@ public class ScriptOpCodes {
     public static final int OP_NOP9 = 0xb8;
     public static final int OP_NOP10 = 0xb9;
     public static final int OP_INVALIDOPCODE = 0xff;
+    
+    // prime nodes
+    public static final int OP_PRIMENODE350 = 0xc1;
+    public static final int OP_PRIMENODE100 = 0xc2;
+    public static final int OP_PRIMENODE20 = 0xc3;
+    public static final int OP_PRIMENODE10 = 0xc4;
+    public static final int OP_PRIMENODEP2 = 0xc5;
+    
+    // template matching params
+    public static final int OP_SMALLINTEGER = 0xfa;
+    public static final int OP_PUBKEYS = 0xfb;
+    public static final int OP_PUBKEYHASH = 0xfd;
+    public static final int OP_PUBKEY = 0xfe;
 
     private static final Map<Integer, String> opCodeMap = ImmutableMap.<Integer, String>builder()
         .put(OP_0, "0")
@@ -266,7 +279,16 @@ public class ScriptOpCodes {
         .put(OP_NOP7, "NOP7")
         .put(OP_NOP8, "NOP8")
         .put(OP_NOP9, "NOP9")
-        .put(OP_NOP10, "NOP10").build();
+        .put(OP_NOP10, "NOP10")
+        .put(OP_PRIMENODE350, "PRIMENODE350")
+        .put(OP_PRIMENODE100, "PRIMENODE100")
+        .put(OP_PRIMENODE20, "PRIMENODE20")
+        .put(OP_PRIMENODE10, "PRIMENODE10")
+        .put(OP_PRIMENODEP2, "PRIMENODEP2")
+        .put(OP_SMALLINTEGER, "SMALLINTEGER")
+        .put(OP_PUBKEYS, "PUBKEYS")
+        .put(OP_PUBKEYHASH, "PUBKEYHASH")
+        .put(OP_PUBKEY, "PUBKEY").build();
 
     private static final Map<String, Integer> opCodeNameMap = ImmutableMap.<String, Integer>builder()
         .put("0", OP_0)
@@ -379,7 +401,16 @@ public class ScriptOpCodes {
         .put("NOP7", OP_NOP7)
         .put("NOP8", OP_NOP8)
         .put("NOP9", OP_NOP9)
-        .put("NOP10", OP_NOP10).build();
+        .put("NOP10", OP_NOP10)
+        .put("PRIMENODE350", OP_PRIMENODE350)
+        .put("PRIMENODE100", OP_PRIMENODE10)
+        .put("PRIMENODE20", OP_PRIMENODE20)
+        .put("PRIMENODE10", OP_PRIMENODE10)
+        .put("PRIMENODEP2", OP_PRIMENODEP2)
+        .put("SMALLINTEGER", OP_SMALLINTEGER)
+        .put("PUBKEYS", OP_PUBKEYS)
+        .put("PUBKEYHASH", OP_PUBKEYHASH)
+        .put("PUBKEY", OP_PUBKEY).build();
 
     /**
      * Converts the given OpCode into a string (eg "0", "PUSHDATA", or "NON_OP(10)")
