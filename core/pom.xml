@@ -20,19 +20,20 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.matthewmitchell</groupId>
-        <artifactId>peercoinj-parent</artifactId>
-        <version>0.12.3</version>
+        <groupId>com.ligerzero459</groupId>
+        <artifactId>paycoinj-parent</artifactId>
+        <version>0.1.0</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>peercoinj</artifactId>
+    <artifactId>paycoinj</artifactId>
 
-    <name>peercoinj</name>
-    <description>A Java Peercoin library</description>
+    <name>paycoinj</name>
+    <description>A Java Paycoin library</description>
 
     <packaging>jar</packaging>
 
-    <url>https://github.com/MatthewLM/peercoinj</url>
+    <url>https://github.com/ligerzero459/paycoinj</url>
 
     <licenses>
         <license>
@@ -256,7 +257,7 @@
                         <configuration>
                             <archive>
                                 <manifest>
-                                    <mainClass>com.matthewmitchell.peercoinj.BitcoindComparisonTool</mainClass>
+                                    <mainClass>com.ligerzero459.paycoinj.BitcoindComparisonTool</mainClass>
                                     <addClasspath>false</addClasspath>
                                 </manifest>
                             </archive>

@@ -24,7 +24,7 @@
 
 package paymentchannels;
 
-option java_package = "com.matthewmitchell.peercoinj.paymentchannel";
+option java_package = "com.ligerzero459.paycoinj.paymentchannel";
 option java_outer_classname = "Protos";
 
 // This message is designed to be either sent raw over the network (e.g. length prefixed) or embedded inside another
