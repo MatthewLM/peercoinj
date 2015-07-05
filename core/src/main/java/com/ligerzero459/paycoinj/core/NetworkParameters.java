@@ -53,7 +53,7 @@ public abstract class NetworkParameters implements Serializable {
     public static final byte[] SATOSHI_KEY = Utils.HEX.decode("04a0a849dd49b113d3179a332dd77715c43be4d0076e2f19e66de23dd707e56630f792f298dfd209bf042bb3561f4af6983f3d81e439737ab0bf7f898fecd21aab");
 
     /** The string returned by getId() for the main, production network where people trade things. */
-    public static final String ID_MAINNET = "org.peercoin.production";
+    public static final String ID_MAINNET = "org.paycoin.production";
     /** Unit test network. */
     public static final String ID_UNITTESTNET = "com.ligerzero459.paycoinj.unittest";
 
@@ -98,9 +98,9 @@ public abstract class NetworkParameters implements Serializable {
         try {
             // A script containing the difficulty bits and the following message:
             //
-            //   "Matonis 07-AUG-2012 Parallel Currencies And The Roadmap To Monetary Freedom"
+            //   "Time 11/29/2014 France Considers Backing Palestinian Statehood"
             byte[] bytes = Utils.HEX.decode
-                    ("04ffff001d020f274b4d61746f6e69732030372d4155472d3230313220506172616c6c656c2043757272656e6369657320416e642054686520526f61646d617020546f204d6f6e65746172792046726565646f6d");
+                    ("04ffff001d0f2754696d652031312f32392f32303134204672616e636520436f6e736964657273204261636b696e672050616c657374696e69616e205374617465686f6f64");
             t.addInput(new TransactionInput(n, t, bytes));
             ByteArrayOutputStream scriptPubKeyBytes = new ByteArrayOutputStream();
             t.addOutput(new TransactionOutput(n, t, ZERO, scriptPubKeyBytes.toByteArray()));
@@ -111,7 +111,7 @@ public abstract class NetworkParameters implements Serializable {
         genesisBlock.addTransaction(t);
         
         String merkleHash = genesisBlock.getMerkleRoot().toString();
-        checkState(merkleHash.equals("3c2d8f85fab4d17aac558cc648a1a58acff0de6deb890c29985690052c5993c2"), merkleHash);
+        checkState(merkleHash.equals("1552f748afb7ff4e04776652c5a17d4073e60b7004e9bca639a99edb82aeb1a0"), merkleHash);
         
         return genesisBlock;
     }
