@@ -15,17 +15,17 @@
  * limitations under the License.
  */
 
-package com.matthewmitchell.peercoinj.examples;
+package com.ligerzero459.paycoinj.examples;
 
-import com.matthewmitchell.peercoinj.core.Coin;
-import com.matthewmitchell.peercoinj.core.NetworkParameters;
-import com.matthewmitchell.peercoinj.core.Sha256Hash;
-import com.matthewmitchell.peercoinj.core.VerificationException;
-import com.matthewmitchell.peercoinj.core.WalletExtension;
-import com.matthewmitchell.peercoinj.kits.WalletAppKit;
-import com.matthewmitchell.peercoinj.params.RegTestParams;
-import com.matthewmitchell.peercoinj.protocols.channels.*;
-import com.matthewmitchell.peercoinj.utils.BriefLogFormatter;
+import com.ligerzero459.paycoinj.core.Coin;
+import com.ligerzero459.paycoinj.core.NetworkParameters;
+import com.ligerzero459.paycoinj.core.Sha256Hash;
+import com.ligerzero459.paycoinj.core.VerificationException;
+import com.ligerzero459.paycoinj.core.WalletExtension;
+import com.ligerzero459.paycoinj.kits.WalletAppKit;
+import com.ligerzero459.paycoinj.params.MainNetParams;
+import com.ligerzero459.paycoinj.protocols.channels.*;
+import com.ligerzero459.paycoinj.utils.BriefLogFormatter;
 import com.google.common.collect.ImmutableList;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -51,7 +51,7 @@ public class ExamplePaymentChannelServer implements PaymentChannelServerListener
     }
 
     public void run() throws Exception {
-        NetworkParameters params = RegTestParams.get();
+        NetworkParameters params = MainNetParams.get();
 
         // Bring up all the objects we need, create/load a wallet, sync the chain, etc. We override WalletAppKit so we
         // can customize it by adding the extension objects - we have to do this before the wallet file is loaded so

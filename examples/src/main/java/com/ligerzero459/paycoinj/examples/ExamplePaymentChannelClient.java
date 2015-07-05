@@ -15,16 +15,16 @@
  * limitations under the License.
  */
 
-package com.matthewmitchell.peercoinj.examples;
+package com.ligerzero459.paycoinj.examples;
 
-import com.matthewmitchell.peercoinj.core.*;
-import com.matthewmitchell.peercoinj.kits.WalletAppKit;
-import com.matthewmitchell.peercoinj.params.RegTestParams;
-import com.matthewmitchell.peercoinj.protocols.channels.PaymentChannelClientConnection;
-import com.matthewmitchell.peercoinj.protocols.channels.StoredPaymentChannelClientStates;
-import com.matthewmitchell.peercoinj.protocols.channels.ValueOutOfRangeException;
-import com.matthewmitchell.peercoinj.utils.BriefLogFormatter;
-import com.matthewmitchell.peercoinj.utils.Threading;
+import com.ligerzero459.paycoinj.core.*;
+import com.ligerzero459.paycoinj.kits.WalletAppKit;
+import com.ligerzero459.paycoinj.params.MainNetParams;
+import com.ligerzero459.paycoinj.protocols.channels.PaymentChannelClientConnection;
+import com.ligerzero459.paycoinj.protocols.channels.StoredPaymentChannelClientStates;
+import com.ligerzero459.paycoinj.protocols.channels.ValueOutOfRangeException;
+import com.ligerzero459.paycoinj.utils.BriefLogFormatter;
+import com.ligerzero459.paycoinj.utils.Threading;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -39,7 +39,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 
-import static com.matthewmitchell.peercoinj.core.Coin.CENT;
+import static com.ligerzero459.paycoinj.core.Coin.CENT;
 
 /**
  * Simple client that connects to the given host, opens a channel, and pays one cent.
@@ -60,7 +60,7 @@ public class ExamplePaymentChannelClient {
     public ExamplePaymentChannelClient() {
         channelSize = CENT;
         myKey = new ECKey();
-        params = RegTestParams.get();
+        params = MainNetParams.get();
     }
 
     public void run(final String host) throws Exception {

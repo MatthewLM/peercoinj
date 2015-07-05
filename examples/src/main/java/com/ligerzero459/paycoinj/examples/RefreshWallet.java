@@ -15,12 +15,12 @@
  * limitations under the License.
  */
 
-package com.matthewmitchell.peercoinj.examples;
+package com.ligerzero459.paycoinj.examples;
 
-import com.matthewmitchell.peercoinj.core.*;
-import com.matthewmitchell.peercoinj.params.TestNet3Params;
-import com.matthewmitchell.peercoinj.store.BlockStore;
-import com.matthewmitchell.peercoinj.store.MemoryBlockStore;
+import com.ligerzero459.paycoinj.core.*;
+import com.ligerzero459.paycoinj.params.MainNetParams;
+import com.ligerzero459.paycoinj.store.BlockStore;
+import com.ligerzero459.paycoinj.store.MemoryBlockStore;
 
 import java.io.File;
 import java.net.InetAddress;
@@ -35,7 +35,7 @@ public class RefreshWallet {
         System.out.println(wallet.toString());
 
         // Set up the components and link them together.
-        final NetworkParameters params = TestNet3Params.get();
+        final NetworkParameters params = MainNetParams.get();
         BlockStore blockStore = new MemoryBlockStore(params);
         BlockChain chain = new BlockChain(params, wallet, blockStore);
 

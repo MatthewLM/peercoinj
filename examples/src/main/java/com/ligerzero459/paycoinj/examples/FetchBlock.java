@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 
-package com.matthewmitchell.peercoinj.examples;
+package com.ligerzero459.paycoinj.examples;
 
-import com.matthewmitchell.peercoinj.core.*;
-import com.matthewmitchell.peercoinj.params.TestNet3Params;
-import com.matthewmitchell.peercoinj.store.BlockStore;
-import com.matthewmitchell.peercoinj.store.MemoryBlockStore;
-import com.matthewmitchell.peercoinj.utils.BriefLogFormatter;
+import com.ligerzero459.paycoinj.core.*;
+import com.ligerzero459.paycoinj.params.MainNetParams;
+import com.ligerzero459.paycoinj.store.BlockStore;
+import com.ligerzero459.paycoinj.store.MemoryBlockStore;
+import com.ligerzero459.paycoinj.utils.BriefLogFormatter;
 
 import java.net.InetAddress;
 import java.util.concurrent.Future;
@@ -33,7 +33,7 @@ public class FetchBlock {
     public static void main(String[] args) throws Exception {
         BriefLogFormatter.init();
         System.out.println("Connecting to node");
-        final NetworkParameters params = TestNet3Params.get();
+        final NetworkParameters params = MainNetParams.get();
 
         BlockStore blockStore = new MemoryBlockStore(params);
         BlockChain chain = new BlockChain(params, blockStore);

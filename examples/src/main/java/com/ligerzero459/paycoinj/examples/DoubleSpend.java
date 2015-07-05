@@ -1,14 +1,14 @@
-package com.matthewmitchell.peercoinj.examples;
+package com.ligerzero459.paycoinj.examples;
 
-import com.matthewmitchell.peercoinj.core.*;
-import com.matthewmitchell.peercoinj.kits.WalletAppKit;
-import com.matthewmitchell.peercoinj.params.RegTestParams;
-import com.matthewmitchell.peercoinj.utils.BriefLogFormatter;
-import com.matthewmitchell.peercoinj.utils.Threading;
+import com.ligerzero459.paycoinj.core.*;
+import com.ligerzero459.paycoinj.kits.WalletAppKit;
+import com.ligerzero459.paycoinj.params.MainNetParams;
+import com.ligerzero459.paycoinj.utils.BriefLogFormatter;
+import com.ligerzero459.paycoinj.utils.Threading;
 
 import java.io.File;
 
-import static com.matthewmitchell.peercoinj.core.Coin.*;
+import static com.ligerzero459.paycoinj.core.Coin.*;
 
 /**
  * This is a little test app that waits for a coin on a local regtest node, then  generates two transactions that double
@@ -18,7 +18,7 @@ import static com.matthewmitchell.peercoinj.core.Coin.*;
 public class DoubleSpend {
     public static void main(String[] args) throws Exception {
         BriefLogFormatter.init();
-        final RegTestParams params = RegTestParams.get();
+        final MainNetParams params = MainNetParams.get();
         WalletAppKit kit = new WalletAppKit(params, new File("."), "doublespend");
         kit.connectToLocalHost();
         kit.setAutoSave(false);

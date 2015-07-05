@@ -15,12 +15,12 @@
  * limitations under the License.
  */
 
-package com.matthewmitchell.peercoinj.tools;
+package com.ligerzero459.paycoin.tools;
 
-import com.matthewmitchell.peercoinj.core.*;
-import com.matthewmitchell.peercoinj.net.discovery.DnsDiscovery;
-import com.matthewmitchell.peercoinj.params.MainNetParams;
-import com.matthewmitchell.peercoinj.utils.BriefLogFormatter;
+import com.ligerzero459.paycoinj.core.*;
+import com.ligerzero459.paycoinj.net.discovery.DnsDiscovery;
+import com.ligerzero459.paycoinj.params.MainNetParams;
+import com.ligerzero459.paycoinj.utils.BriefLogFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -15,15 +15,15 @@
  * limitations under the License.
  */
 
-package com.matthewmitchell.peercoinj.examples;
+package com.ligerzero459.paycoinj.examples;
 
-import com.matthewmitchell.peercoinj.core.AbstractPeerEventListener;
-import com.matthewmitchell.peercoinj.core.NetworkParameters;
-import com.matthewmitchell.peercoinj.core.Peer;
-import com.matthewmitchell.peercoinj.core.PeerGroup;
-import com.matthewmitchell.peercoinj.net.discovery.DnsDiscovery;
-import com.matthewmitchell.peercoinj.params.MainNetParams;
-import com.matthewmitchell.peercoinj.utils.BriefLogFormatter;
+import com.ligerzero459.paycoinj.core.AbstractPeerEventListener;
+import com.ligerzero459.paycoinj.core.NetworkParameters;
+import com.ligerzero459.paycoinj.core.Peer;
+import com.ligerzero459.paycoinj.core.PeerGroup;
+import com.ligerzero459.paycoinj.net.discovery.DnsDiscovery;
+import com.ligerzero459.paycoinj.params.MainNetParams;
+import com.ligerzero459.paycoinj.utils.BriefLogFormatter;
 import com.google.common.collect.Lists;
 
 import javax.swing.*;

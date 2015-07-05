@@ -1,10 +1,10 @@
-package com.matthewmitchell.peercoinj.examples;
+package com.ligerzero459.paycoinj.examples;
 
-import com.matthewmitchell.peercoinj.core.*;
-import com.matthewmitchell.peercoinj.net.discovery.DnsDiscovery;
-import com.matthewmitchell.peercoinj.params.TestNet3Params;
-import com.matthewmitchell.peercoinj.store.SPVBlockStore;
-import com.matthewmitchell.peercoinj.wallet.DeterministicSeed;
+import com.ligerzero459.paycoinj.core.*;
+import com.ligerzero459.paycoinj.net.discovery.DnsDiscovery;
+import com.ligerzero459.paycoinj.params.MainNetParams;
+import com.ligerzero459.paycoinj.store.SPVBlockStore;
+import com.ligerzero459.paycoinj.wallet.DeterministicSeed;
 
 import java.io.File;
 
@@ -15,7 +15,7 @@ import java.io.File;
 public class RestoreFromSeed {
 
     public static void main(String[] args) throws Exception {
-        NetworkParameters params = TestNet3Params.get();
+        NetworkParameters params = MainNetParams.get();
 
         // Peercoinj supports hierarchical deterministic wallets (or "HD Wallets"): https://github.com/peercoin/bips/blob/master/bip-0032.mediawiki
         // HD wallets allow you to restore your wallet simply from a root seed. This seed can be represented using a short mnemonic sentence as described in BIP 39: https://github.com/peercoin/bips/blob/master/bip-0039.mediawiki

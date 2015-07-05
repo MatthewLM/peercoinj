@@ -15,15 +15,13 @@
  * limitations under the License.
  */
 
-package com.matthewmitchell.peercoinj.examples;
+package com.ligerzero459.paycoinj.examples;
 
-import com.matthewmitchell.peercoinj.core.*;
-import com.matthewmitchell.peercoinj.crypto.KeyCrypterException;
-import com.matthewmitchell.peercoinj.kits.WalletAppKit;
-import com.matthewmitchell.peercoinj.params.MainNetParams;
-import com.matthewmitchell.peercoinj.params.RegTestParams;
-import com.matthewmitchell.peercoinj.params.TestNet3Params;
-import com.matthewmitchell.peercoinj.utils.BriefLogFormatter;
+import com.ligerzero459.paycoinj.core.*;
+import com.ligerzero459.paycoinj.crypto.KeyCrypterException;
+import com.ligerzero459.paycoinj.kits.WalletAppKit;
+import com.ligerzero459.paycoinj.params.MainNetParams;
+import com.ligerzero459.paycoinj.utils.BriefLogFormatter;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -49,29 +47,14 @@ public class ForwardingService {
         }
 
         // Figure out which network we should connect to. Each one gets its own set of files.
-        NetworkParameters params;
-        String filePrefix;
-        if (args.length > 1 && args[1].equals("testnet")) {
-            params = TestNet3Params.get();
-            filePrefix = "forwarding-service-testnet";
-        } else if (args.length > 1 && args[1].equals("regtest")) {
-            params = RegTestParams.get();
-            filePrefix = "forwarding-service-regtest";
-        } else {
-            params = MainNetParams.get();
-            filePrefix = "forwarding-service";
-        }
+        NetworkParameters params = MainNetParams.get();
+        String filePrefix = "forwarding-service";
+            
         // Parse the address given as the first parameter.
         forwardingAddress = new Address(params, args[0]);
 
         // Start up a basic app using a class that automates some boilerplate.
         kit = new WalletAppKit(params, new File("."), filePrefix);
-
-        if (params == RegTestParams.get()) {
-            // Regression test mode is designed for testing and development only, so there's no public network for it.
-            // If you pick this mode, you're expected to be running a local "peercoind -regtest" instance.
-            kit.connectToLocalHost();
-        }
 
         // Download the block chain and wait until it's done.
         kit.startAsync();

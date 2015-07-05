@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-package com.matthewmitchell.peercoinj.examples;
+package com.ligerzero459.paycoinj.examples;
 
-import com.matthewmitchell.peercoinj.core.*;
-import com.matthewmitchell.peercoinj.params.MainNetParams;
-import com.matthewmitchell.peercoinj.store.MemoryBlockStore;
+import com.ligerzero459.paycoinj.core.*;
+import com.ligerzero459.paycoinj.params.MainNetParams;
+import com.ligerzero459.paycoinj.store.MemoryBlockStore;
 
 import java.math.BigInteger;
 import java.net.InetAddress;

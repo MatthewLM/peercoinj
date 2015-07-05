@@ -15,28 +15,26 @@
  * limitations under the License.
  */
 
-package com.matthewmitchell.peercoinj.tools;
+package com.ligerzero459.paycoin.tools;
 
-import com.matthewmitchell.peercoinj.core.*;
-import com.matthewmitchell.peercoinj.core.Wallet.BalanceType;
-import com.matthewmitchell.peercoinj.crypto.DeterministicKey;
-import com.matthewmitchell.peercoinj.crypto.KeyCrypterException;
-import com.matthewmitchell.peercoinj.crypto.MnemonicCode;
-import com.matthewmitchell.peercoinj.crypto.MnemonicException;
-import com.matthewmitchell.peercoinj.net.discovery.DnsDiscovery;
-import com.matthewmitchell.peercoinj.params.MainNetParams;
-import com.matthewmitchell.peercoinj.params.RegTestParams;
-import com.matthewmitchell.peercoinj.params.TestNet3Params;
-import com.matthewmitchell.peercoinj.protocols.payments.PaymentProtocol;
-import com.matthewmitchell.peercoinj.protocols.payments.PaymentProtocolException;
-import com.matthewmitchell.peercoinj.protocols.payments.PaymentSession;
-import com.matthewmitchell.peercoinj.store.*;
-import com.matthewmitchell.peercoinj.uri.PeercoinURI;
-import com.matthewmitchell.peercoinj.uri.PeercoinURIParseException;
-import com.matthewmitchell.peercoinj.utils.BriefLogFormatter;
-import com.matthewmitchell.peercoinj.wallet.DeterministicSeed;
-import com.matthewmitchell.peercoinj.wallet.DeterministicUpgradeRequiredException;
-import com.matthewmitchell.peercoinj.wallet.DeterministicUpgradeRequiresPassword;
+import com.ligerzero459.paycoinj.core.*;
+import com.ligerzero459.paycoinj.core.Wallet.BalanceType;
+import com.ligerzero459.paycoinj.crypto.DeterministicKey;
+import com.ligerzero459.paycoinj.crypto.KeyCrypterException;
+import com.ligerzero459.paycoinj.crypto.MnemonicCode;
+import com.ligerzero459.paycoinj.crypto.MnemonicException;
+import com.ligerzero459.paycoinj.net.discovery.DnsDiscovery;
+import com.ligerzero459.paycoinj.params.MainNetParams;
+import com.ligerzero459.paycoinj.protocols.payments.PaymentProtocol;
+import com.ligerzero459.paycoinj.protocols.payments.PaymentProtocolException;
+import com.ligerzero459.paycoinj.protocols.payments.PaymentSession;
+import com.ligerzero459.paycoinj.store.*;
+import com.ligerzero459.paycoinj.uri.PeercoinURI;
+import com.ligerzero459.paycoinj.uri.PeercoinURIParseException;
+import com.ligerzero459.paycoinj.utils.BriefLogFormatter;
+import com.ligerzero459.paycoinj.wallet.DeterministicSeed;
+import com.ligerzero459.paycoinj.wallet.DeterministicUpgradeRequiredException;
+import com.ligerzero459.paycoinj.wallet.DeterministicUpgradeRequiresPassword;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -49,7 +47,7 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import joptsimple.util.DateConverter;
-import com.matthewmitchell.peercoinj.wallet.Protos;
+import com.ligerzero459.paycoinj.wallet.Protos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.params.KeyParameter;
@@ -70,11 +68,11 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 
-import static com.matthewmitchell.peercoinj.core.Coin.parseCoin;
+import static com.ligerzero459.paycoinj.core.Coin.parseCoin;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * A command line tool for manipulating wallets and working with Peercoin.
+ * A command line tool for manipulating wallets and working with Paycoin.
  */
 public class WalletTool {
     private static final Logger log = LoggerFactory.getLogger(WalletTool.class);
@@ -94,7 +92,7 @@ public class WalletTool {
     private static File chainFileName;
     private static ValidationMode mode;
     private static String password;
-    private static org.peercoin.protocols.payments.Protos.PaymentRequest paymentRequest;
+    private static com.ligerzero459.paycoinj.protocols.payments.Protos.PaymentRequest paymentRequest;
     private static OptionSpec<Integer> lookaheadSize;
 
     public static class Condition {
@@ -256,14 +254,6 @@ public class WalletTool {
             case PROD:
                 params = MainNetParams.get();
                 chainFileName = new File("prodnet.chain");
-                break;
-            case TEST:
-                params = TestNet3Params.get();
-                chainFileName = new File("testnet.chain");
-                break;
-            case REGTEST:
-                params = RegTestParams.get();
-                chainFileName = new File("regtest.chain");
                 break;
             default:
                 throw new RuntimeException("Unreachable.");
@@ -632,7 +622,7 @@ public class WalletTool {
                 System.exit(1);
             }
             try {
-                paymentRequest = org.peercoin.protocols.payments.Protos.PaymentRequest.newBuilder().mergeFrom(stream).build();
+                paymentRequest = com.ligerzero459.paycoinj.protocols.payments.Protos.PaymentRequest.newBuilder().mergeFrom(stream).build();
             } catch(IOException e) {
                 System.err.println("Failed to parse payment request from file " + e.getMessage());
                 System.exit(1);

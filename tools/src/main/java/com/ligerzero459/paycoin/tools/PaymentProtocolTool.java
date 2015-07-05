@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package com.matthewmitchell.peercoinj.tools;
+package com.ligerzero459.paycoin.tools;
 
-import com.matthewmitchell.peercoinj.crypto.TrustStoreLoader;
-import com.matthewmitchell.peercoinj.protocols.payments.PaymentProtocol;
-import com.matthewmitchell.peercoinj.protocols.payments.PaymentProtocolException;
-import com.matthewmitchell.peercoinj.protocols.payments.PaymentSession;
-import com.matthewmitchell.peercoinj.uri.PeercoinURI;
-import com.matthewmitchell.peercoinj.uri.PeercoinURIParseException;
-import org.peercoin.protocols.payments.Protos;
+import com.ligerzero459.paycoinj.crypto.TrustStoreLoader;
+import com.ligerzero459.paycoinj.protocols.payments.PaymentProtocol;
+import com.ligerzero459.paycoinj.protocols.payments.PaymentProtocolException;
+import com.ligerzero459.paycoinj.protocols.payments.PaymentSession;
+import com.ligerzero459.paycoinj.uri.PeercoinURI;
+import com.ligerzero459.paycoinj.uri.PeercoinURIParseException;
+import com.ligerzero459.paycoinj.protocols.payments.Protos;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;

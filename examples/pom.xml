@@ -19,23 +19,18 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <groupId>com.matthewmitchell</groupId>
-        <artifactId>peercoinj-parent</artifactId>
-        <version>0.12.3</version>
+        <groupId>com.ligerzero459</groupId>
+        <artifactId>paycoinj-parent</artifactId>
+        <version>0.1.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>peercoinj-examples</artifactId>
+    <artifactId>paycoinj-examples</artifactId>
 
-    <name>peercoinj Examples</name>
-    <description>A collection of examples using the peercoinj library</description>
+    <name>paycoinj Examples</name>
+    <description>A collection of examples using the paycoinj library</description>
 
     <dependencies>
-        <dependency>
-            <groupId>com.matthewmitchell</groupId>
-            <artifactId>peercoinj</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-jdk14</artifactId>
@@ -45,6 +40,11 @@
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <version>1.3.167</version>
+        </dependency>
+        <dependency>
+            <groupId>com.ligerzero459</groupId>
+            <artifactId>paycoinj</artifactId>
+            <version>0.1.0</version>
         </dependency>
     </dependencies>
 </project>

@@ -1,12 +1,12 @@
-package com.matthewmitchell.peercoinj.examples;
+package com.ligerzero459.paycoinj.examples;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.matthewmitchell.peercoinj.core.*;
-import com.matthewmitchell.peercoinj.core.Wallet.BalanceType;
-import com.matthewmitchell.peercoinj.kits.WalletAppKit;
-import com.matthewmitchell.peercoinj.params.TestNet3Params;
+import com.ligerzero459.paycoinj.core.*;
+import com.ligerzero459.paycoinj.core.Wallet.BalanceType;
+import com.ligerzero459.paycoinj.kits.WalletAppKit;
+import com.ligerzero459.paycoinj.params.MainNetParams;
 
 import java.io.File;
 
@@ -18,7 +18,7 @@ public class SendRequest {
     public static void main(String[] args) throws Exception {
 
         // We use the WalletAppKit that handles all the boilerplate for us. Have a look at the Kit.java example for more details.
-        NetworkParameters params = TestNet3Params.get();
+        NetworkParameters params = MainNetParams.get();
         WalletAppKit kit = new WalletAppKit(params, new File("."), "sendrequest-example");
         kit.startAsync();
         kit.awaitRunning();
@@ -32,7 +32,7 @@ public class SendRequest {
 
         // To which address you want to send the coins?
         // The Address class represents a Peercoin address.
-        Address to = new Address(params, "mupBAFeT63hXfeeT4rnAUcpKHDkz1n4fdw");
+        Address to = new Address(params, "PDW1CfjZkcPSyCavuYe3HGwLGEM87eoqnn");
 
         // There are different ways to create and publish a SendRequest. This is probably the easiest one.
         // Have a look at the code of the SendRequest class to see what's happening and what other options you have: https://peercoinj.github.io/javadoc/0.11/com/google/peercoin/core/Wallet.SendRequest.html
