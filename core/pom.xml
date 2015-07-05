@@ -23,7 +23,6 @@
         <groupId>com.ligerzero459</groupId>
         <artifactId>paycoinj-parent</artifactId>
         <version>0.1.0</version>
-        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>paycoinj</artifactId>
@@ -288,7 +287,7 @@
             <version>3.0</version>
             <scope>test</scope>
         </dependency>
-        <!-- peercoinj consumers are expected to provide their own SLF4J adapters
+        <!-- paycoinj consumers are expected to provide their own SLF4J adapters
              such as logback, slf4j-log4j12, slf4j-jcl and so on
              see http://www.slf4j.org/faq.html -->
         <dependency>
@@ -340,16 +339,13 @@
             <version>1.4.0</version>
         </dependency>
 
-        <!-- Add in to test/use Postgres blockstore -->
-        <!--
         <dependency>
           <groupId>postgresql</groupId>
           <artifactId>postgresql</artifactId>
           <version>9.1-901.jdbc4</version>
         </dependency>
-        -->
         <dependency>
-            <groupId>com.matthewmitchell</groupId>
+            <groupId>com.ligerzero459</groupId>
             <artifactId>orchid</artifactId>
             <version>1.0</version>
         </dependency>
