@@ -24,7 +24,7 @@
 
 package paymentchannels;
 
-option java_package = "com.matthewmitchell.peercoinj.protocols.channels";
+option java_package = "com.ligerzero459.paycoinj.protocols.channels";
 option java_outer_classname = "ClientState";
 
 
