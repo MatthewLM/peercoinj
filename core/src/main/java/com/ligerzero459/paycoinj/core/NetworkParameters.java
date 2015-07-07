@@ -17,8 +17,7 @@
 
 package com.ligerzero459.paycoinj.core;
 
-import com.ligerzero459.paycoinj.params.UnitTestParams;
-import com.ligerzero459.paycoinj.params.MainNetParams;
+import com.ligerzero459.paycoinj.params.*;
 import com.ligerzero459.paycoinj.script.Script;
 import com.ligerzero459.paycoinj.script.ScriptOpCodes;
 import com.google.common.base.Objects;
@@ -94,13 +93,13 @@ public abstract class NetworkParameters implements Serializable {
     private static Block createGenesis(NetworkParameters n) {
         Block genesisBlock = new Block(n);
         Transaction t = new Transaction(n);
-        t.setTime(1345083810);
+        t.setTime(1417219200);
         try {
             // A script containing the difficulty bits and the following message:
             //
             //   "Time 11/29/2014 France Considers Backing Palestinian Statehood"
             byte[] bytes = Utils.HEX.decode
-                    ("04ffff001d0f2754696d652031312f32392f32303134204672616e636520436f6e736964657273204261636b696e672050616c657374696e69616e205374617465686f6f64");
+                    ("04ffff001d020f273e54696d652031312f32392f32303134204672616e636520436f6e736964657273204261636b696e672050616c657374696e69616e205374617465686f6f64");
             t.addInput(new TransactionInput(n, t, bytes));
             ByteArrayOutputStream scriptPubKeyBytes = new ByteArrayOutputStream();
             t.addOutput(new TransactionOutput(n, t, ZERO, scriptPubKeyBytes.toByteArray()));
