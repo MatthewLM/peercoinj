@@ -4,6 +4,7 @@ import com.ligerzero459.paycoinj.core.*;
 import com.ligerzero459.paycoinj.net.discovery.DnsDiscovery;
 import com.ligerzero459.paycoinj.params.MainNetParams;
 import com.ligerzero459.paycoinj.store.SPVBlockStore;
+import com.ligerzero459.paycoinj.store.ValidHashStore;
 import com.ligerzero459.paycoinj.wallet.DeterministicSeed;
 
 import java.io.File;
@@ -42,7 +43,8 @@ public class RestoreFromSeed {
 
         // Setting up the BlochChain, the BlocksStore and connecting to the network.
         SPVBlockStore chainStore = new SPVBlockStore(params, chainFile);
-        BlockChain chain = new BlockChain(params, chainStore);
+        ValidHashStore validHashStore = new ValidHashStore(new File("."));
+        BlockChain chain = new BlockChain(params, chainStore, validHashStore);
         PeerGroup peers = new PeerGroup(params, chain);
         peers.addPeerDiscovery(new DnsDiscovery(params));
 

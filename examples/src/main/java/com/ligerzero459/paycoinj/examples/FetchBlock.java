@@ -21,7 +21,9 @@ import com.ligerzero459.paycoinj.core.*;
 import com.ligerzero459.paycoinj.params.MainNetParams;
 import com.ligerzero459.paycoinj.store.BlockStore;
 import com.ligerzero459.paycoinj.store.MemoryBlockStore;
+import com.ligerzero459.paycoinj.store.ValidHashStore;
 import com.ligerzero459.paycoinj.utils.BriefLogFormatter;
+import java.io.File;
 
 import java.net.InetAddress;
 import java.util.concurrent.Future;
@@ -36,7 +38,8 @@ public class FetchBlock {
         final NetworkParameters params = MainNetParams.get();
 
         BlockStore blockStore = new MemoryBlockStore(params);
-        BlockChain chain = new BlockChain(params, blockStore);
+        ValidHashStore validHashStore = new ValidHashStore(new File("."));
+        BlockChain chain = new BlockChain(params, blockStore, validHashStore);
         PeerGroup peerGroup = new PeerGroup(params, chain);
         peerGroup.startAsync();
         peerGroup.awaitRunning();

@@ -21,6 +21,7 @@ import com.ligerzero459.paycoinj.core.*;
 import com.ligerzero459.paycoinj.params.MainNetParams;
 import com.ligerzero459.paycoinj.store.BlockStore;
 import com.ligerzero459.paycoinj.store.MemoryBlockStore;
+import com.ligerzero459.paycoinj.store.ValidHashStore;
 
 import java.io.File;
 import java.net.InetAddress;
@@ -37,7 +38,8 @@ public class RefreshWallet {
         // Set up the components and link them together.
         final NetworkParameters params = MainNetParams.get();
         BlockStore blockStore = new MemoryBlockStore(params);
-        BlockChain chain = new BlockChain(params, wallet, blockStore);
+        ValidHashStore validHashStore = new ValidHashStore(new File("."));
+        BlockChain chain = new BlockChain(params, wallet, blockStore, validHashStore);
 
         final PeerGroup peerGroup = new PeerGroup(params, chain);
         peerGroup.addAddress(new PeerAddress(InetAddress.getLocalHost()));

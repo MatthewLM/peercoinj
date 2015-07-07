@@ -32,7 +32,7 @@ public class SendRequest {
 
         // To which address you want to send the coins?
         // The Address class represents a Peercoin address.
-        Address to = new Address(params, "PDW1CfjZkcPSyCavuYe3HGwLGEM87eoqnn");
+        Address to = new Address(params, "PS43Jt2x3LXCkou2hZPaKjGwb1TQmAaihg");
 
         // There are different ways to create and publish a SendRequest. This is probably the easiest one.
         // Have a look at the code of the SendRequest class to see what's happening and what other options you have: https://peercoinj.github.io/javadoc/0.11/com/google/peercoin/core/Wallet.SendRequest.html

@@ -41,23 +41,24 @@ public class ForwardingService {
     public static void main(String[] args) throws Exception {
         // This line makes the log output more compact and easily read, especially when using the JDK log adapter.
         BriefLogFormatter.init();
-        if (args.length < 1) {
-            System.err.println("Usage: address-to-send-back-to [regtest|testnet]");
-            return;
-        }
+//        if (args.length < 1) {
+//            System.err.println("Usage: address-to-send-back-to [regtest|testnet]");
+//            return;
+//        }
 
         // Figure out which network we should connect to. Each one gets its own set of files.
         NetworkParameters params = MainNetParams.get();
         String filePrefix = "forwarding-service";
             
         // Parse the address given as the first parameter.
-        forwardingAddress = new Address(params, args[0]);
+        forwardingAddress = new Address(params, "PS43Jt2x3LXCkou2hZPaKjGwb1TQmAaihg");
 
         // Start up a basic app using a class that automates some boilerplate.
         kit = new WalletAppKit(params, new File("."), filePrefix);
 
         // Download the block chain and wait until it's done.
         kit.startAsync();
+        kit.setBlockingStartup(false);
         kit.awaitRunning();
 
         // We want to know when we receive money.

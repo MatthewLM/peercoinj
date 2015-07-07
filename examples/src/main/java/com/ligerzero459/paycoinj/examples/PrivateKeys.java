@@ -20,6 +20,8 @@ package com.ligerzero459.paycoinj.examples;
 import com.ligerzero459.paycoinj.core.*;
 import com.ligerzero459.paycoinj.params.MainNetParams;
 import com.ligerzero459.paycoinj.store.MemoryBlockStore;
+import com.ligerzero459.paycoinj.store.ValidHashStore;
+import java.io.File;
 
 import java.math.BigInteger;
 import java.net.InetAddress;
@@ -59,7 +61,8 @@ public class PrivateKeys {
 
             // Find the transactions that involve those coins.
             final MemoryBlockStore blockStore = new MemoryBlockStore(params);
-            BlockChain chain = new BlockChain(params, wallet, blockStore);
+            ValidHashStore validHashStore = new ValidHashStore(new File("."));
+            BlockChain chain = new BlockChain(params, wallet, blockStore, validHashStore);
 
             final PeerGroup peerGroup = new PeerGroup(params, chain);
             peerGroup.addAddress(new PeerAddress(InetAddress.getLocalHost()));
