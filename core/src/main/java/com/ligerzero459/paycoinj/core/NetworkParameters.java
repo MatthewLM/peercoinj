@@ -44,7 +44,7 @@ public abstract class NetworkParameters implements Serializable {
     /**
      * The protocol version this library implements.
      */
-    public static final int PROTOCOL_VERSION = 60012;
+    public static final int PROTOCOL_VERSION = 70003;
 
     /**
      * The alert signing key.
