@@ -277,10 +277,12 @@ public class WalletAppKit extends AbstractIdleService {
             // Set up peer addresses or discovery first, so if wallet extensions try to broadcast a transaction
             // before we're actually connected the broadcast waits for an appropriate number of connections.
             if (peerAddresses != null) {
+                log.info("no peer addressed found");
                 for (PeerAddress addr : peerAddresses) vPeerGroup.addAddress(addr);
                 vPeerGroup.setMaxConnections(peerAddresses.length);
                 peerAddresses = null;
             } else {
+                log.info("starting peer discovery");
                 vPeerGroup.addPeerDiscovery(new DnsDiscovery(params));
             }
             vChain.addWallet(vWallet);
@@ -296,6 +298,7 @@ public class WalletAppKit extends AbstractIdleService {
 
                 // TODO: Be able to use the provided download listener when doing a blocking startup.
                 final DownloadListener listener = new DownloadListener();
+                log.info("blockchain download starting");
                 vPeerGroup.startBlockChainDownload(listener);
                 listener.await();
             } else {
@@ -305,6 +308,7 @@ public class WalletAppKit extends AbstractIdleService {
                     public void running() {
                         completeExtensionInitiations(vPeerGroup);
                         final PeerEventListener l = downloadListener == null ? new DownloadListener() : downloadListener;
+                        log.info("blockchain download starting");
                         vPeerGroup.startBlockChainDownload(l);
                     }
 

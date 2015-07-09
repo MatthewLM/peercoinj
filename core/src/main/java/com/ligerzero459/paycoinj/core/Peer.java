@@ -358,8 +358,10 @@ public class Peer extends PeerSocketHandler {
         } else if (m instanceof InventoryMessage) {
             processInv((InventoryMessage) m);
         } else if (m instanceof Block) {
+            log.info("processing Block");
             processBlock((Block) m);
         } else if (m instanceof FilteredBlock) {
+            log.info("processing FilteredBlock");
             startFilteredBlock((FilteredBlock) m);
         } else if (m instanceof Transaction) {
             processTransaction((Transaction) m);
@@ -373,6 +375,7 @@ public class Peer extends PeerSocketHandler {
         } else if (m instanceof AlertMessage) {
             processAlert((AlertMessage) m);
         } else if (m instanceof VersionMessage) {
+            log.info("processing VersionMessage");
             processVersionMessage((VersionMessage) m);
         } else if (m instanceof VersionAck) {
             if (vPeerVersionMessage == null) {
@@ -592,7 +595,7 @@ public class Peer extends PeerSocketHandler {
         final Transaction fTx;
         lock.lock();
         try {
-            log.debug("{}: Received tx {}", getAddress(), tx.getHashAsString());
+            log.info("{}: Received tx {}", getAddress(), tx.getHashAsString());
             if (memoryPool != null) {
                 // We may get back a different transaction object.
                 tx = memoryPool.seen(tx, getAddress());
@@ -840,7 +843,7 @@ public class Peer extends PeerSocketHandler {
 
     private void processBlock(Block m) {
         if (log.isDebugEnabled()) {
-            log.debug("{}: Received broadcast block {}", getAddress(), m.getHashAsString());
+            log.info("{}: Received broadcast block {}", getAddress(), m.getHashAsString());
         }
         // Was this block requested by getBlock()?
         if (maybeHandleRequestedData(m)) return;
@@ -850,7 +853,7 @@ public class Peer extends PeerSocketHandler {
         }
         // Did we lose download peer status after requesting block data?
         if (!vDownloadData) {
-            log.debug("{}: Received block we did not ask for: {}", getAddress(), m.getHashAsString());
+            log.info("{}: Received block we did not ask for: {}", getAddress(), m.getHashAsString());
             return;
         }
         pendingBlockDownloads.remove(m.getHash());
@@ -858,6 +861,7 @@ public class Peer extends PeerSocketHandler {
             // Otherwise it's a block sent to us because the peer thought we needed it, so add it to the block chain.
             if (blockChain.add(m)) {
 		
+                log.info("block {} addded successfully: ", m.getHashAsString());
                 // The block was successfully linked into the chain. Notify the user of our progress.
                 invokeOnBlocksDownloaded(m);
 		
@@ -908,9 +912,9 @@ public class Peer extends PeerSocketHandler {
     // TODO: Fix this duplication.
     private void endFilteredBlock(FilteredBlock m) {
         if (log.isDebugEnabled())
-            log.debug("{}: Received broadcast filtered block {}", getAddress(), m.getHash().toString());
+            log.info("{}: Received broadcast filtered block {}", getAddress(), m.getHash().toString());
         if (!vDownloadData) {
-            log.debug("{}: Received block we did not ask for: {}", getAddress(), m.getHash().toString());
+            log.info("{}: Received block we did not ask for: {}", getAddress(), m.getHash().toString());
             return;
         }
         if (blockChain == null) {
@@ -1099,7 +1103,7 @@ public class Peer extends PeerSocketHandler {
                     // Some other peer already announced this so don't download.
                     it.remove();
                 } else {
-                    log.debug("{}: getdata on tx {}", getAddress(), item.hash);
+                    log.info("{}: getdata on tx {}", getAddress(), item.hash);
                     getdata.addItem(item);
                 }
                 // This can trigger transaction confidence listeners.
@@ -1137,7 +1141,7 @@ public class Peer extends PeerSocketHandler {
                         // the duplicate check in blockChainDownloadLocked(). But the satoshi client may change in future so
                         // it's better to be safe here.
                         if (!pendingBlockDownloads.contains(item.hash)) {
-                            if (vPeerVersionMessage.isBloomFilteringSupported() && useFilteredBlocks) {
+                            if (useFilteredBlocks) {
                                 getdata.addFilteredBlock(item.hash);
                                 pingAfterGetData = true;
                             } else {
@@ -1373,7 +1377,7 @@ public class Peer extends PeerSocketHandler {
             return;
         }
         if (log.isDebugEnabled())
-            log.debug("{}: blockChainDownloadLocked({}) current head = {}",
+            log.info("{}: blockChainDownloadLocked({}) current head = {}",
                     toString(), toHash.toString(), chainHead.getHeader().getHashAsString());
         StoredBlock cursor = chainHead;
         for (int i = 100; cursor != null && i > 0; i--) {
@@ -1452,7 +1456,7 @@ public class Peer extends PeerSocketHandler {
             checkNotNull(future, "Already completed");
             Long elapsed = Utils.currentTimeMillis() - startTimeMsec;
             Peer.this.addPingTimeData(elapsed);
-            log.debug("{}: ping time is {} msec", Peer.this.toString(), elapsed);
+            log.info("{}: ping time is {} msec", Peer.this.toString(), elapsed);
             future.set(elapsed);
             future = null;
         }
@@ -1650,7 +1654,7 @@ public class Peer extends PeerSocketHandler {
         if (ver == null || !ver.isBloomFilteringSupported())
             return;
         vBloomFilter = filter;
-        log.debug("{}: Sending Bloom filter{}", this, andQueryMemPool ? " and querying mempool" : "");
+        log.info("{}: Sending Bloom filter{}", this, andQueryMemPool ? " and querying mempool" : "");
         sendMessage(filter);
         if (andQueryMemPool)
             sendMessage(new MemoryPoolMessage());

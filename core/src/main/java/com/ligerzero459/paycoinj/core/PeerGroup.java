@@ -82,7 +82,7 @@ import static com.google.common.base.Preconditions.*;
  */
 public class PeerGroup extends AbstractExecutionThreadService implements TransactionBroadcaster {
     private static final Logger log = LoggerFactory.getLogger(PeerGroup.class);
-    private static final int DEFAULT_CONNECTIONS = 4;
+    private static final int DEFAULT_CONNECTIONS = 8;
     private static final int TOR_TIMEOUT_SECONDS = 60;
 
     protected final ReentrantLock lock = Threading.lock("peergroup");
@@ -121,7 +121,7 @@ public class PeerGroup extends AbstractExecutionThreadService implements Transac
     // until we reach this count.
     @GuardedBy("lock") private int maxConnections;
     // Minimum protocol version we will allow ourselves to connect to: Do not require bloom filtering as it doesn't exist in Peercoin
-    private volatile int vMinRequiredProtocolVersion = 60000;
+    private volatile int vMinRequiredProtocolVersion = 70003;
 
     // Runs a background thread that we use for scheduling pings to our peers, so we can measure their performance
     // and network latency. We ping peers every pingIntervalMsec milliseconds.
@@ -130,7 +130,7 @@ public class PeerGroup extends AbstractExecutionThreadService implements Transac
     public static final long DEFAULT_PING_INTERVAL_MSEC = 2000;
     private long pingIntervalMsec = DEFAULT_PING_INTERVAL_MSEC;
 
-    @GuardedBy("lock") private boolean useLocalhostPeerWhenPossible = true;
+    @GuardedBy("lock") private boolean useLocalhostPeerWhenPossible = false;
     @GuardedBy("lock") private boolean ipv6Unreachable = false;
 
     private final NetworkParameters params;
@@ -199,11 +199,11 @@ public class PeerGroup extends AbstractExecutionThreadService implements Transac
         }
 
         @Override public void onScriptsAdded(Wallet wallet, List<Script> scripts) {
-            queueRecalc(true);
+            queueRecalc(false);
         }
 
         @Override public void onKeysAdded(List<ECKey> keys) {
-            queueRecalc(true);
+            queueRecalc(false);
         }
 
         @Override
@@ -233,7 +233,7 @@ public class PeerGroup extends AbstractExecutionThreadService implements Transac
             for (TransactionOutput output : tx.getOutputs()) {
                 if (output.getScriptPubKey().isSentToRawPubKey() && output.isMine(wallet)) {
                     if (tx.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING)
-                        queueRecalc(true);
+                        queueRecalc(false);
                     else
                         queueRecalc(false);
                     return;
@@ -837,7 +837,7 @@ public class PeerGroup extends AbstractExecutionThreadService implements Transac
 	                nowMillis = Utils.currentTimeMillis();
 	            }
 	            if (inactives.size() == 0) {
-	                log.debug("Peer discovery didn't provide us any more peers, not trying to build new connection.");
+	                log.info("Peer discovery didn't provide us any more peers, not trying to build new connection.");
 	                return;
 	            }
 	            

@@ -30,18 +30,18 @@ public class MainNetParams extends NetworkParameters {
         super();
         interval = INTERVAL;
         targetTimespan = TARGET_TIMESPAN;
-        maxTarget = Utils.decodeCompactBits(0x1d00ffffL);
+        maxTarget = Utils.decodeCompactBits(0x1e0fffffL);
         dumpedPrivateKeyHeader = 183;
         addressHeader = 55;
         p2shHeader = 117;
         acceptableAddressCodes = new int[] { addressHeader, p2shHeader };
-        port = 9901;
+        port = 8998;
         packetMagic= 0xaaaaaaaaL;
         genesisBlock.setDifficultyTarget(0x1e0fffffL);
         genesisBlock.setTime(1417219210L);
         genesisBlock.setNonce(716560L);
         id = ID_MAINNET;
-        spendableCoinbaseDepth = 500;
+        spendableCoinbaseDepth = 100;
         String genesisHash = genesisBlock.getHashAsString();
         checkState(genesisHash.equals("00000e5695fbec8e36c10064491946ee3b723a9fa640fc0e25d3b8e4737e53e3"), genesisHash);
 
@@ -91,7 +91,7 @@ public class MainNetParams extends NetworkParameters {
 
         dnsSeeds = new String[] {
                 "dnsseed.paycoin.com"
-              , "dnsseed.paycoinfoundation.org"
+//              , "dnsseed.paycoinfoundation.org"
               , "dnsseed.xpydev.org"
         };
     }

@@ -354,7 +354,9 @@ public abstract class AbstractBlockChain {
                         @Nullable List<Sha256Hash> filteredTxHashList, @Nullable Map<Sha256Hash, Transaction> filteredTxn)
             throws BlockStoreException, VerificationException, PrunedException {
         lock.lock();
+        log.info("adding block to chain: {}", block.getHashAsString());
         try {
+            log.info("inside try adding block: {}", block.getHashAsString());
             // TODO: Use read/write locks to ensure that during chain download properties are still low latency.
             if (System.currentTimeMillis() - statsLastTime > 1000) {
                 // More than a second passed since last stats logging.
@@ -366,9 +368,11 @@ public abstract class AbstractBlockChain {
             // Quick check for duplicates to avoid an expensive check further down (in findSplit). This can happen a lot
             // when connecting orphan transactions due to the dumb brute force algorithm we use.
             if (block.equals(getChainHead().getHeader())) {
+                log.info("Block is current chain head");
                 return true;
             }
             if (tryConnecting && orphanBlocks.containsKey(block.getHash())) {
+                log.info("Block contained in orphanBlocks: {}", block.getHashAsString());
                 return false;
             }
 
@@ -379,6 +383,7 @@ public abstract class AbstractBlockChain {
             // Check for already-seen block, but only for full pruned mode, where the DB is
             // more likely able to handle these queries quickly.
             if (shouldVerifyTransactions() && blockStore.get(block.getHash()) != null) {
+                log.info("Block already seen: {}", block.getHashAsString());
                 return true;
             }
 
@@ -399,8 +404,8 @@ public abstract class AbstractBlockChain {
                 if (contentsImportant)
                     block.verifyTransactions();
             } catch (VerificationException e) {
-                log.error("Failed to verify block: ", e);
-                log.error(block.getHashAsString());
+                log.info("Failed to verify block: ", e);
+                log.info(block.getHashAsString());
                 throw e;
             }
 
@@ -411,8 +416,8 @@ public abstract class AbstractBlockChain {
                 // We can't find the previous block. Probably we are still in the process of downloading the chain and a
                 // block was solved whilst we were doing it. We put it to one side and try to connect it later when we
                 // have more blocks.
+                log.info("Block does not connect: {} prev {}", block.getHashAsString(), block.getPrevBlockHash());
                 checkState(tryConnecting, "bug in tryConnectingOrphans");
-                log.warn("Block does not connect: {} prev {}", block.getHashAsString(), block.getPrevBlockHash());
                 orphanBlocks.put(block.getHash(), new OrphanBlock(block, filteredTxHashList, filteredTxn));
                 return false;
             } else {
@@ -422,7 +427,7 @@ public abstract class AbstractBlockChain {
                 // Wait a while for the server if the block is less than three hours old
     		    try {
 			    if (validHashStore != null && !validHashStore.isValidHash(block.getHash(), this, block.getTimeSeconds() > Utils.currentTimeSeconds() - 60*60*3)) {
-			       throw new VerificationException("Invalid hash received");
+//			       throw new VerificationException("Invalid hash received");
 			    }
 		    } catch (IOException e) {
 			    log.error("IO Error when determining valid hashes: ", e);
@@ -430,6 +435,7 @@ public abstract class AbstractBlockChain {
 		    }
             	
                 checkDifficultyTransitions(storedPrev, block);
+                log.info("moving to connect block: {}", block.getHashAsString());
                 connectBlock(block, storedPrev, shouldVerifyTransactions(), filteredTxHashList, filteredTxn);
             }
 
@@ -466,6 +472,7 @@ public abstract class AbstractBlockChain {
                               @Nullable final List<Sha256Hash> filteredTxHashList,
                               @Nullable final Map<Sha256Hash, Transaction> filteredTxn) throws BlockStoreException, VerificationException, PrunedException {
         checkState(lock.isHeldByCurrentThread());
+        log.info("in connectBlock: {}", block.getHashAsString());
         boolean filtered = filteredTxHashList != null && filteredTxn != null;
         // Check that we aren't connecting a block that fails a checkpoint check
         if (!params.passesCheckpoint(storedPrev.getHeight() + 1, block.getHash()))
@@ -480,7 +487,7 @@ public abstract class AbstractBlockChain {
         StoredBlock head = getChainHead();
         if (storedPrev.equals(head)) {
             if (filtered && filteredTxn.size() > 0)  {
-                log.debug("Block {} connects to top of best chain with {} transaction(s) of which we were sent {}",
+                log.info("Block {} connects to top of best chain with {} transaction(s) of which we were sent {}",
                         block.getHashAsString(), filteredTxHashList.size(), filteredTxn.size());
                 for (Sha256Hash hash : filteredTxHashList) log.debug("  matched tx {}", hash);
             }
@@ -494,7 +501,7 @@ public abstract class AbstractBlockChain {
             StoredBlock newStoredBlock = addToBlockStore(storedPrev,
                     block.transactions == null ? block : block.cloneAsHeader(), txOutChanges);
             setChainHead(newStoredBlock);
-            log.debug("Chain is now {} blocks high, running listeners", newStoredBlock.getHeight());
+            log.info("Chain is now {} blocks high, running listeners", newStoredBlock.getHeight());
             informListenersForNewBlock(block, NewBlockType.BEST_CHAIN, filteredTxHashList, filteredTxn, newStoredBlock);
         } else {
             // This block connects to somewhere other than the top of the best known chain. We treat these differently.
@@ -787,7 +794,7 @@ public abstract class AbstractBlockChain {
                 if (listener.isTransactionRelevant(tx)) {
                     falsePositives.remove(tx.getHash());
                     if (clone)
-                        tx = new Transaction(tx.params, tx.peercoinSerialize());
+                        tx = new Transaction(tx.params, tx.paycoinSerialize());
                     listener.receiveFromBlock(tx, block, blockType, relativityOffset++);
                 }
             } catch (ScriptException e) {
@@ -830,7 +837,7 @@ public abstract class AbstractBlockChain {
                 StoredBlock prev = getStoredBlockInCurrentScope(orphanBlock.block.getPrevBlockHash());
                 if (prev == null) {
                     // This is still an unconnected/orphan block.
-                    log.debug("  but it is not connectable right now");
+                    log.info("  but it is not connectable right now");
                     continue;
                 }
 
@@ -1006,7 +1013,7 @@ public abstract class AbstractBlockChain {
         // Each false positive counts as 1.0 towards the estimate.
         falsePositiveRate += FP_ESTIMATOR_ALPHA * count;
         if (count > 0)
-            log.debug("{} false positives, current rate = {} trend = {}", count, falsePositiveRate, falsePositiveTrend);
+            log.info("{} false positives, current rate = {} trend = {}", count, falsePositiveRate, falsePositiveTrend);
     }
 
     /** Resets estimates of false positives. Used when the filter is sent to the peer. */

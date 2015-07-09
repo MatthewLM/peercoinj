@@ -108,7 +108,7 @@ public class Block extends Message {
         super(params);
         // Set up a few basic things. We are not complete after this though.
         version = 1;
-        difficultyTarget = 0x1d0fffffL;
+        difficultyTarget = 0x1e0fffffL;
         time = System.currentTimeMillis() / 1000;
         prevBlockHash = Sha256Hash.ZERO_HASH;
 
@@ -240,7 +240,7 @@ public class Block extends Message {
         maybeParseTransactions();
         if (optimalEncodingMessageSize != 0)
             return optimalEncodingMessageSize;
-        optimalEncodingMessageSize = peercoinSerialize().length;
+        optimalEncodingMessageSize = paycoinSerialize().length;
         return optimalEncodingMessageSize;
     }
 
@@ -408,7 +408,7 @@ public class Block extends Message {
         if (transactions != null) {
             stream.write(new VarInt(transactions.size()).encode());
             for (Transaction tx : transactions) {
-                tx.peercoinSerialize(stream);
+                tx.paycoinSerialize(stream);
             }
         }
         
@@ -427,7 +427,7 @@ public class Block extends Message {
      * @throws IOException
      */
     @Override
-    public byte[] peercoinSerialize() {
+    public byte[] paycoinSerialize() {
         // we have completely cached byte array.
         if (headerBytesValid && transactionBytesValid) {
             Preconditions.checkNotNull(payload, "Bytes should never be null if headerBytesValid && transactionBytesValid");
@@ -454,7 +454,7 @@ public class Block extends Message {
     }
 
     @Override
-    protected void peercoinSerializeToStream(OutputStream stream) throws IOException {
+    protected void paycoinSerializeToStream(OutputStream stream) throws IOException {
         writeHeader(stream);
         // We may only have enough data to write the header.
         writeTransactions(stream);
@@ -965,7 +965,7 @@ public class Block extends Message {
                 ScriptBuilder.createOutputScript(new ECKey(null, pubKeyTo)).getProgram()));
         transactions.add(coinbase);
         coinbase.setParent(this);
-        coinbase.length = coinbase.peercoinSerialize().length;
+        coinbase.length = coinbase.paycoinSerialize().length;
         adjustLength(transactions.size(), coinbase.length);
     }
 
