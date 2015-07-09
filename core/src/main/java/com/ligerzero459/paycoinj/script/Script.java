@@ -41,7 +41,7 @@ import static com.google.common.base.Preconditions.*;
 /**
  * <p>Programs embedded inside transactions that control redemption of payments.</p>
  *
- * <p>Peercoin transactions don't specify what they do directly. Instead <a href="https://en.peercoin.it/wiki/Script">a
+ * <p>Paycoin transactions don't specify what they do directly. Instead <a href="https://en.peercoin.it/wiki/Script">a
  * small binary stack language</a> is used to define programs that when evaluated return whether the transaction
  * "accepts" or rejects the other transactions connected to it.</p>
  *
@@ -286,7 +286,7 @@ public class Script {
 
     /**
      * For 2-element [input] scripts assumes that the paid-to-address can be derived from the public key.
-     * The concept of a "from address" isn't well defined in Peercoin and you should not assume the sender of a
+     * The concept of a "from address" isn't well defined in Paycoin and you should not assume the sender of a
      * transaction can actually receive coins on it. This method may be removed in future.
      */
     @Deprecated
@@ -468,7 +468,7 @@ public class Script {
     private int findSigInRedeem(byte[] signatureBytes, Sha256Hash hash) {
         checkArgument(chunks.get(0).isOpCode()); // P2SH scriptSig
         int numKeys = Script.decodeFromOpN(chunks.get(chunks.size() - 2).opcode);
-        TransactionSignature signature = TransactionSignature.decodeFromPeercoin(signatureBytes, true);
+        TransactionSignature signature = TransactionSignature.decodeFromPaycoin(signatureBytes, true);
         for (int i = 0 ; i < numKeys ; i++) {
             if (ECKey.fromPublicOnly(chunks.get(i + 1).data).verify(hash, signature)) {
                 return i;
@@ -613,7 +613,7 @@ public class Script {
      * <p>peercoinj does not support creation of P2SH transactions today. The goal of P2SH is to allow short addresses
      * even for complex scripts (eg, multi-sig outputs) so they are convenient to work with in things like QRcodes or
      * with copy/paste, and also to minimize the size of the unspent output set (which improves performance of the
-     * Peercoin system).</p>
+     * Paycoin system).</p>
      */
     public boolean isPayToScriptHash() {
         // We have to check against the serialized form because BIP16 defines a P2SH output using an exact byte
@@ -1267,7 +1267,7 @@ public class Script {
         // TODO: Use int for indexes everywhere, we can't have that many inputs/outputs
         boolean sigValid = false;
         try {
-            TransactionSignature sig  = TransactionSignature.decodeFromPeercoin(sigBytes, false);
+            TransactionSignature sig  = TransactionSignature.decodeFromPaycoin(sigBytes, false);
             Sha256Hash hash = txContainingThis.hashForSignature(index, connectedScript, (byte) sig.sighashFlags);
             sigValid = ECKey.verify(hash.getBytes(), sig, pubKey);
         } catch (Exception e1) {
@@ -1337,7 +1337,7 @@ public class Script {
             // We could reasonably move this out of the loop, but because signature verification is significantly
             // more expensive than hashing, its not a big deal.
             try {
-                TransactionSignature sig = TransactionSignature.decodeFromPeercoin(sigs.getFirst(), false);
+                TransactionSignature sig = TransactionSignature.decodeFromPaycoin(sigs.getFirst(), false);
                 Sha256Hash hash = txContainingThis.hashForSignature(index, connectedScript, (byte) sig.sighashFlags);
                 if (ECKey.verify(hash.getBytes(), sig, pubKey))
                     sigs.pollFirst();
@@ -1393,7 +1393,7 @@ public class Script {
         // Clone the transaction because executing the script involves editing it, and if we die, we'll leave
         // the tx half broken (also it's not so thread safe to work on it directly.
         try {
-            txContainingThis = new Transaction(txContainingThis.getParams(), txContainingThis.peercoinSerialize());
+            txContainingThis = new Transaction(txContainingThis.getParams(), txContainingThis.paycoinSerialize());
         } catch (ProtocolException e) {
             throw new RuntimeException(e);   // Should not happen unless we were given a totally broken transaction.
         }

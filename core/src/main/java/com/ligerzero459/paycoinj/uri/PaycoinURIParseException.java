@@ -19,7 +19,7 @@
 package com.ligerzero459.paycoinj.uri;
 
 /**
- * <p>Exception to provide the following to {@link PeercoinURI}:</p>
+ * <p>Exception to provide the following to {@link PaycoinURI}:</p>
  * <ul>
  * <li>Provision of parsing error messages</li>
  * </ul>
@@ -27,12 +27,12 @@ package com.ligerzero459.paycoinj.uri;
  * that reported in the exception message). Since this is in English, it may not be worth reporting directly
  * to the user other than as part of a "general failure to parse" response.</p>
  */
-public class PeercoinURIParseException extends Exception {
-    public PeercoinURIParseException(String s) {
+public class PaycoinURIParseException extends Exception {
+    public PaycoinURIParseException(String s) {
         super(s);
     }
 
-    public PeercoinURIParseException(String s, Throwable throwable) {
+    public PaycoinURIParseException(String s, Throwable throwable) {
         super(s, throwable);
     }
 }

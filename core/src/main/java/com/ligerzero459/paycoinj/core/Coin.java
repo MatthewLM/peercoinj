@@ -30,43 +30,43 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class Coin implements Monetary, Comparable<Coin>, Serializable {
 
     /**
-     * Number of decimals for one Peercoin. This constant is useful for quick adapting to other coins because a lot of
+     * Number of decimals for one Paycoin. This constant is useful for quick adapting to other coins because a lot of
      * constants derive from it.
      */
     public static final int SMALLEST_UNIT_EXPONENT = 6;
 
     /**
-     * The number of satoshis equal to one peercoin.
+     * The number of satoshis equal to one paycoin.
      */
     private static final long COIN_VALUE = LongMath.pow(10, SMALLEST_UNIT_EXPONENT);
 
     /**
-     * Zero Peercoins.
+     * Zero Paycoins.
      */
     public static final Coin ZERO = Coin.valueOf(0);
 
     /**
-     * One Peercoin.
+     * One Paycoin.
      */
     public static final Coin COIN = Coin.valueOf(COIN_VALUE);
 
     /**
-     * 0.01 Peercoins. This unit is not really used much.
+     * 0.01 Paycoins. This unit is not really used much.
      */
     public static final Coin CENT = COIN.divide(100);
 
     /**
-     * 0.001 Peercoins, also known as 1 mPPC.
+     * 0.001 Paycoins, also known as 1 mPPC.
      */
     public static final Coin MILLICOIN = COIN.divide(1000);
 
     /**
-     * 0.000001 Peercoin, also known as 1 µPPC or 1 uPPC.
+     * 0.000001 Paycoin, also known as 1 µPPC or 1 uPPC.
      */
     public static final Coin MICROCOIN = MILLICOIN.divide(1000);
 
     /**
-     * A satoshi is the smallest unit that can be transferred. 1 million of them fit into a Peercoin.
+     * A satoshi is the smallest unit that can be transferred. 1 million of them fit into a Paycoin.
      */
     public static final Coin SATOSHI = Coin.valueOf(1);
 
@@ -84,7 +84,7 @@ public final class Coin implements Monetary, Comparable<Coin>, Serializable {
 
     private Coin(final long satoshis) {
         checkArgument(-MAX_SATOSHIS <= satoshis && satoshis <= MAX_SATOSHIS,
-            "%s satoshis exceeds maximum possible quantity of Peercoin.", satoshis);
+            "%s satoshis exceeds maximum possible quantity of Paycoin.", satoshis);
         this.value = satoshis;
     }
 

@@ -46,12 +46,12 @@ import java.util.regex.Pattern;
 
 /**
  * <p>Instances of this class format and parse locale-specific numerical
- * representations of Peercoin monetary values.
+ * representations of Paycoin monetary values.
  *
  * <p>A primary goal of this class is to minimize the danger of
  * human-misreading of monetary values due to mis-counting the number
  * of zeros (or, more generally, of decimal places) in the number that
- * represents a Peercoin monetary value.  Some of the features offered for doing this
+ * represents a Paycoin monetary value.  Some of the features offered for doing this
  * are: <ol>
  *   <li>automatic adjustment of denominational units in which a
  *       value is represented so as to lessen the number of adjacent zeros,
@@ -258,7 +258,7 @@ import java.util.regex.Pattern;
  *
  * <h3>Formatting</h3>
  *
- * <p>You format a Peercoin monetary value by passing it to the {@link PpcFormat#format(Object)}
+ * <p>You format a Paycoin monetary value by passing it to the {@link PpcFormat#format(Object)}
  * method.  This argument can be either a {@link com.ligerzero459.paycoinj.core.Coin}-type object or a
  * numerical object such as {@link java.lang.Long} or {@link java.math.BigDecimal}.
  * Integer-based types such as {@link java.math.BigInteger} are interpreted as representing a
@@ -1196,7 +1196,7 @@ public abstract class PpcFormat extends Format {
 
     /**
      * Return the denomination for formatting the given value.  The returned <code>int</code>
-     * is the size of the decimal-place shift between the given Peercoin-value denominated in
+     * is the size of the decimal-place shift between the given Paycoin-value denominated in
      * peercoins and that same value as formatted.  A fixed-denomination formatter will ignore
      * the arguments.
      *
@@ -1298,7 +1298,7 @@ public abstract class PpcFormat extends Format {
     /********************/
 
     /**
-      * Parse a <code>String</code> representation of a Peercoin monetary value.  Returns a
+      * Parse a <code>String</code> representation of a Paycoin monetary value.  Returns a
       * {@link com.ligerzero459.paycoinj.core.Coin} object that represents the parsed value.
       * @see java.text.NumberFormat */
     @Override
@@ -1386,7 +1386,7 @@ public abstract class PpcFormat extends Format {
         );
     }
 
-    /** Parse a <code>String</code> representation of a Peercoin monetary value.  If this
+    /** Parse a <code>String</code> representation of a Paycoin monetary value.  If this
      * object's pattern includes a currency sign, either symbol or code, as by default is true
      * for instances of {@link PpcAutoFormat} and false for instances of {@link
      * PpcFixedFormat}, then denominated (i.e., prefixed) currency signs in the parsed String
@@ -1440,7 +1440,7 @@ public abstract class PpcFormat extends Format {
         return coin;
     }
 
-    /** Parse a <code>String</code> representation of a Peercoin monetary value.  If this
+    /** Parse a <code>String</code> representation of a Paycoin monetary value.  If this
      * object's pattern includes a currency sign, either symbol or code, as by default is true
      * for instances of {@link PpcAutoFormat} and false for instances of {@link
      * PpcFixedFormat}, then denominated (i.e., prefixed) currency signs in the parsed String

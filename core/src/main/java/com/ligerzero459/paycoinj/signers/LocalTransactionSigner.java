@@ -104,7 +104,7 @@ public class LocalTransactionSigner extends StatelessTransactionSigner {
                 // we always run first, we have to depend on the other signers rearranging the signatures as needed.
                 // Therefore, always place as first signature.
                 int sigIndex = 0;
-                inputScript = scriptPubKey.getScriptSigWithSignature(inputScript, signature.encodeToPeercoin(), sigIndex);
+                inputScript = scriptPubKey.getScriptSigWithSignature(inputScript, signature.encodeToPaycoin(), sigIndex);
                 txIn.setScriptSig(inputScript);
 
             } catch (ECKey.KeyIsEncryptedException e) {

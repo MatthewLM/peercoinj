@@ -110,7 +110,7 @@ public abstract class ListMessage extends Message {
     }
 
     @Override
-    public void peercoinSerializeToStream(OutputStream stream) throws IOException {
+    public void paycoinSerializeToStream(OutputStream stream) throws IOException {
         stream.write(new VarInt(items.size()).encode());
         for (InventoryItem i : items) {
             // Write out the type code.

@@ -220,7 +220,7 @@ public class PaymentChannelClient implements IPaymentChannelClient {
 
         Protos.ProvideRefund.Builder provideRefundBuilder = Protos.ProvideRefund.newBuilder()
                 .setMultisigKey(ByteString.copyFrom(myKey.getPubKey()))
-                .setTx(ByteString.copyFrom(state.getIncompleteRefundTransaction().peercoinSerialize()));
+                .setTx(ByteString.copyFrom(state.getIncompleteRefundTransaction().paycoinSerialize()));
 
         conn.sendToServer(Protos.TwoWayChannelMessage.newBuilder()
                 .setProvideRefund(provideRefundBuilder)
@@ -242,13 +242,13 @@ public class PaymentChannelClient implements IPaymentChannelClient {
         state.storeChannelInWallet(serverId);
 
         Protos.ProvideContract.Builder contractMsg = Protos.ProvideContract.newBuilder()
-                .setTx(ByteString.copyFrom(state.getMultisigContract().peercoinSerialize()));
+                .setTx(ByteString.copyFrom(state.getMultisigContract().paycoinSerialize()));
         try {
             // Make an initial payment of the dust limit, and put it into the message as well. The size of the
             // server-requested dust limit was already sanity checked by this point.
             PaymentChannelClientState.IncrementedPayment payment = state().incrementPaymentBy(Coin.valueOf(minPayment));
             Protos.UpdatePayment.Builder initialMsg = contractMsg.getInitialPaymentBuilder();
-            initialMsg.setSignature(ByteString.copyFrom(payment.signature.encodeToPeercoin()));
+            initialMsg.setSignature(ByteString.copyFrom(payment.signature.encodeToPaycoin()));
             initialMsg.setClientChangeValue(state.getValueRefunded().value);
         } catch (ValueOutOfRangeException e) {
             throw new IllegalStateException(e);  // This cannot happen.
@@ -529,7 +529,7 @@ public class PaymentChannelClient implements IPaymentChannelClient {
 
             PaymentChannelClientState.IncrementedPayment payment = state().incrementPaymentBy(size);
             Protos.UpdatePayment.Builder updatePaymentBuilder = Protos.UpdatePayment.newBuilder()
-                    .setSignature(ByteString.copyFrom(payment.signature.encodeToPeercoin()))
+                    .setSignature(ByteString.copyFrom(payment.signature.encodeToPaycoin()))
                     .setClientChangeValue(state.getValueRefunded().value);
             if (info != null) updatePaymentBuilder.setInfo(info);
 

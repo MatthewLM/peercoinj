@@ -143,10 +143,10 @@ public class BloomFilter extends Message {
     }
     
     /**
-     * Serializes this message to the provided stream. If you just want the raw bytes use peercoinSerialize().
+     * Serializes this message to the provided stream. If you just want the raw bytes use paycoinSerialize().
      */
     @Override
-    void peercoinSerializeToStream(OutputStream stream) throws IOException {
+    void paycoinSerializeToStream(OutputStream stream) throws IOException {
         stream.write(new VarInt(data.length).encode());
         stream.write(data);
         Utils.uint32ToByteStreamLE(hashFuncs, stream);
@@ -335,7 +335,7 @@ public class BloomFilter extends Message {
                 if (contains(chunk.data)) {
                     boolean isSendingToPubKeys = script.isSentToRawPubKey() || script.isSentToMultiSig();
                     if (flag == BloomUpdate.UPDATE_ALL || (flag == BloomUpdate.UPDATE_P2PUBKEY_ONLY && isSendingToPubKeys))
-                        insert(output.getOutPointFor().peercoinSerialize());
+                        insert(output.getOutPointFor().paycoinSerialize());
                     found = true;
                 }
             }

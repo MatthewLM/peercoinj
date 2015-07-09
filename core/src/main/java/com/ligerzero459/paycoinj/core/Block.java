@@ -41,10 +41,10 @@ import static com.ligerzero459.paycoinj.core.Utils.doubleDigest;
 import static com.ligerzero459.paycoinj.core.Utils.doubleDigestTwoBuffers;
 
 /**
- * <p>A block is a group of transactions, and is one of the fundamental data structures of the Peercoin system.
+ * <p>A block is a group of transactions, and is one of the fundamental data structures of the Paycoin system.
  * It records a set of {@link Transaction}s together with some data that links it into a place in the global block
  * chain, and proves that a difficult calculation was done over its contents. See
- * <a href="http://www.peercoin.org/peercoin.pdf">the Peercoin technical paper</a> for
+ * <a href="http://www.peercoin.org/peercoin.pdf">the Paycoin technical paper</a> for
  * more detail on blocks. <p/>
  *
  * To get a block, you can either build one from the raw bytes you can get from another implementation, or request one
@@ -61,7 +61,7 @@ public class Block extends Message {
 
     /**
      * A constant shared by the entire network: how large in bytes a block is allowed to be. One day we may have to
-     * upgrade everyone to change this, so Peercoin can continue to grow. For now it exists as an anti-DoS measure to
+     * upgrade everyone to change this, so Paycoin can continue to grow. For now it exists as an anti-DoS measure to
      * avoid somebody creating a titanically huge but valid block and forcing everyone to download/store it forever.
      */
     public static final int MAX_BLOCK_SIZE = 1 * 1000 * 1000;
@@ -86,7 +86,7 @@ public class Block extends Message {
     /** If null, it means this object holds only the headers. */
     public List<Transaction> transactions;
     
-    //Peercoin
+    //Paycoin
     private byte[] blockSig;
 
     /** Stores the hash of the block. If null, getHash() will recalculate it. */
@@ -118,13 +118,13 @@ public class Block extends Message {
         
     }
 
-    /** Constructs a block object from the Peercoin wire format. */
+    /** Constructs a block object from the Paycoin wire format. */
     public Block(NetworkParameters params, byte[] payloadBytes) throws ProtocolException {
         super(params, payloadBytes, 0, false, false, payloadBytes.length);
     }
 
     /**
-     * Contruct a block object from the Peercoin wire format.
+     * Contruct a block object from the Paycoin wire format.
      * @param params NetworkParameters object.
      * @param parseLazy Whether to perform a full parse immediately or delay until a read is requested.
      * @param parseRetain Whether to retain the backing byte array for quick reserialization.  
@@ -859,7 +859,7 @@ public class Block extends Message {
         hash = null;
     }
 
-    /** Returns the version of the block data structure as defined by the Peercoin protocol. */
+    /** Returns the version of the block data structure as defined by the Paycoin protocol. */
     public long getVersion() {
         maybeParseHeader();
         return version;
@@ -906,7 +906,7 @@ public class Block extends Message {
      * BlockChain} verifies that this is not too easy by looking at the length of the chain when the block is added.
      * To find the actual value the hash should be compared against, use
      * {@link com.ligerzero459.paycoinj.core.Block#getDifficultyTargetAsInteger()}. Note that this is <b>not</b> the same as
-     * the difficulty value reported by the Peercoin "getdifficulty" RPC that you may see on various block explorers.
+     * the difficulty value reported by the Paycoin "getdifficulty" RPC that you may see on various block explorers.
      * That number is the result of applying a formula to the underlying difficulty to normalize the minimum to 1.
      * Calculating the difficulty that way is currently unsupported.
      */

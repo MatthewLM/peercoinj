@@ -26,7 +26,7 @@ import java.util.*;
  */
 public class FilteredBlock extends Message {
     /** The protocol version at which Bloom filtering started to be supported. */
-    public static final int MIN_PROTOCOL_VERSION = 70000;
+    public static final int MIN_PROTOCOL_VERSION = 80000;
     private Block header;
 
     private PartialMerkleTree merkleTree;
@@ -47,12 +47,12 @@ public class FilteredBlock extends Message {
     }
 
     @Override
-    public void peercoinSerializeToStream(OutputStream stream) throws IOException {
+    public void paycoinSerializeToStream(OutputStream stream) throws IOException {
         if (header.transactions == null)
-            header.peercoinSerializeToStream(stream);
+            header.paycoinSerializeToStream(stream);
         else
-            header.cloneAsHeader().peercoinSerializeToStream(stream);
-        merkleTree.peercoinSerializeToStream(stream);
+            header.cloneAsHeader().paycoinSerializeToStream(stream);
+        merkleTree.paycoinSerializeToStream(stream);
     }
 
     @Override

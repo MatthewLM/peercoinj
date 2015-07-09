@@ -54,11 +54,11 @@ public final class MonetaryFormat {
     public static final MonetaryFormat UPPC = new MonetaryFormat().shift(6).minDecimals(0).optionalDecimals(0);
     /** Standard format for fiat amounts. */
     public static final MonetaryFormat FIAT = new MonetaryFormat().shift(0).minDecimals(2).repeatOptionalDecimals(2, 1);
-    /** Currency code for base 1 Peercoin. */
+    /** Currency code for base 1 Paycoin. */
     public static final String CODE_PPC = "PPC";
-    /** Currency code for base 1/1000 Peercoin. */
+    /** Currency code for base 1/1000 Paycoin. */
     public static final String CODE_MPPC = "mPPC";
-    /** Currency code for base 1/1000000 Peercoin. */
+    /** Currency code for base 1/1000000 Paycoin. */
     public static final String CODE_UPPC = "µPPC";
 
     private final char negativeSign;
@@ -73,7 +73,7 @@ public final class MonetaryFormat {
     private final char codeSeparator;
     private final boolean codePrefixed;
 
-    private static final String DECIMALS_PADDING = "0000000000000000"; // a few more than necessary for Peercoin
+    private static final String DECIMALS_PADDING = "0000000000000000"; // a few more than necessary for Paycoin
 
     /**
      * Set character to prefix negative values.

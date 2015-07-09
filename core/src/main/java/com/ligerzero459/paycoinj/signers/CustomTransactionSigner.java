@@ -84,7 +84,7 @@ public abstract class CustomTransactionSigner extends StatelessTransactionSigner
             SignatureAndKey sigKey = getSignature(sighash, propTx.keyPaths.get(scriptPubKey));
             TransactionSignature txSig = new TransactionSignature(sigKey.sig, Transaction.SigHash.ALL, false);
             int sigIndex = inputScript.getSigInsertionIndex(sighash, sigKey.pubKey);
-            inputScript = scriptPubKey.getScriptSigWithSignature(inputScript, txSig.encodeToPeercoin(), sigIndex);
+            inputScript = scriptPubKey.getScriptSigWithSignature(inputScript, txSig.encodeToPaycoin(), sigIndex);
             txIn.setScriptSig(inputScript);
         }
         return true;

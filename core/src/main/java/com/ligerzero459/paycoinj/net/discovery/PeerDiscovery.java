@@ -20,7 +20,7 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
 
 /**
- * A PeerDiscovery object is responsible for finding addresses of other nodes in the Peercoin P2P network. Note that
+ * A PeerDiscovery object is responsible for finding addresses of other nodes in the Paycoin P2P network. Note that
  * the addresses returned may or may not be accepting connections.
  */
 public interface PeerDiscovery {

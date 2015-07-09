@@ -41,7 +41,7 @@ import java.util.Map;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * <p>Provides a standard implementation of a Peercoin URI with support for the following:</p>
+ * <p>Provides a standard implementation of a Paycoin URI with support for the following:</p>
  *
  * <ul>
  * <li>URLEncoded URIs (as passed in by IE on the command line)</li>
@@ -79,11 +79,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @author Gary Rowe (BIP21 support)
  * @see <a href="https://github.com/bitcoin/bips/blob/master/bip-0021.mediawiki">BIP 0021</a>
  */
-public class PeercoinURI {
+public class PaycoinURI {
     /**
      * Provides logging for this class
      */
-    private static final Logger log = LoggerFactory.getLogger(PeercoinURI.class);
+    private static final Logger log = LoggerFactory.getLogger(PaycoinURI.class);
 
     // Not worth turning into an enum
     public static final String FIELD_MESSAGE = "message";
@@ -103,25 +103,25 @@ public class PeercoinURI {
     private final Map<String, Object> parameterMap = new LinkedHashMap<String, Object>();
 
     /**
-     * Constructs a new PeercoinURI from the given string. Can be for any network.
+     * Constructs a new PaycoinURI from the given string. Can be for any network.
      *
      * @param uri The raw URI data to be parsed (see class comments for accepted formats)
-     * @throws PeercoinURIParseException if the URI is not syntactically or semantically valid.
+     * @throws PaycoinURIParseException if the URI is not syntactically or semantically valid.
      */
-    public PeercoinURI(String uri) throws PeercoinURIParseException {
+    public PaycoinURI(String uri) throws PaycoinURIParseException {
         this(null, uri);
     }
 
     /**
-     * Constructs a new object by trying to parse the input as a valid Peercoin URI.
+     * Constructs a new object by trying to parse the input as a valid Paycoin URI.
      *
      * @param params The network parameters that determine which network the URI is from, or null if you don't have
      *               any expectation about what network the URI is for and wish to check yourself.
      * @param input The raw URI data to be parsed (see class comments for accepted formats)
      *
-     * @throws PeercoinURIParseException If the input fails Peercoin URI syntax and semantic checks.
+     * @throws PaycoinURIParseException If the input fails Paycoin URI syntax and semantic checks.
      */
-    public PeercoinURI(@Nullable NetworkParameters params, String input) throws PeercoinURIParseException {
+    public PaycoinURI(@Nullable NetworkParameters params, String input) throws PaycoinURIParseException {
         checkNotNull(input);
         log.debug("Attempting to parse '{}' for {}", input, params == null ? "any" : params.getId());
 
@@ -130,7 +130,7 @@ public class PeercoinURI {
         try {
             uri = new URI(input);
         } catch (URISyntaxException e) {
-            throw new PeercoinURIParseException("Bad URI syntax", e);
+            throw new PaycoinURIParseException("Bad URI syntax", e);
         }
 
         // URI is formed as  peercoin:<address>?<query parameters>
@@ -148,13 +148,13 @@ public class PeercoinURI {
         } else if (input.startsWith("ppcoin:")) {
             schemeSpecificPart = input.substring("ppcoin:".length());
         } else {
-            throw new PeercoinURIParseException("Unsupported URI scheme: " + uri.getScheme());
+            throw new PaycoinURIParseException("Unsupported URI scheme: " + uri.getScheme());
         }
 
         // Split off the address from the rest of the query parameters.
         String[] addressSplitTokens = schemeSpecificPart.split("\\?", 2);
         if (addressSplitTokens.length == 0)
-            throw new PeercoinURIParseException("No data found after the peercoin: prefix");
+            throw new PaycoinURIParseException("No data found after the peercoin: prefix");
         String addressToken = addressSplitTokens[0];  // may be empty!
 
         String[] nameValuePairTokens;
@@ -170,17 +170,17 @@ public class PeercoinURI {
         parseParameters(params, addressToken, nameValuePairTokens);
 
         if (!addressToken.isEmpty()) {
-            // Attempt to parse the addressToken as a Peercoin address for this network
+            // Attempt to parse the addressToken as a Paycoin address for this network
             try {
                 Address address = new Address(params, addressToken);
                 putWithValidation(FIELD_ADDRESS, address);
             } catch (final AddressFormatException e) {
-                throw new PeercoinURIParseException("Bad address", e);
+                throw new PaycoinURIParseException("Bad address", e);
             }
         }
 
         if (addressToken.isEmpty() && getPaymentRequestUrl() == null) {
-            throw new PeercoinURIParseException("No address and no r= parameter found");
+            throw new PaycoinURIParseException("No address and no r= parameter found");
         }
     }
 
@@ -189,15 +189,15 @@ public class PeercoinURI {
      * @param nameValuePairTokens The tokens representing the name value pairs (assumed to be
      *                            separated by '=' e.g. 'amount=0.2')
      */
-    private void parseParameters(@Nullable NetworkParameters params, String addressToken, String[] nameValuePairTokens) throws PeercoinURIParseException {
+    private void parseParameters(@Nullable NetworkParameters params, String addressToken, String[] nameValuePairTokens) throws PaycoinURIParseException {
         // Attempt to decode the rest of the tokens into a parameter map.
         for (String nameValuePairToken : nameValuePairTokens) {
             final int sepIndex = nameValuePairToken.indexOf('=');
             if (sepIndex == -1)
-                throw new PeercoinURIParseException("Malformed Peercoin URI - no separator in '" +
+                throw new PaycoinURIParseException("Malformed Paycoin URI - no separator in '" +
                         nameValuePairToken + "'");
             if (sepIndex == 0)
-                throw new PeercoinURIParseException("Malformed Peercoin URI - empty name '" +
+                throw new PaycoinURIParseException("Malformed Paycoin URI - empty name '" +
                         nameValuePairToken + "'");
             final String nameToken = nameValuePairToken.substring(0, sepIndex).toLowerCase(Locale.ENGLISH);
             final String valueToken = nameValuePairToken.substring(sepIndex + 1);
@@ -242,16 +242,16 @@ public class PeercoinURI {
      * @param key The key for the map
      * @param value The value to store
      */
-    private void putWithValidation(String key, Object value) throws PeercoinURIParseException {
+    private void putWithValidation(String key, Object value) throws PaycoinURIParseException {
         if (parameterMap.containsKey(key)) {
-            throw new PeercoinURIParseException(String.format("'%s' is duplicated, URI is invalid", key));
+            throw new PaycoinURIParseException(String.format("'%s' is duplicated, URI is invalid", key));
         } else {
             parameterMap.put(key, value);
         }
     }
 
     /**
-     * The Peercoin Address from the URI, if one was present. It's possible to have Peercoin URI's with no address if a
+     * The Paycoin Address from the URI, if one was present. It's possible to have Paycoin URI's with no address if a
      * r= payment protocol parameter is specified, though this form is not recommended as older wallets can't understand
      * it.
      */
@@ -318,7 +318,7 @@ public class PeercoinURI {
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder("PeercoinURI[");
+        StringBuilder builder = new StringBuilder("PaycoinURI[");
         boolean first = true;
         for (Map.Entry<String, Object> entry : parameterMap.entrySet()) {
             if (first) {
@@ -332,20 +332,20 @@ public class PeercoinURI {
         return builder.toString();
     }
 
-    public static String convertToPeercoinURI(Address address, Coin amount, String label, String message) {
-        return convertToPeercoinURI(address.toString(), amount, label, message);
+    public static String convertToPaycoinURI(Address address, Coin amount, String label, String message) {
+        return convertToPaycoinURI(address.toString(), amount, label, message);
     }
 
     /**
-     * Simple Peercoin URI builder using known good fields.
+     * Simple Paycoin URI builder using known good fields.
      * 
-     * @param address The Peercoin address
+     * @param address The Paycoin address
      * @param amount The amount
      * @param label A label
      * @param message A message
-     * @return A String containing the Peercoin URI
+     * @return A String containing the Paycoin URI
      */
-    public static String convertToPeercoinURI(String address, @Nullable Coin amount, @Nullable String label,
+    public static String convertToPaycoinURI(String address, @Nullable Coin amount, @Nullable String label,
                                              @Nullable String message) {
         checkNotNull(address);
         if (amount != null && amount.signum() < 0) {

@@ -41,7 +41,7 @@ import java.util.List;
  * a wallet app, look at {@link PaymentSession} for a higher level API that should simplify working with the protocol.</p>
  *
  * <p>BIP 70 defines a binary, protobuf based protocol that runs directly between sender and receiver of funds. Payment
- * protocol data does not flow over the Peercoin P2P network or enter the block chain. It's instead for data that is only
+ * protocol data does not flow over the Paycoin P2P network or enter the block chain. It's instead for data that is only
  * of interest to the parties involved but isn't otherwise needed for consensus.</p>
  */
 public class PaymentProtocol {
@@ -316,7 +316,7 @@ public class PaymentProtocol {
         Protos.Payment.Builder builder = Protos.Payment.newBuilder();
         for (Transaction transaction : transactions) {
             transaction.verify();
-            builder.addTransactions(ByteString.copyFrom(transaction.unsafePeercoinSerialize()));
+            builder.addTransactions(ByteString.copyFrom(transaction.unsafePaycoinSerialize()));
         }
         if (refundOutputs != null) {
             for (Protos.Output output : refundOutputs)

@@ -82,7 +82,7 @@ import static com.google.common.base.Preconditions.*;
  */
 public class PeerGroup extends AbstractExecutionThreadService implements TransactionBroadcaster {
     private static final Logger log = LoggerFactory.getLogger(PeerGroup.class);
-    private static final int DEFAULT_CONNECTIONS = 8;
+    private static final int DEFAULT_CONNECTIONS = 100;
     private static final int TOR_TIMEOUT_SECONDS = 60;
 
     protected final ReentrantLock lock = Threading.lock("peergroup");
@@ -120,7 +120,7 @@ public class PeerGroup extends AbstractExecutionThreadService implements Transac
     // How many connections we want to have open at the current time. If we lose connections, we'll try opening more
     // until we reach this count.
     @GuardedBy("lock") private int maxConnections;
-    // Minimum protocol version we will allow ourselves to connect to: Do not require bloom filtering as it doesn't exist in Peercoin
+    // Minimum protocol version we will allow ourselves to connect to: Do not require bloom filtering as it doesn't exist in Paycoin
     private volatile int vMinRequiredProtocolVersion = 70003;
 
     // Runs a background thread that we use for scheduling pings to our peers, so we can measure their performance
@@ -832,6 +832,7 @@ public class PeerGroup extends AbstractExecutionThreadService implements Transac
                 }
 
 	            if (!haveReadyInactivePeer(nowMillis)) {
+                        log.info("Attempting to build new connection.");
 	            	Utils.sleep(100); // Prevent too many requests.
 	                discoverPeers();
 	                nowMillis = Utils.currentTimeMillis();
@@ -1569,7 +1570,7 @@ public class PeerGroup extends AbstractExecutionThreadService implements Transac
      * will complete as soon as the transaction was successfully written to that peer.</p>
      *
      * <p>Other than for sending your own transactions, this method is useful if you have received a transaction from
-     * someone and want to know that it's valid. It's a bit of a weird hack because the current version of the Peercoin
+     * someone and want to know that it's valid. It's a bit of a weird hack because the current version of the Paycoin
      * protocol does not inform you if you send an invalid transaction. Because sending bad transactions counts towards
      * your DoS limit, be careful with relaying lots of unknown transactions. Otherwise you might get kicked off the
      * network.</p>

@@ -69,7 +69,7 @@ import static com.google.common.base.Preconditions.*;
  * when you already have the public or private parts. If you create a key with only the public part, you can check
  * signatures but not create them.</p>
  *
- * <p>ECKey also provides access to Peercoin-Qt compatible text message signing, as accessible via the UI or JSON-RPC.
+ * <p>ECKey also provides access to Paycoin-Qt compatible text message signing, as accessible via the UI or JSON-RPC.
  * This is slightly different to signing raw bytes - if you want to sign your own data and it won't be exposed as
  * text to people, you don't want to use this. If in doubt, ask on the mailing list.</p>
  *
@@ -116,10 +116,10 @@ public class ECKey implements EncryptableItem, Serializable {
         }
     };
 
-    /** The parameters of the secp256k1 curve that Peercoin uses. */
+    /** The parameters of the secp256k1 curve that Paycoin uses. */
     public static final X9ECParameters CURVE_PARAMS = CustomNamedCurves.getByName("secp256k1");
 
-    /** The parameters of the secp256k1 curve that Peercoin uses. */
+    /** The parameters of the secp256k1 curve that Paycoin uses. */
     public static final ECDomainParameters CURVE;
 
     /**
@@ -203,7 +203,7 @@ public class ECKey implements EncryptableItem, Serializable {
     }
 
     /**
-     * Construct an ECKey from an ASN.1 encoded private key. These are produced by OpenSSL and stored by the Peercoin
+     * Construct an ECKey from an ASN.1 encoded private key. These are produced by OpenSSL and stored by the Paycoin
      * reference implementation in its wallet. Note that this is slow because it requires an EC point multiply.
      */
     public static ECKey fromASN1(byte[] asn1privkey) {
@@ -382,7 +382,7 @@ public class ECKey implements EncryptableItem, Serializable {
     }
 
     /**
-     * Output this ECKey as an ASN.1 encoded private key, as understood by OpenSSL or used by the Peercoin reference
+     * Output this ECKey as an ASN.1 encoded private key, as understood by OpenSSL or used by the Paycoin reference
      * implementation in its wallet storage format.
      */
     public byte[] toASN1() {
@@ -466,7 +466,7 @@ public class ECKey implements EncryptableItem, Serializable {
 
     /**
      * Groups the two components that make up a signature, and provides a way to encode to DER form, which is
-     * how ECDSA signatures are represented when embedded in other data structures in the Peercoin protocol. The raw
+     * how ECDSA signatures are represented when embedded in other data structures in the Paycoin protocol. The raw
      * components can be useful for doing further EC maths on them.
      */
     public static class ECDSASignature {
@@ -484,7 +484,7 @@ public class ECKey implements EncryptableItem, Serializable {
         /**
          * Will automatically adjust the S component to be less than or equal to half the curve order, if necessary.
          * This is required because for every signature (r,s) the signature (r, -s (mod N)) is a valid signature of
-         * the same message. However, we dislike the ability to modify the bits of a Peercoin transaction after it's
+         * the same message. However, we dislike the ability to modify the bits of a Paycoin transaction after it's
          * been signed, as that violates various assumed invariants. Thus in future only one of those forms will be
          * considered legal and the other will be banned.
          */
@@ -567,7 +567,7 @@ public class ECKey implements EncryptableItem, Serializable {
     }
 
     /**
-     * Signs the given hash and returns the R and S components as BigIntegers. In the Peercoin protocol, they are
+     * Signs the given hash and returns the R and S components as BigIntegers. In the Paycoin protocol, they are
      * usually encoded using DER format, so you want {@link com.ligerzero459.paycoinj.core.ECKey.ECDSASignature#toASN1()}
      * instead. However sometimes the independent components can be useful, for instance, if you're doing to do
      * further EC maths on them.
@@ -586,7 +586,7 @@ public class ECKey implements EncryptableItem, Serializable {
     public static boolean FAKE_SIGNATURES = false;
 
     /**
-     * Signs the given hash and returns the R and S components as BigIntegers. In the Peercoin protocol, they are
+     * Signs the given hash and returns the R and S components as BigIntegers. In the Paycoin protocol, they are
      * usually encoded using DER format, so you want {@link com.ligerzero459.paycoinj.core.ECKey.ECDSASignature#encodeToDER()}
      * instead. However sometimes the independent components can be useful, for instance, if you're doing to do further
      * EC maths on them.
@@ -736,7 +736,7 @@ public class ECKey implements EncryptableItem, Serializable {
     }
 
     /**
-     * Signs a text message using the standard Peercoin messaging signing format and returns the signature as a base64
+     * Signs a text message using the standard Paycoin messaging signing format and returns the signature as a base64
      * encoded string.
      *
      * @throws IllegalStateException if this ECKey does not have the private part.
@@ -747,7 +747,7 @@ public class ECKey implements EncryptableItem, Serializable {
     }
 
     /**
-     * Signs a text message using the standard Peercoin messaging signing format and returns the signature as a base64
+     * Signs a text message using the standard Paycoin messaging signing format and returns the signature as a base64
      * encoded string.
      *
      * @throws IllegalStateException if this ECKey does not have the private part.
@@ -777,14 +777,14 @@ public class ECKey implements EncryptableItem, Serializable {
     }
 
     /**
-     * Given an arbitrary piece of text and a Peercoin-format message signature encoded in base64, returns an ECKey
+     * Given an arbitrary piece of text and a Paycoin-format message signature encoded in base64, returns an ECKey
      * containing the public key that was used to sign it. This can then be compared to the expected public key to
-     * determine if the signature was correct. These sorts of signatures are compatible with the Peercoin-Qt/peercoind
+     * determine if the signature was correct. These sorts of signatures are compatible with the Paycoin-Qt/peercoind
      * format generated by signmessage/verifymessage RPCs and GUI menu options. They are intended for humans to verify
      * their communications with each other, hence the base64 format and the fact that the input is text.
      *
      * @param message Some piece of human readable text.
-     * @param signatureBase64 The Peercoin-format message signature in base64
+     * @param signatureBase64 The Paycoin-format message signature in base64
      * @throws SignatureException If the public key could not be recovered or if there was a signature format error.
      */
     public static ECKey signedMessageToKey(String message, String signatureBase64) throws SignatureException {

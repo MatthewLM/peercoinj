@@ -35,12 +35,12 @@ import java.util.Locale;
  * <p>This class, a concrete extension of {@link PpcFormat}, is distinguished by its
  * accommodation of multiple denominational units as follows:
  *
- * <p>When formatting Peercoin monetary values, an instance of this class automatically adjusts
+ * <p>When formatting Paycoin monetary values, an instance of this class automatically adjusts
  * the denominational units in which it represents a given value so as to minimize the number
  * of consecutive zeros in the number that is displayed, and includes either a currency code or
  * symbol in the formatted value to indicate which denomination was chosen.
  *
- * <p>When parsing <code>String</code> representations of Peercoin monetary values, instances of
+ * <p>When parsing <code>String</code> representations of Paycoin monetary values, instances of
  * this class automatically recognize units indicators consisting of currency codes and
  * symbols, including including those containing currency or metric prefixes such as
  * <code>"¢"</code> or <code>"c"</code> to indicate hundredths, and interpret each number being
@@ -114,7 +114,7 @@ public final class PpcAutoFormat extends PpcFormat {
     }
 
     /**
-     * Calculate the appropriate denomination for the given Peercoin monetary value.  This
+     * Calculate the appropriate denomination for the given Paycoin monetary value.  This
      * method takes a BigInteger representing a quantity of satoshis, and returns the
      * number of places that value's decimal point is to be moved when formatting said value
      * in order that the resulting number represents the correct quantity of denominational

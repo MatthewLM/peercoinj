@@ -44,7 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * <p>A Peer handles the high level communication with a Peercoin node, extending a {@link PeerSocketHandler} which
+ * <p>A Peer handles the high level communication with a Paycoin node, extending a {@link PeerSocketHandler} which
  * handles low-level message (de)serialization.</p>
  *
  * <p>Note that timeouts are handled by the extended
@@ -1141,6 +1141,7 @@ public class Peer extends PeerSocketHandler {
                         // the duplicate check in blockChainDownloadLocked(). But the satoshi client may change in future so
                         // it's better to be safe here.
                         if (!pendingBlockDownloads.contains(item.hash)) {
+                            log.info("pending block: " + item.hash.toString());
                             if (useFilteredBlocks) {
                                 getdata.addFilteredBlock(item.hash);
                                 pingAfterGetData = true;

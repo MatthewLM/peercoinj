@@ -21,7 +21,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 
 /**
- * <p>Base58 is a way to encode Peercoin addresses as numbers and letters. Note that this is not the same base58 as used by
+ * <p>Base58 is a way to encode Paycoin addresses as numbers and letters. Note that this is not the same base58 as used by
  * Flickr, which you may see reference to around the internet.</p>
  *
  * <p>You may instead wish to work with {@link VersionedChecksummedBytes}, which adds support for testing the prefix

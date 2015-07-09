@@ -43,7 +43,7 @@ public interface StreamParser {
      *     </li>
      * <li>buff will end with its limit the same as it was previously, and its position set to the position up to which
      *     bytes have been read (the same as its return value)</li>
-     * <li>buff must be at least the size of a Peercoin header (incl magic bytes).</li>
+     * <li>buff must be at least the size of a Paycoin header (incl magic bytes).</li>
      * </ul>
      *
      * @return The amount of bytes consumed which should not be provided again

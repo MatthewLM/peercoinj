@@ -151,7 +151,7 @@ public class ScriptBuilder {
      */
     public static Script createInputScript(@Nullable TransactionSignature signature, ECKey pubKey) {
         byte[] pubkeyBytes = pubKey.getPubKey();
-        byte[] sigBytes = signature != null ? signature.encodeToPeercoin() : new byte[]{};
+        byte[] sigBytes = signature != null ? signature.encodeToPaycoin() : new byte[]{};
         return new ScriptBuilder().data(sigBytes).data(pubkeyBytes).build();
     }
 
@@ -160,7 +160,7 @@ public class ScriptBuilder {
      * If given signature is null, incomplete scriptSig will be created with OP_0 instead of signature
      */
     public static Script createInputScript(@Nullable TransactionSignature signature) {
-        byte[] sigBytes = signature != null ? signature.encodeToPeercoin() : new byte[]{};
+        byte[] sigBytes = signature != null ? signature.encodeToPaycoin() : new byte[]{};
         return new ScriptBuilder().data(sigBytes).build();
     }
 
@@ -183,7 +183,7 @@ public class ScriptBuilder {
     public static Script createMultiSigInputScript(List<TransactionSignature> signatures) {
         List<byte[]> sigs = new ArrayList<byte[]>(signatures.size());
         for (TransactionSignature signature : signatures) {
-            sigs.add(signature.encodeToPeercoin());
+            sigs.add(signature.encodeToPaycoin());
         }
 
         return createMultiSigInputScriptBytes(sigs, null);
@@ -213,7 +213,7 @@ public class ScriptBuilder {
                 sigs.add(new byte[]{});
         } else {
             for (TransactionSignature signature : signatures) {
-                sigs.add(signature.encodeToPeercoin());
+                sigs.add(signature.encodeToPaycoin());
             }
         }
         return createMultiSigInputScriptBytes(sigs, multisigProgram.getProgram());

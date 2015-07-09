@@ -55,7 +55,7 @@ public class BlockFileLoader implements Iterable<Block>, Iterator<Block> {
         if (OS.indexOf("win") >= 0) {
             defaultDataDir = System.getenv("APPDATA") + "\\.peercoin\\blocks\\";
         } else if (OS.indexOf("mac") >= 0 || (OS.indexOf("darwin") >= 0)) {
-            defaultDataDir = System.getProperty("user.home") + "/Library/Application Support/Peercoin/blocks/";
+            defaultDataDir = System.getProperty("user.home") + "/Library/Application Support/Paycoin/blocks/";
         } else {
             defaultDataDir = System.getProperty("user.home") + "/.peercoin/blocks/";
         }

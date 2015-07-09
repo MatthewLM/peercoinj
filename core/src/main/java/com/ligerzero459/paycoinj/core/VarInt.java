@@ -31,7 +31,7 @@ public class VarInt {
         originallyEncodedSize = getSizeInBytes();
     }
 
-    // Peercoin has its own varint format, known in the C++ source as "compact size".
+    // Paycoin has its own varint format, known in the C++ source as "compact size".
     public VarInt(byte[] buf, int offset) {
         int first = 0xFF & buf[offset];
         long val;

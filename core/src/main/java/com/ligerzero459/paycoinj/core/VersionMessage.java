@@ -75,7 +75,7 @@ public class VersionMessage extends Message {
     /** The version of this library release, as a string. */
     public static final String PAYCOINJ_VERSION = "0.1.0";
     /** The value that is prepended to the subVer field of this application. */
-    public static final String LIBRARY_SUBVER = "/PaycoinJ:" + PAYCOINJ_VERSION + "/";
+    public static final String LIBRARY_SUBVER = "/paycoinJ:" + PAYCOINJ_VERSION + "/";
 
     public VersionMessage(NetworkParameters params, byte[] payload) throws ProtocolException {
         super(params, payload, 0);
@@ -103,6 +103,7 @@ public class VersionMessage extends Message {
         }
         subVer = LIBRARY_SUBVER;
         bestHeight = newBestHeight;
+        relayTxesBeforeFilter = true;
 
         length = 85;
         if (protocolVersion > 31402)
@@ -154,7 +155,7 @@ public class VersionMessage extends Message {
     }
 
     @Override
-    public void peercoinSerializeToStream(OutputStream buf) throws IOException {
+    public void paycoinSerializeToStream(OutputStream buf) throws IOException {
         Utils.uint32ToByteStreamLE(clientVersion, buf);
         Utils.uint32ToByteStreamLE(localServices, buf);
         Utils.uint32ToByteStreamLE(localServices >> 32, buf);
@@ -162,9 +163,9 @@ public class VersionMessage extends Message {
         Utils.uint32ToByteStreamLE(time >> 32, buf);
         try {
             // My address.
-            myAddr.peercoinSerialize(buf);
+            myAddr.paycoinSerialize(buf);
             // Their address.
-            theirAddr.peercoinSerialize(buf);
+            theirAddr.paycoinSerialize(buf);
         } catch (UnknownHostException e) {
             throw new RuntimeException(e);  // Can't happen.
         } catch (IOException e) {
@@ -257,8 +258,8 @@ public class VersionMessage extends Message {
 
     /**
      * Appends the given user-agent information to the subVer field. The subVer is composed of a series of
-     * name:version pairs separated by slashes in the form of a path. For example a typical subVer field for PeercoinJ
-     * users might look like "/PeercoinJ:0.4-SNAPSHOT/MultiBit:1.2/" where libraries come further to the left.<p>
+     * name:version pairs separated by slashes in the form of a path. For example a typical subVer field for PaycoinJ
+     * users might look like "/PaycoinJ:0.4-SNAPSHOT/MultiBit:1.2/" where libraries come further to the left.<p>
      *
      * There can be as many components as you feel a need for, and the version string can be anything, but it is
      * recommended to use A.B.C where A = major, B = minor and C = revision for software releases, and dates for
@@ -267,7 +268,7 @@ public class VersionMessage extends Message {
      *
      * Anything put in the "comments" field will appear in brackets and may be used for platform info, or anything
      * else. For example, calling <tt>appendToSubVer("MultiBit", "1.0", "Windows")</tt> will result in a subVer being
-     * set of "/PeercoinJ:1.0/MultiBit:1.0(Windows)/. Therefore the / ( and ) characters are reserved in all these
+     * set of "/PaycoinJ:1.0/MultiBit:1.0(Windows)/. Therefore the / ( and ) characters are reserved in all these
      * components. If you don't want to add a comment (recommended), pass null.<p>
      *
      * See <a href="https://github.com.matthewmitchell/bips/blob/master/bip-0014.mediawiki">BIP 14</a> for more information.

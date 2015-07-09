@@ -19,18 +19,18 @@ package com.ligerzero459.paycoinj.core;
 import java.io.Serializable;
 
 /**
- * Classes implementing this interface represent a monetary value, such as a Peercoin or fiat amount.
+ * Classes implementing this interface represent a monetary value, such as a Paycoin or fiat amount.
  */
 public interface Monetary extends Serializable {
 
     /**
-     * Returns the absolute value of exponent of the value of a "smallest unit" in scientific notation. For Peercoin, a
+     * Returns the absolute value of exponent of the value of a "smallest unit" in scientific notation. For Paycoin, a
      * satoshi is worth 1E-8 so this would be 8.
      */
     int smallestUnitExponent();
 
     /**
-     * Returns the number of "smallest units" of this monetary value. For Peercoin, this would be the number of satoshis.
+     * Returns the number of "smallest units" of this monetary value. For Paycoin, this would be the number of satoshis.
      */
     long getValue();
 

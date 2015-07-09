@@ -48,13 +48,13 @@ public class HeadersMessage extends Message {
     }
 
     @Override
-    public void peercoinSerializeToStream(OutputStream stream) throws IOException {
+    public void paycoinSerializeToStream(OutputStream stream) throws IOException {
         stream.write(new VarInt(blockHeaders.size()).encode());
         for (Block header : blockHeaders) {
             if (header.transactions == null)
-                header.peercoinSerializeToStream(stream);
+                header.paycoinSerializeToStream(stream);
             else
-                header.cloneAsHeader().peercoinSerializeToStream(stream);
+                header.cloneAsHeader().paycoinSerializeToStream(stream);
             stream.write(0);
         }
     }

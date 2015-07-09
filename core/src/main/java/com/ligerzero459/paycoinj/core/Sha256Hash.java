@@ -67,7 +67,7 @@ public class Sha256Hash implements Serializable, Comparable<Sha256Hash> {
     }
 
     /**
-     * Calculates the hash of the hash of the contents. This is a standard operation in Peercoin.
+     * Calculates the hash of the hash of the contents. This is a standard operation in Paycoin.
      */
     public static Sha256Hash createDouble(byte[] contents) {
         return new Sha256Hash(Utils.doubleDigest(contents));
@@ -102,7 +102,7 @@ public class Sha256Hash implements Serializable, Comparable<Sha256Hash> {
      */
     @Override
     public int hashCode() {
-        // Use the last 4 bytes, not the first 4 which are often zeros in Peercoin.
+        // Use the last 4 bytes, not the first 4 which are often zeros in Paycoin.
         return (bytes[31] & 0xFF) | ((bytes[30] & 0xFF) << 8) | ((bytes[29] & 0xFF) << 16) | ((bytes[28] & 0xFF) << 24);
     }
 

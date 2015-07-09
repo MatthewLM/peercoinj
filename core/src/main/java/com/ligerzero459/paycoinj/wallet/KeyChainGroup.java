@@ -128,7 +128,7 @@ public class KeyChainGroup implements KeyBag {
     /**
      * <p>Alias for <code>addFollowingAccountKeys(followingAccountKeys, (followingAccountKeys.size() + 1) / 2 + 1)</code></p>
      * <p>Creates married keychain requiring majority of keys to spend (2-of-3, 3-of-5 and so on)</p>
-     * <p>IMPORTANT: As of Peercoin Core 0.9 all multisig transactions which require more than 3 public keys are non-standard
+     * <p>IMPORTANT: As of Paycoin Core 0.9 all multisig transactions which require more than 3 public keys are non-standard
      * and such spends won't be processed by peers with default settings, essentially making such transactions almost
      * nonspendable</p>
      */
@@ -142,7 +142,7 @@ public class KeyChainGroup implements KeyBag {
      * specifies how many signatures required to spend transactions for this married keychain. This value should not exceed
      * total number of keys involved (one followed key plus number of following keys), otherwise IllegalArgumentException
      * will be thrown.</p>
-     * <p>IMPORTANT: As of Peercoin Core 0.9 all multisig transactions which require more than 3 public keys are non-standard
+     * <p>IMPORTANT: As of Paycoin Core 0.9 all multisig transactions which require more than 3 public keys are non-standard
      * and such spends won't be processed by peers with default settings, essentially making such transactions almost
      * nonspendable</p>
      * <p>This method will throw an IllegalStateException, if active keychain is already married or already has leaf keys

@@ -32,7 +32,7 @@ import java.util.Map;
 import static com.ligerzero459.paycoinj.core.Utils.*;
 
 /**
- * <p>Methods to serialize and de-serialize messages to the Peercoin network format as defined in
+ * <p>Methods to serialize and de-serialize messages to the Paycoin network format as defined in
  * <a href="https://en.peercoin.it/wiki/Protocol_specification">the protocol specification</a>.</p>
  *
  * <p>To be able to serialize and deserialize new Message subclasses the following criteria needs to be met.</p>
@@ -40,11 +40,11 @@ import static com.ligerzero459.paycoinj.core.Utils.*;
  * <ul>
  * <li>The proper Class instance needs to be mapped to its message name in the names variable below</li>
  * <li>There needs to be a constructor matching: NetworkParameters params, byte[] payload</li>
- * <li>Message.peercoinSerializeToStream() needs to be properly subclassed</li>
+ * <li>Message.paycoinSerializeToStream() needs to be properly subclassed</li>
  * </ul>
  */
-public class PeercoinSerializer {
-    private static final Logger log = LoggerFactory.getLogger(PeercoinSerializer.class);
+public class PaycoinSerializer {
+    private static final Logger log = LoggerFactory.getLogger(PaycoinSerializer.class);
     private static final int COMMAND_LEN = 12;
 
     private NetworkParameters params;
@@ -74,22 +74,22 @@ public class PeercoinSerializer {
     }
 
     /**
-     * Constructs a PeercoinSerializer with the given behavior.
+     * Constructs a PaycoinSerializer with the given behavior.
      *
      * @param params           networkParams used to create Messages instances and termining packetMagic
      */
-    public PeercoinSerializer(NetworkParameters params) {
+    public PaycoinSerializer(NetworkParameters params) {
         this(params, false, false);
     }
 
     /**
-     * Constructs a PeercoinSerializer with the given behavior.
+     * Constructs a PaycoinSerializer with the given behavior.
      *
      * @param params           networkParams used to create Messages instances and termining packetMagic
      * @param parseLazy        deserialize messages in lazy mode.
      * @param parseRetain      retain the backing byte array of a message for fast reserialization.
      */
-    public PeercoinSerializer(NetworkParameters params, boolean parseLazy, boolean parseRetain) {
+    public PaycoinSerializer(NetworkParameters params, boolean parseLazy, boolean parseRetain) {
         this.params = params;
         this.parseLazy = parseLazy;
         this.parseRetain = parseRetain;
@@ -125,16 +125,16 @@ public class PeercoinSerializer {
     public void serialize(Message message, OutputStream out) throws IOException {
         String name = names.get(message.getClass());
         if (name == null) {
-            throw new Error("PeercoinSerializer doesn't currently know how to serialize " + message.getClass());
+            throw new Error("PaycoinSerializer doesn't currently know how to serialize " + message.getClass());
         }
-        serialize(name, message.peercoinSerialize(), out);
+        serialize(name, message.paycoinSerialize(), out);
     }
 
     /**
      * Reads a message from the given ByteBuffer and returns it.
      */
     public Message deserialize(ByteBuffer in) throws ProtocolException, IOException {
-        // A Peercoin protocol message has the following format.
+        // A Paycoin protocol message has the following format.
         //
         //   - 4 byte magic number: 0xfabfb5da for the testnet or
         //                          0xf9beb4d9 for production
@@ -149,7 +149,7 @@ public class PeercoinSerializer {
         // Satoshi's implementation ignores garbage before the magic header bytes. We have to do the same because
         // sometimes it sends us stuff that isn't part of any message.
         seekPastMagicBytes(in);
-        PeercoinPacketHeader header = new PeercoinPacketHeader(in);
+        PaycoinPacketHeader header = new PaycoinPacketHeader(in);
         // Now try to read the whole message.
         return deserializePayload(header, in);
     }
@@ -158,15 +158,15 @@ public class PeercoinSerializer {
      * Deserializes only the header in case packet meta data is needed before decoding
      * the payload. This method assumes you have already called seekPastMagicBytes()
      */
-    public PeercoinPacketHeader deserializeHeader(ByteBuffer in) throws ProtocolException, IOException {
-        return new PeercoinPacketHeader(in);
+    public PaycoinPacketHeader deserializeHeader(ByteBuffer in) throws ProtocolException, IOException {
+        return new PaycoinPacketHeader(in);
     }
 
     /**
      * Deserialize payload only.  You must provide a header, typically obtained by calling
-     * {@link PeercoinSerializer#deserializeHeader}.
+     * {@link PaycoinSerializer#deserializeHeader}.
      */
-    public Message deserializePayload(PeercoinPacketHeader header, ByteBuffer in) throws ProtocolException, BufferUnderflowException {
+    public Message deserializePayload(PaycoinPacketHeader header, ByteBuffer in) throws ProtocolException, BufferUnderflowException {
         byte[] payloadBytes = new byte[header.size];
         in.get(payloadBytes, 0, header.size);
 
@@ -277,7 +277,7 @@ public class PeercoinSerializer {
     }
 
 
-    public static class PeercoinPacketHeader {
+    public static class PaycoinPacketHeader {
         /** The largest number of bytes that a header can represent */
         public static final int HEADER_LENGTH = COMMAND_LEN + 4 + 4;
 
@@ -286,7 +286,7 @@ public class PeercoinSerializer {
         public final int size;
         public final byte[] checksum;
 
-        public PeercoinPacketHeader(ByteBuffer in) throws ProtocolException, BufferUnderflowException {
+        public PaycoinPacketHeader(ByteBuffer in) throws ProtocolException, BufferUnderflowException {
             header = new byte[HEADER_LENGTH];
             in.get(header, 0, header.length);
 

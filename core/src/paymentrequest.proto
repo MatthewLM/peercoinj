@@ -23,7 +23,7 @@
  */
 
 //
-// Simple Peercoin Payment Protocol messages
+// Simple Paycoin Payment Protocol messages
 //
 // Use fields 100+ for extensions;
 // to avoid conflicts, register extensions at:

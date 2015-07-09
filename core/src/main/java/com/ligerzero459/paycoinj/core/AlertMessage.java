@@ -22,7 +22,7 @@ import java.util.Set;
 
 /**
  * Alerts are signed messages that are broadcast on the peer-to-peer network if they match a hard-coded signing key.
- * The private keys are held by a small group of core Peercoin developers, and alerts may be broadcast in the event of
+ * The private keys are held by a small group of core Paycoin developers, and alerts may be broadcast in the event of
  * an available upgrade or a serious network problem. Alerts have an expiration time, data that specifies what
  * set of software versions it matches and the ability to cancel them by broadcasting another type of alert.<p>
  *
@@ -74,7 +74,7 @@ public class AlertMessage extends Message {
         readVarInt();  // Skip the length field on the content array.
         // We're inside the embedded structure.
         version = readUint32();
-        // Read the timestamps. Peercoin uses seconds since the epoch.
+        // Read the timestamps. Paycoin uses seconds since the epoch.
         relayUntil = new Date(readUint64().longValue() * 1000);
         expiration = new Date(readUint64().longValue() * 1000);
         id = readUint32();

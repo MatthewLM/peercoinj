@@ -109,7 +109,7 @@ import static com.google.common.base.Preconditions.*;
 /**
  * <p>A Wallet stores keys and a record of transactions that send and receive value from those keys. Using these,
  * it is able to create new transactions that spend the recorded transactions, and this is the fundamental operation
- * of the Peercoin protocol.</p>
+ * of the Paycoin protocol.</p>
  *
  * <p>To learn more about this class, read <b><a href="https://bitcoinj.github.io/working-with-the-wallet">
  *     working with the wallet.</a></b></p>
@@ -1853,7 +1853,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
             // There is a dead coinbase tx being received on the best chain. A coinbase tx is made dead when it moves
             // to a side chain but it can be switched back on a reorg and resurrected back to spent or unspent.
             // So take it out of the dead pool. Note that we don't resurrect dependent transactions here, even though
-            // we could. Peercoin nodes on the network have deleted the dependent transactions from their mempools
+            // we could. Paycoin nodes on the network have deleted the dependent transactions from their mempools
             // entirely by this point. We could and maybe should rebroadcast them so the network remembers and tries
             // to confirm them again. But this is a deeply unusual edge case that due to the maturity rule should never
             // happen in practice, thus for simplicities sake we ignore it here.
@@ -1942,9 +1942,9 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
                     // so the exact nature of the mutation can be examined.
                     log.warn("Saw two pending transactions double spend each other");
                     log.warn("  offending input is input {}", tx.getInputs().indexOf(input));
-                    log.warn("{}: {}", tx.getHash(), Utils.HEX.encode(tx.unsafePeercoinSerialize()));
+                    log.warn("{}: {}", tx.getHash(), Utils.HEX.encode(tx.unsafePaycoinSerialize()));
                     Transaction other = input.getConnectedOutput().getSpentBy().getParentTransaction();
-                    log.warn("{}: {}", other.getHash(), Utils.HEX.encode(tx.unsafePeercoinSerialize()));
+                    log.warn("{}: {}", other.getHash(), Utils.HEX.encode(tx.unsafePaycoinSerialize()));
                 }
             } else if (result == TransactionInput.ConnectionResult.SUCCESS) {
                 // Otherwise we saw a transaction spend our coins, but we didn't try and spend them ourselves yet.
@@ -2963,7 +2963,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
 
     /** A SendResult is returned to you as part of sending coins to a recipient. */
     public static class SendResult {
-        /** The Peercoin transaction message that moves the money. */
+        /** The Paycoin transaction message that moves the money. */
         public Transaction tx;
         /** A future that will complete once the tx message has been successfully broadcast to the network. */
         public ListenableFuture<Transaction> broadcastComplete;
@@ -3202,14 +3202,14 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
      * <p>You MUST ensure that the value is not smaller than {@link Transaction#MIN_OUTPUT_VALUE} or the transaction
      * will almost certainly be rejected by the network as dust.</p>
      *
-     * @param address The Peercoin address to send the money to.
+     * @param address The Paycoin address to send the money to.
      * @param value How much currency to send.
      * @return either the created Transaction or null if there are insufficient coins.
      * coins as spent until commitTx is called on the result.
      * @throws InsufficientMoneyException if the request could not be completed due to not enough balance.
      * @throws TooSmallOutput if there is an output which is below the minimum allowed amount
      * @throws CouldNotAdjustDownwards if emptying the wallet was requested and the output can't be shrunk for fees without violating a protocol rule.
-     * @throws ExceededMaxTransactionSize if the resultant transaction is too big for Peercoin to process (try breaking up the amounts of value)
+     * @throws ExceededMaxTransactionSize if the resultant transaction is too big for Paycoin to process (try breaking up the amounts of value)
      */
     public Transaction createSend(Address address, Coin value) throws InsufficientMoneyException {
         SendRequest req = SendRequest.to(address, value);
@@ -3230,7 +3230,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
      * @throws IllegalArgumentException if you try and complete the same SendRequest twice
      * @throws TooSmallOutput if there is an output which is below the minimum allowed amount
      * @throws CouldNotAdjustDownwards if emptying the wallet was requested and the output can't be shrunk for fees without violating a protocol rule.
-     * @throws ExceededMaxTransactionSize if the resultant transaction is too big for Peercoin to process (try breaking up the amounts of value)
+     * @throws ExceededMaxTransactionSize if the resultant transaction is too big for Paycoin to process (try breaking up the amounts of value)
      */
     public Transaction sendCoinsOffline(SendRequest request) throws InsufficientMoneyException {
         lock.lock();
@@ -3266,7 +3266,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
      * @throws InsufficientMoneyException if the request could not be completed due to not enough balance.
      * @throws TooSmallOutput if there is an output which is below the minimum allowed amount
      * @throws CouldNotAdjustDownwards if emptying the wallet was requested and the output can't be shrunk for fees without violating a protocol rule.
-     * @throws ExceededMaxTransactionSize if the resultant transaction is too big for Peercoin to process (try breaking up the amounts of value)
+     * @throws ExceededMaxTransactionSize if the resultant transaction is too big for Paycoin to process (try breaking up the amounts of value)
      */
     public SendResult sendCoins(TransactionBroadcaster broadcaster, Address to, Coin value) throws InsufficientMoneyException {
         SendRequest request = SendRequest.to(to, value);
@@ -3291,7 +3291,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
      * @throws IllegalArgumentException if you try and complete the same SendRequest twice
      * @throws TooSmallOutput if there is an output which is below the minimum allowed amount
      * @throws CouldNotAdjustDownwards if emptying the wallet was requested and the output can't be shrunk for fees without violating a protocol rule.
-     * @throws ExceededMaxTransactionSize if the resultant transaction is too big for Peercoin to process (try breaking up the amounts of value)
+     * @throws ExceededMaxTransactionSize if the resultant transaction is too big for Paycoin to process (try breaking up the amounts of value)
      */
     public SendResult sendCoins(TransactionBroadcaster broadcaster, SendRequest request) throws InsufficientMoneyException {
         // Should not be locked here, as we're going to call into the broadcaster and that might want to hold its
@@ -3323,7 +3323,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
      * @throws IllegalArgumentException if you try and complete the same SendRequest twice
      * @throws TooSmallOutput if there is an output which is below the minimum allowed amount
      * @throws CouldNotAdjustDownwards if emptying the wallet was requested and the output can't be shrunk for fees without violating a protocol rule.
-     * @throws ExceededMaxTransactionSize if the resultant transaction is too big for Peercoin to process (try breaking up the amounts of value)
+     * @throws ExceededMaxTransactionSize if the resultant transaction is too big for Paycoin to process (try breaking up the amounts of value)
      */
     public SendResult sendCoins(SendRequest request) throws InsufficientMoneyException {
         TransactionBroadcaster broadcaster = vTransactionBroadcaster;
@@ -3342,7 +3342,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
      * @throws IllegalArgumentException if you try and complete the same SendRequest twice
      * @throws TooSmallOutput if there is an output which is below the minimum allowed amount
      * @throws CouldNotAdjustDownwards if emptying the wallet was requested and the output can't be shrunk for fees without violating a protocol rule.
-     * @throws ExceededMaxTransactionSize if the resultant transaction is too big for Peercoin to process (try breaking up the amounts of value)
+     * @throws ExceededMaxTransactionSize if the resultant transaction is too big for Paycoin to process (try breaking up the amounts of value)
      */
     public Transaction sendCoins(Peer peer, SendRequest request) throws InsufficientMoneyException {
         Transaction tx = sendCoinsOffline(request);
@@ -3370,7 +3370,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
      * @throws IllegalArgumentException if you try and complete the same SendRequest twice
      * @throws TooSmallOutput if there is an output which is below the minimum allowed amount
      * @throws CouldNotAdjustDownwards if emptying the wallet was requested and the output can't be shrunk for fees without violating a protocol rule.
-     * @throws ExceededMaxTransactionSize if the resultant transaction is too big for Peercoin to process (try breaking up the amounts of value)
+     * @throws ExceededMaxTransactionSize if the resultant transaction is too big for Paycoin to process (try breaking up the amounts of value)
      */
     public void completeTx(SendRequest req) throws InsufficientMoneyException {
         lock.lock();
@@ -3452,7 +3452,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
             }
 
             // Check size.
-            int size = req.tx.peercoinSerialize().length;
+            int size = req.tx.paycoinSerialize().length;
             if (size > Transaction.MAX_STANDARD_TX_SIZE)
                 throw new ExceededMaxTransactionSize();
 
@@ -3539,7 +3539,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
     private boolean adjustOutputDownwardsForFee(Transaction tx, CoinSelection coinSelection, Coin baseFee, Coin feePerKb) {
         TransactionOutput output = tx.getOutput(0);
         // Check if we need additional fee due to the transaction's size
-        int size = tx.peercoinSerialize().length;
+        int size = tx.paycoinSerialize().length;
         size += estimateBytesForSigning(coinSelection);
         
         // ppcoin: Always add required fee
@@ -3892,7 +3892,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
                     try {
                         if (isTxOutputBloomFilterable(out)) {
                             TransactionOutPoint outPoint = new TransactionOutPoint(params, i, tx);
-                            filter.insert(outPoint.peercoinSerialize());
+                            filter.insert(outPoint.paycoinSerialize());
                         }
                     } catch (ScriptException e) {
                         throw new RuntimeException(e); // If it is ours, we parsed the script correctly, so this shouldn't happen
@@ -4101,7 +4101,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
                 if (changeAddress == null)
                     changeAddress = getChangeAddress();
                 changeOutput = new TransactionOutput(params, req.tx, change, changeAddress);
-                size += changeOutput.peercoinSerialize().length + VarInt.sizeOf(req.tx.getOutputs().size()) - VarInt.sizeOf(req.tx.getOutputs().size() - 1);
+                size += changeOutput.paycoinSerialize().length + VarInt.sizeOf(req.tx.getOutputs().size()) - VarInt.sizeOf(req.tx.getOutputs().size() - 1);
                 additionalValueForNextCategory = null;
             }
 
@@ -4114,7 +4114,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
 
             // Estimate transaction size and loop again if we need more fee per kb. The serialized tx doesn't
             // include things we haven't added yet like input signatures/scripts or the change output.
-            size += req.tx.peercoinSerialize().length;
+            size += req.tx.paycoinSerialize().length;
             size += estimateBytesForSigning(selection);
             if (size/1000 > lastCalculatedSize/1000 && req.feePerKb.signum() > 0) {
                 lastCalculatedSize = size;
@@ -4218,7 +4218,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
 
     /**
      * <p>Specifies that the given {@link TransactionBroadcaster}, typically a {@link PeerGroup}, should be used for
-     * sending transactions to the Peercoin network by default. Some sendCoins methods let you specify a broadcaster
+     * sending transactions to the Paycoin network by default. Some sendCoins methods let you specify a broadcaster
      * explicitly, in that case, they don't use this broadcaster. If null is specified then the wallet won't attempt
      * to broadcast transactions itself.</p>
      *
@@ -4439,7 +4439,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
             if (sign)
                 signTransaction(req);
             // KeyTimeCoinSelector should never select enough inputs to push us oversize.
-            checkState(rekeyTx.peercoinSerialize().length < Transaction.MAX_STANDARD_TX_SIZE);
+            checkState(rekeyTx.paycoinSerialize().length < Transaction.MAX_STANDARD_TX_SIZE);
             return rekeyTx;
         } catch (VerificationException e) {
             throw new RuntimeException(e);  // Cannot happen.

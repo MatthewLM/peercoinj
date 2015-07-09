@@ -26,7 +26,7 @@ import java.util.Arrays;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * <p>A Message is a data structure that can be serialized/deserialized using both the Peercoin proprietary serialization
+ * <p>A Message is a data structure that can be serialized/deserialized using both the Paycoin proprietary serialization
  * format and built-in Java object serialization. Specific types of messages that are used both in the block chain,
  * and on the wire, are derived from this class.</p>
  */
@@ -87,9 +87,9 @@ public abstract class Message implements Serializable {
     /**
      * 
      * @param params NetworkParameters object.
-     * @param payload Peercoin protocol formatted byte array containing message content.
+     * @param payload Paycoin protocol formatted byte array containing message content.
      * @param offset The location of the first payload byte within the array.
-     * @param protocolVersion Peercoin protocol version.
+     * @param protocolVersion Paycoin protocol version.
      * @param parseLazy Whether to perform a full parse immediately or delay until a read is requested.
      * @param parseRetain Whether to retain the backing byte array for quick reserialization.  
      * If true and the backing byte array is invalidated due to modification of a field then 
@@ -133,7 +133,7 @@ public abstract class Message implements Serializable {
             maybeParse();
             byte[] payloadBytes = new byte[cursor - offset];
             System.arraycopy(payload, offset, payloadBytes, 0, cursor - offset);
-            byte[] reserialized = peercoinSerialize();
+            byte[] reserialized = paycoinSerialize();
             if (!Arrays.equals(reserialized, payloadBytes))
                 throw new RuntimeException("Serialization is wrong: \n" +
                         Utils.HEX.encode(reserialized) + " vs \n" +
@@ -149,7 +149,7 @@ public abstract class Message implements Serializable {
         this(params, payload, offset, NetworkParameters.PROTOCOL_VERSION, parseLazy, parseRetain, length);
     }
 
-    // These methods handle the serialization/deserialization using the custom Peercoin protocol.
+    // These methods handle the serialization/deserialization using the custom Paycoin protocol.
     // It's somewhat painful to work with in Java, so some of these objects support a second 
     // serialization mechanism - the standard Java serialization system. This is used when things 
     // are serialized to the wallet.
@@ -255,7 +255,7 @@ public abstract class Message implements Serializable {
     }
 
     /**
-     * Should only used by PeercoinSerializer for cached checksum
+     * Should only used by PaycoinSerializer for cached checksum
      *
      * @return the checksum
      */
@@ -264,7 +264,7 @@ public abstract class Message implements Serializable {
     }
 
     /**
-     * Should only used by PeercoinSerializer for caching checksum
+     * Should only used by PaycoinSerializer for caching checksum
      *
      * @param checksum the checksum to set
      */
@@ -275,13 +275,13 @@ public abstract class Message implements Serializable {
     }
 
     /**
-     * Returns a copy of the array returned by {@link Message#unsafePeercoinSerialize()}, which is safe to mutate.
+     * Returns a copy of the array returned by {@link Message#unsafePaycoinSerialize()}, which is safe to mutate.
      * If you need extra performance and can guarantee you won't write to the array, you can use the unsafe version.
      *
      * @return a freshly allocated serialized byte array
      */
-    public byte[] peercoinSerialize() {
-        byte[] payload = unsafePeercoinSerialize();
+    public byte[] paycoinSerialize() {
+        byte[] payload = unsafePaycoinSerialize();
         byte[] copy = new byte[payload.length];
         System.arraycopy(payload, 0, copy, 0, payload.length);
         return copy;
@@ -304,7 +304,7 @@ public abstract class Message implements Serializable {
      *
      * @return a byte array owned by this object, do NOT mutate it.
      */
-    public byte[] unsafePeercoinSerialize() {
+    public byte[] unsafePaycoinSerialize() {
         // 1st attempt to use a cached array.
         if (payload != null) {
             if (offset == 0 && length == payload.length) {
@@ -321,7 +321,7 @@ public abstract class Message implements Serializable {
         // No cached array available so serialize parts by stream.
         ByteArrayOutputStream stream = new UnsafeByteArrayOutputStream(length < 32 ? 32 : length + 32);
         try {
-            peercoinSerializeToStream(stream);
+            paycoinSerializeToStream(stream);
         } catch (IOException e) {
             // Cannot happen, we are serializing to a memory stream.
         }
@@ -333,7 +333,7 @@ public abstract class Message implements Serializable {
             // This give a dual benefit.  Releasing references to the larger byte array so that it
             // it is more likely to be GC'd.  And preventing double serializations.  E.g. calculating
             // merkle root calls this method.  It is will frequently happen prior to serializing the block
-            // which means another call to peercoinSerialize is coming.  If we didn't recache then internal
+            // which means another call to paycoinSerialize is coming.  If we didn't recache then internal
             // serialization would occur a 2nd time and every subsequent time the message is serialized.
             payload = stream.toByteArray();
             cursor = cursor - offset;
@@ -356,26 +356,26 @@ public abstract class Message implements Serializable {
      * @param stream
      * @throws IOException
      */
-    final public void peercoinSerialize(OutputStream stream) throws IOException {
+    final public void paycoinSerialize(OutputStream stream) throws IOException {
         // 1st check for cached payload.
         if (payload != null && length != UNKNOWN_LENGTH) {
             stream.write(payload, offset, length);
             return;
         }
 
-        peercoinSerializeToStream(stream);
+        paycoinSerializeToStream(stream);
     }
 
     /**
-     * Serializes this message to the provided stream. If you just want the raw payload use peercoinSerialize().
+     * Serializes this message to the provided stream. If you just want the raw payload use paycoinSerialize().
      */
-    void peercoinSerializeToStream(OutputStream stream) throws IOException {
-        log.error("Error: {} class has not implemented peercoinSerializeToStream method.  Generating message with no payload", getClass());
+    void paycoinSerializeToStream(OutputStream stream) throws IOException {
+        log.error("Error: {} class has not implemented paycoinSerializeToStream method.  Generating message with no payload", getClass());
     }
 
     /**
      * This method is a NOP for all classes except Block and Transaction.  It is only declared in Message
-     * so PeercoinSerializer can avoid 2 instanceof checks + a casting.
+     * so PaycoinSerializer can avoid 2 instanceof checks + a casting.
      */
     public Sha256Hash getHash() {
         throw new UnsupportedOperationException();

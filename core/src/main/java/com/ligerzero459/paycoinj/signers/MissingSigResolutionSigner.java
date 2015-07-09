@@ -55,7 +55,7 @@ public class MissingSigResolutionSigner extends StatelessTransactionSigner {
             return true;
 
         int numInputs = propTx.partialTx.getInputs().size();
-        byte[] dummySig = TransactionSignature.dummy().encodeToPeercoin();
+        byte[] dummySig = TransactionSignature.dummy().encodeToPaycoin();
         for (int i = 0; i < numInputs; i++) {
             TransactionInput txIn = propTx.partialTx.getInput(i);
             if (txIn.getConnectedOutput() == null) {

@@ -110,7 +110,7 @@ public class TransactionInput extends ChildMessage implements Serializable {
     /**
      * Deserializes an input message. This is usually part of a transaction message.
      * @param params NetworkParameters object.
-     * @param payload Peercoin protocol formatted byte array containing message content.
+     * @param payload Paycoin protocol formatted byte array containing message content.
      * @param offset The location of the first payload byte within the array.
      * @param parseLazy Whether to perform a full parse immediately or delay until a read is requested.
      * @param parseRetain Whether to retain the backing byte array for quick reserialization.  
@@ -144,8 +144,8 @@ public class TransactionInput extends ChildMessage implements Serializable {
     }
 
     @Override
-    protected void peercoinSerializeToStream(OutputStream stream) throws IOException {
-        outpoint.peercoinSerialize(stream);
+    protected void paycoinSerializeToStream(OutputStream stream) throws IOException {
+        outpoint.paycoinSerialize(stream);
         stream.write(new VarInt(scriptBytes.length).encode());
         stream.write(scriptBytes);
         Utils.uint32ToByteStreamLE(sequence, stream);
@@ -186,7 +186,7 @@ public class TransactionInput extends ChildMessage implements Serializable {
 
     /**
      * Convenience method that returns the from address of this input by parsing the scriptSig. The concept of a
-     * "from address" is not well defined in Peercoin and you should not assume that senders of a transaction can
+     * "from address" is not well defined in Paycoin and you should not assume that senders of a transaction can
      * actually receive coins on the same address they used to sign (e.g. this is not true for shared wallets).
      */
     @Deprecated
@@ -201,7 +201,7 @@ public class TransactionInput extends ChildMessage implements Serializable {
     /**
      * Sequence numbers allow participants in a multi-party transaction signing protocol to create new versions of the
      * transaction independently of each other. Newer versions of a transaction can replace an existing version that's
-     * in nodes memory pools if the existing version is time locked. See the Contracts page on the Peercoin wiki for
+     * in nodes memory pools if the existing version is time locked. See the Contracts page on the Paycoin wiki for
      * examples of how you can use this feature to build contract protocols. Note that as of 2012 the tx replacement
      * feature is disabled so sequence numbers are unusable.
      */
@@ -213,7 +213,7 @@ public class TransactionInput extends ChildMessage implements Serializable {
     /**
      * Sequence numbers allow participants in a multi-party transaction signing protocol to create new versions of the
      * transaction independently of each other. Newer versions of a transaction can replace an existing version that's
-     * in nodes memory pools if the existing version is time locked. See the Contracts page on the Peercoin wiki for
+     * in nodes memory pools if the existing version is time locked. See the Contracts page on the Paycoin wiki for
      * examples of how you can use this feature to build contract protocols. Note that as of 2012 the tx replacement
      * feature is disabled so sequence numbers are unusable.
      */
@@ -451,7 +451,7 @@ public class TransactionInput extends ChildMessage implements Serializable {
 
     /** Returns a copy of the input detached from its containing transaction, if need be. */
     public TransactionInput duplicateDetached() {
-        return new TransactionInput(params, null, peercoinSerialize(), 0);
+        return new TransactionInput(params, null, paycoinSerialize(), 0);
     }
 
     /**

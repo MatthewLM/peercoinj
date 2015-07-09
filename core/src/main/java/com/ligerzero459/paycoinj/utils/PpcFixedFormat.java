@@ -26,7 +26,7 @@ import java.util.List;
 
 /**
  * <p>This class, a concrete extension of {@link PpcFormat}, is distinguished in that each
- * instance formats and by-default parses all Peercoin monetary values in units of a single
+ * instance formats and by-default parses all Paycoin monetary values in units of a single
  * denomination that is specified at the time that instance is constructed.
  *
  * <p>By default, neither currency codes nor symbols are included in formatted values as

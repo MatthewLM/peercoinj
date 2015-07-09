@@ -42,7 +42,7 @@ public class TransactionOutPoint extends ChildMessage implements Serializable {
     /** Which output of that transaction we are talking about. */
     private long index;
 
-    // This is not part of Peercoin serialization. It's included in Java serialization.
+    // This is not part of Paycoin serialization. It's included in Java serialization.
     // It points to the connected transaction.
     Transaction fromTx;
 
@@ -108,7 +108,7 @@ public class TransactionOutPoint extends ChildMessage implements Serializable {
     }
 
     @Override
-    protected void peercoinSerializeToStream(OutputStream stream) throws IOException {
+    protected void paycoinSerializeToStream(OutputStream stream) throws IOException {
         stream.write(Utils.reverseBytes(hash.getBytes()));
         Utils.uint32ToByteStreamLE(index, stream);
     }

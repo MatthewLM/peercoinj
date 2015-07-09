@@ -44,7 +44,7 @@ public class Pong extends Message {
     }
     
     @Override
-    public void peercoinSerializeToStream(OutputStream stream) throws IOException {
+    public void paycoinSerializeToStream(OutputStream stream) throws IOException {
         Utils.int64ToByteStreamLE(nonce, stream);
     }
     

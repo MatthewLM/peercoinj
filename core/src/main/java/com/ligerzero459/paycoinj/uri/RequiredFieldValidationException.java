@@ -1,7 +1,7 @@
 package com.ligerzero459.paycoinj.uri;
 
 /**
- * <p>Exception to provide the following to {@link PeercoinURI}:</p>
+ * <p>Exception to provide the following to {@link PaycoinURI}:</p>
  * <ul>
  * <li>Provision of parsing error messages</li>
  * </ul>
@@ -12,7 +12,7 @@ package com.ligerzero459.paycoinj.uri;
  * @since 0.3.0
  *         
  */
-public class RequiredFieldValidationException extends PeercoinURIParseException {
+public class RequiredFieldValidationException extends PaycoinURIParseException {
 
     public RequiredFieldValidationException(String s) {
         super(s);

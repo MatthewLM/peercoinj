@@ -44,7 +44,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterruptibly;
 
 /**
- * A collection of various utility methods that are helpful for working with the Peercoin protocol.
+ * A collection of various utility methods that are helpful for working with the Paycoin protocol.
  * To enable debug logging from the library, run with -Dpeercoinj.logging=true on your command line.
  */
 public class Utils {
@@ -57,9 +57,9 @@ public class Utils {
         }
     }
 
-    /** The string that prefixes all text messages signed using Peercoin keys. */
-    public static final String Peercoin_SIGNED_MESSAGE_HEADER = "Peercoin Signed Message:\n";
-    public static final byte[] Peercoin_SIGNED_MESSAGE_HEADER_BYTES = Peercoin_SIGNED_MESSAGE_HEADER.getBytes(Charsets.UTF_8);
+    /** The string that prefixes all text messages signed using Paycoin keys. */
+    public static final String Paycoin_SIGNED_MESSAGE_HEADER = "Paycoin Signed Message:\n";
+    public static final byte[] Paycoin_SIGNED_MESSAGE_HEADER_BYTES = Paycoin_SIGNED_MESSAGE_HEADER.getBytes(Charsets.UTF_8);
 
     private static BlockingQueue<Boolean> mockSleepQueue;
 
@@ -148,7 +148,7 @@ public class Utils {
 
     /**
      * Calculates the SHA-256 hash of the given byte range, and then hashes the resulting hash again. This is
-     * standard procedure in Peercoin. The resulting hash is in big endian form.
+     * standard procedure in Paycoin. The resulting hash is in big endian form.
      */
     public static byte[] doubleDigest(byte[] input, int offset, int length) {
         synchronized (digest) {
@@ -351,7 +351,7 @@ public class Utils {
      * first byte as sign. Thus 0x1234560000 is compact 0x05123456 and 0xc0de000000 is compact 0x0600c0de. Compact
      * 0x05c0de00 would be -0x40de000000.</p>
      *
-     * <p>Peercoin only uses this "compact" format for encoding difficulty targets, which are unsigned 256bit quantities.
+     * <p>Paycoin only uses this "compact" format for encoding difficulty targets, which are unsigned 256bit quantities.
      * Thus, all the complexities of the sign bit and using base 256 are probably an implementation accident.</p>
      */
     public static BigInteger decodeCompactBits(long compact) {
@@ -482,13 +482,13 @@ public class Utils {
     /**
      * <p>Given a textual message, returns a byte buffer formatted as follows:</p>
      *
-     * <tt><p>[24] "Peercoin Signed Message:\n" [message.length as a varint] message</p></tt>
+     * <tt><p>[24] "Paycoin Signed Message:\n" [message.length as a varint] message</p></tt>
      */
     public static byte[] formatMessageForSigning(String message) {
         try {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            bos.write(Peercoin_SIGNED_MESSAGE_HEADER_BYTES.length);
-            bos.write(Peercoin_SIGNED_MESSAGE_HEADER_BYTES);
+            bos.write(Paycoin_SIGNED_MESSAGE_HEADER_BYTES.length);
+            bos.write(Paycoin_SIGNED_MESSAGE_HEADER_BYTES);
             byte[] messageBytes = message.getBytes(Charsets.UTF_8);
             VarInt size = new VarInt(messageBytes.length);
             bos.write(size.encode());

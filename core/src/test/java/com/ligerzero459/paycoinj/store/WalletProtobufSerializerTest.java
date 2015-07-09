@@ -121,7 +121,7 @@ public class WalletProtobufSerializerTest {
         assertEquals(1, wallet1.getTransactions(true).size());
         assertEquals(v1, wallet1.getBalance(Wallet.BalanceType.ESTIMATED));
         Transaction t1copy = wallet1.getTransaction(t1.getHash());
-        assertArrayEquals(t1.peercoinSerialize(), t1copy.peercoinSerialize());
+        assertArrayEquals(t1.paycoinSerialize(), t1copy.paycoinSerialize());
         assertEquals(2, t1copy.getConfidence().numBroadcastPeers());
         assertEquals(TransactionConfidence.Source.NETWORK, t1copy.getConfidence().getSource());
         

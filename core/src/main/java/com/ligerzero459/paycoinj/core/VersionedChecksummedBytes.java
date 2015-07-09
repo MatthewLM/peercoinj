@@ -23,7 +23,7 @@ import com.google.common.base.Objects;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * <p>In Peercoin the following format is often used to represent some type of key:</p>
+ * <p>In Paycoin the following format is often used to represent some type of key:</p>
  * <p/>
  * <pre>[one version byte] [data bytes] [4 checksum bytes]</pre>
  * <p/>

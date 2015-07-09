@@ -432,7 +432,7 @@ public class PostgresFullPrunedBlockStore implements FullPrunedBlockStore {
             s.setBytes(1, hashBytes);
             s.setBytes(2, storedBlock.getChainWork().toByteArray());
             s.setInt(3, storedBlock.getHeight());
-            s.setBytes(4, storedBlock.getHeader().unsafePeercoinSerialize());
+            s.setBytes(4, storedBlock.getHeader().unsafePaycoinSerialize());
             s.setBoolean(5, wasUndoable);
             s.executeUpdate();
             s.close();
@@ -484,7 +484,7 @@ public class PostgresFullPrunedBlockStore implements FullPrunedBlockStore {
                 bos.write((int) (0xFF & (numTxn >> 16)));
                 bos.write((int) (0xFF & (numTxn >> 24)));
                 for (Transaction tx : undoableBlock.getTransactions())
-                    tx.peercoinSerialize(bos);
+                    tx.paycoinSerialize(bos);
                 transactions = bos.toByteArray();
             }
             bos.close();

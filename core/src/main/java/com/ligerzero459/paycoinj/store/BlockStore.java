@@ -24,7 +24,7 @@ import com.ligerzero459.paycoinj.core.StoredBlock;
  * different ways. An in-memory implementation (MemoryBlockStore) exists for unit testing but real apps will want to
  * use implementations that save to disk.<p>
  *
- * A BlockStore is a map of hashes to StoredBlock. The hash is the double digest of the Peercoin serialization
+ * A BlockStore is a map of hashes to StoredBlock. The hash is the double digest of the Paycoin serialization
  * of the block header, <b>not</b> the header with the extra data as well.<p>
  *
  * BlockStores are thread safe.

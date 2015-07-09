@@ -55,7 +55,7 @@ public class ValidHashStore {
 	
 	static {
 		try {
-			VALID_HASHES_URL = new URL("https://peercoinexplorer.info/chain/Peercoin/q/getvalidhashes");
+			VALID_HASHES_URL = new URL("https://peercoinexplorer.info/chain/Paycoin/q/getvalidhashes");
 		} catch (final MalformedURLException x) {
 			throw new RuntimeException(x); // cannot happen
 		}

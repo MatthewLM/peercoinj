@@ -34,14 +34,14 @@ public class PeerAddressTest
         String fromSpec = "010000000000000000000000000000000000ffff0a000001208d";
         PeerAddress pa = new PeerAddress(MainNetParams.get(),
                 HEX.decode(fromSpec), 0, 0);
-        String reserialized = HEX.encode(pa.peercoinSerialize());
+        String reserialized = HEX.encode(pa.paycoinSerialize());
         assertEquals(reserialized,fromSpec );
     }
 
     @Test
-    public void testpeercoinSerialize() throws Exception {
+    public void testpaycoinSerialize() throws Exception {
         PeerAddress pa = new PeerAddress(InetAddress.getByName(null), 8333, 0);
         assertEquals("000000000000000000000000000000000000ffff7f000001208d",
-                Utils.HEX.encode(pa.peercoinSerialize()));
+                Utils.HEX.encode(pa.paycoinSerialize()));
     }
 }

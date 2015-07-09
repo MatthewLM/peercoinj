@@ -97,7 +97,7 @@ public class PartialMerkleTree extends Message {
     }
 
     @Override
-    public void peercoinSerializeToStream(OutputStream stream) throws IOException {
+    public void paycoinSerializeToStream(OutputStream stream) throws IOException {
         uint32ToByteStreamLE(transactionCount, stream);
 
         stream.write(new VarInt(hashes.size()).encode());
@@ -123,7 +123,7 @@ public class PartialMerkleTree extends Message {
         length = cursor - offset;
     }
     
-    // Based on CPartialMerkleTree::TraverseAndBuild in Peercoin-qt.
+    // Based on CPartialMerkleTree::TraverseAndBuild in Paycoin-qt.
     private static void traverseAndBuild(int height, int pos, List<Sha256Hash> allLeafHashes, byte[] includeBits,
                                          List<Boolean> matchedChildBits, List<Sha256Hash> resultHashes) {
         boolean parentOfMatch = false;

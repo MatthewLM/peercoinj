@@ -114,7 +114,7 @@ class RuleList {
 }
 
 public class FullBlockTestGenerator {
-    // Used by PeercoindComparisonTool and AbstractFullPrunedBlockChainTest to create test cases
+    // Used by PaycoindComparisonTool and AbstractFullPrunedBlockChainTest to create test cases
     private NetworkParameters params;
     private ECKey coinbaseOutKey;
     private byte[] coinbaseOutKeyPubKey;
@@ -145,7 +145,7 @@ public class FullBlockTestGenerator {
                         outStream.write((int) (params.getPacketMagic() >>> 16));
                         outStream.write((int) (params.getPacketMagic() >>> 8));
                         outStream.write((int) (params.getPacketMagic() >>> 0));
-                        byte[] block = ((BlockAndValidity)element).block.peercoinSerialize();
+                        byte[] block = ((BlockAndValidity)element).block.paycoinSerialize();
                         byte[] length = new byte[4];
                         Utils.uint32ToByteArrayBE(block.length, length, 0);
                         outStream.write(Utils.reverseBytes(length));
@@ -1092,7 +1092,7 @@ public class FullBlockTestGenerator {
         
         Block b56;
         try {
-            b56 = new Block(params, b57.peercoinSerialize());
+            b56 = new Block(params, b57.paycoinSerialize());
         } catch (ProtocolException e) {
             throw new RuntimeException(e); // Cannot happen.
         }
@@ -1217,14 +1217,14 @@ public class FullBlockTestGenerator {
             checkState(new VarInt(varIntBytes, 0).value == b64Created.getTransactions().size());
             
             for (Transaction transaction : b64Created.getTransactions())
-                transaction.peercoinSerialize(stream);
+                transaction.paycoinSerialize(stream);
             b64 = new Block(params, stream.toByteArray(), false, true, stream.size());
             
             // The following checks are checking to ensure block serialization functions in the way needed for this test
             // If they fail, it is likely not an indication of error, but an indication that this test needs rewritten
             checkState(stream.size() == b64Created.getMessageSize() + 8);
             checkState(stream.size() == b64.getMessageSize());
-            checkState(Arrays.equals(stream.toByteArray(), b64.peercoinSerialize()));
+            checkState(Arrays.equals(stream.toByteArray(), b64.paycoinSerialize()));
             checkState(b64.getOptimalEncodingMessageSize() == b64Created.getMessageSize());
         }
         blocks.add(new BlockAndValidity(blockToHeightMap, b64, true, false, b64.getHash(), chainHeadHeight + 19, "b64"));
@@ -1359,7 +1359,7 @@ public class FullBlockTestGenerator {
         }
         b72.solve();
         
-        Block b71 = new Block(params, b72.peercoinSerialize());
+        Block b71 = new Block(params, b72.paycoinSerialize());
         b71.addTransaction(b72.getTransactions().get(2));
         checkState(b71.getHash().equals(b72.getHash()));
         blocks.add(new BlockAndValidity(blockToHeightMap, b71, false, true, b69.getHash(), chainHeadHeight + 21, "b71"));

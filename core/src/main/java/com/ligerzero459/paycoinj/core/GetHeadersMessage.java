@@ -20,7 +20,7 @@ import java.util.List;
 
 /**
  * The "getheaders" command is structurally identical to "getblocks", but has different meaning. On receiving this
- * message a Peercoin node returns matching blocks up to the limit, but without the bodies. It is useful as an
+ * message a Paycoin node returns matching blocks up to the limit, but without the bodies. It is useful as an
  * optimization: when your wallet does not contain any keys created before a particular time, you don't have to download
  * the bodies for those blocks because you know there are no relevant transactions.
  */

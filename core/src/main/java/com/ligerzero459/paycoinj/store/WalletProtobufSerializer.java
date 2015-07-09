@@ -605,7 +605,7 @@ public class WalletProtobufSerializer {
         if (txProto.hasMemo())
             tx.setMemo(txProto.getMemo());
 
-        // Peercoin: Include time
+        // Paycoin: Include time
         tx.setTime(txProto.getTime());
 
         // Transaction should now be complete.

@@ -24,7 +24,7 @@ public class VersionAck extends EmptyMessage {
     public VersionAck() {
     }
 
-    // this is needed by the PeercoinSerializer
+    // this is needed by the PaycoinSerializer
     public VersionAck(NetworkParameters params, byte[] payload) {
     }
 }

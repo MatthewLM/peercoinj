@@ -37,7 +37,7 @@ public class InventoryMessage extends ListMessage {
     /**
      * Deserializes an 'inv' message.
      * @param params NetworkParameters object.
-     * @param payload Peercoin protocol formatted byte array containing message content.
+     * @param payload Paycoin protocol formatted byte array containing message content.
      * @param parseLazy Whether to perform a full parse immediately or delay until a read is requested.
      * @param parseRetain Whether to retain the backing byte array for quick reserialization.  
      * If true and the backing byte array is invalidated due to modification of a field then 
