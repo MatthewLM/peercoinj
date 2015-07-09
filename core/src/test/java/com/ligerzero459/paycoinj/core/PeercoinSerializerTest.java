@@ -21,7 +21,7 @@ import com.ligerzero459.paycoinj.core.AddressMessage;
 import com.ligerzero459.paycoinj.core.Block;
 import com.ligerzero459.paycoinj.core.HeadersMessage;
 import com.ligerzero459.paycoinj.core.PeerAddress;
-import com.ligerzero459.paycoinj.core.PeercoinSerializer;
+import com.ligerzero459.paycoinj.core.PaycoinSerializer;
 import com.ligerzero459.paycoinj.core.Transaction;
 import com.ligerzero459.paycoinj.params.MainNetParams;
 import com.ligerzero459.paycoinj.core.AddressMessage;
@@ -29,7 +29,7 @@ import com.ligerzero459.paycoinj.core.Block;
 import com.ligerzero459.paycoinj.core.HeadersMessage;
 import com.ligerzero459.paycoinj.core.Message;
 import com.ligerzero459.paycoinj.core.PeerAddress;
-import com.ligerzero459.paycoinj.core.PeercoinSerializer;
+import com.ligerzero459.paycoinj.core.PaycoinSerializer;
 import com.ligerzero459.paycoinj.core.ProtocolException;
 import com.ligerzero459.paycoinj.core.Transaction;
 
@@ -77,7 +77,7 @@ public class PeercoinSerializerTest {
 
     @Test
     public void testAddr() throws Exception {
-        PeercoinSerializer bs = new PeercoinSerializer(MainNetParams.get());
+        PaycoinSerializer bs = new PaycoinSerializer(MainNetParams.get());
         AddressMessage a = (AddressMessage)bs.deserialize(ByteBuffer.wrap(addrMessage));
         assertEquals(1, a.getAddresses().size());
         PeerAddress pa = a.getAddresses().get(0);
@@ -92,7 +92,7 @@ public class PeercoinSerializerTest {
 
     @Test
     public void testLazyParsing()  throws Exception {
-        PeercoinSerializer bs = new PeercoinSerializer(MainNetParams.get(), true, false);
+        PaycoinSerializer bs = new PaycoinSerializer(MainNetParams.get(), true, false);
 
     	Transaction tx = (Transaction)bs.deserialize(ByteBuffer.wrap(txMessage));
         assertNotNull(tx);
@@ -113,7 +113,7 @@ public class PeercoinSerializerTest {
     }
 
     private void testCachedParsing(boolean lazy)  throws Exception {
-        PeercoinSerializer bs = new PeercoinSerializer(MainNetParams.get(), lazy, true);
+        PaycoinSerializer bs = new PaycoinSerializer(MainNetParams.get(), lazy, true);
         
         //first try writing to a fields to ensure uncaching and children are not affected
         Transaction tx = (Transaction)bs.deserialize(ByteBuffer.wrap(txMessage));
@@ -176,7 +176,7 @@ public class PeercoinSerializerTest {
      */
     @Test
     public void testHeaders1() throws Exception {
-        PeercoinSerializer bs = new PeercoinSerializer(MainNetParams.get());
+        PaycoinSerializer bs = new PaycoinSerializer(MainNetParams.get());
 
         HeadersMessage hm = (HeadersMessage) bs.deserialize(ByteBuffer.wrap(HEX.decode("e6e8e9e5686561" +
                 "64657273000000000053000000a25e0bfc01010000006fe28c0ab6f1b372c1a6a246ae6" +
@@ -201,7 +201,7 @@ public class PeercoinSerializerTest {
      * Get 6 headers of blocks 1-6 in the chain
      */
     public void testHeaders2() throws Exception {
-        PeercoinSerializer bs = new PeercoinSerializer(MainNetParams.get());
+        PaycoinSerializer bs = new PaycoinSerializer(MainNetParams.get());
 
         HeadersMessage hm = (HeadersMessage) bs.deserialize(ByteBuffer.wrap(HEX.decode("e6e8e9e56865616465" +
                 "72730000000000ed010000ef3fcbd706010000006fe28c0ab6f1b372c1a6a246ae63f74f931e" +
@@ -244,7 +244,7 @@ public class PeercoinSerializerTest {
     @Test
     public void testPeercoinPacketHeader() {
         try {
-            new PeercoinSerializer.PeercoinPacketHeader(ByteBuffer.wrap(new byte[]{0}));
+            new PaycoinSerializer.PeercoinPacketHeader(ByteBuffer.wrap(new byte[]{0}));
             fail();
         } catch (BufferUnderflowException e) {
         }
@@ -252,7 +252,7 @@ public class PeercoinSerializerTest {
         // Message with a Message size which is 1 too big, in little endian format.
         byte[] wrongMessageLength = HEX.decode("000000000000000000000000010000020000000000");
         try {
-            new PeercoinSerializer.PeercoinPacketHeader(ByteBuffer.wrap(wrongMessageLength));
+            new PaycoinSerializer.PeercoinPacketHeader(ByteBuffer.wrap(wrongMessageLength));
             fail();
         } catch (ProtocolException e) {
             // expected
@@ -264,7 +264,7 @@ public class PeercoinSerializerTest {
         // Fail in another way, there is data in the stream but no magic bytes.
         byte[] brokenMessage = HEX.decode("000000");
         try {
-            new PeercoinSerializer(MainNetParams.get()).seekPastMagicBytes(ByteBuffer.wrap(brokenMessage));
+            new PaycoinSerializer(MainNetParams.get()).seekPastMagicBytes(ByteBuffer.wrap(brokenMessage));
             fail();
         } catch (BufferUnderflowException e) {
             // expected
@@ -276,7 +276,7 @@ public class PeercoinSerializerTest {
      * Tests serialization of an unknown message.
      */
     public void testSerializeUnknownMessage() {
-        PeercoinSerializer bs = new PeercoinSerializer(MainNetParams.get());
+        PaycoinSerializer bs = new PaycoinSerializer(MainNetParams.get());
 
         UnknownMessage a = new UnknownMessage();
         ByteArrayOutputStream bos = new ByteArrayOutputStream(addrMessage.length);

@@ -34,5 +34,5 @@ public class MemoryPoolMessage extends Message {
     protected void parseLite() throws ProtocolException {}
 
     @Override
-    void peercoinSerializeToStream(OutputStream stream) throws IOException {}
+    void paycoinSerializeToStream(OutputStream stream) throws IOException {}
 }

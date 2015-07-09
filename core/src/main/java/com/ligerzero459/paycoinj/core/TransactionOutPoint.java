@@ -108,7 +108,7 @@ public class TransactionOutPoint extends ChildMessage implements Serializable {
     }
 
     @Override
-    protected void peercoinSerializeToStream(OutputStream stream) throws IOException {
+    protected void paycoinSerializeToStream(OutputStream stream) throws IOException {
         stream.write(Utils.reverseBytes(hash.getBytes()));
         Utils.uint32ToByteStreamLE(index, stream);
     }

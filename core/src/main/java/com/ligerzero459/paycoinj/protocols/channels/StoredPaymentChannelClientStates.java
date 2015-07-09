@@ -268,8 +268,8 @@ public class StoredPaymentChannelClientStates implements WalletExtension {
                 checkState(channel.refund.getConfidence().getSource() == TransactionConfidence.Source.SELF);
                 final ClientState.StoredClientPaymentChannel.Builder value = ClientState.StoredClientPaymentChannel.newBuilder()
                         .setId(ByteString.copyFrom(channel.id.getBytes()))
-                        .setContractTransaction(ByteString.copyFrom(channel.contract.peercoinSerialize()))
-                        .setRefundTransaction(ByteString.copyFrom(channel.refund.peercoinSerialize()))
+                        .setContractTransaction(ByteString.copyFrom(channel.contract.paycoinSerialize()))
+                        .setRefundTransaction(ByteString.copyFrom(channel.refund.paycoinSerialize()))
                         .setMyKey(ByteString.copyFrom(channel.myKey.getPrivKeyBytes()))
                         .setValueToMe(channel.valueToMe.value)
                         .setRefundFees(channel.refundFees.value);

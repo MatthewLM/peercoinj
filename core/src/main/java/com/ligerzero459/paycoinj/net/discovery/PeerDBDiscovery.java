@@ -94,7 +94,7 @@ public class PeerDBDiscovery implements PeerDiscovery {
         }
 
         synchronized void write(OutputStream s) throws IOException {
-            address.peercoinSerialize(s);
+            address.paycoinSerialize(s);
             Utils.int64ToByteStreamLE(vTimeLastHeard, s);
             Utils.int64ToByteStreamLE(lastConnected, s);
             Utils.int64ToByteStreamLE(triedSinceLastConnection, s);

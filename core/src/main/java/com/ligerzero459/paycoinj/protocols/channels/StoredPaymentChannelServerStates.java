@@ -199,8 +199,8 @@ public class StoredPaymentChannelServerStates implements WalletExtension {
                 ServerState.StoredServerPaymentChannel.Builder channelBuilder = ServerState.StoredServerPaymentChannel.newBuilder()
                         .setBestValueToMe(channel.bestValueToMe.value)
                         .setRefundTransactionUnlockTimeSecs(channel.refundTransactionUnlockTimeSecs)
-                        .setContractTransaction(ByteString.copyFrom(channel.contract.peercoinSerialize()))
-                        .setClientOutput(ByteString.copyFrom(channel.clientOutput.peercoinSerialize()))
+                        .setContractTransaction(ByteString.copyFrom(channel.contract.paycoinSerialize()))
+                        .setClientOutput(ByteString.copyFrom(channel.clientOutput.paycoinSerialize()))
                         .setMyKey(ByteString.copyFrom(channel.myKey.getPrivKeyBytes()));
                 if (channel.bestValueSignature != null)
                     channelBuilder.setBestValueSignature(ByteString.copyFrom(channel.bestValueSignature));

@@ -79,11 +79,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @author Gary Rowe (BIP21 support)
  * @see <a href="https://github.com/bitcoin/bips/blob/master/bip-0021.mediawiki">BIP 0021</a>
  */
-public class PeercoinURI {
+public class PaycoinURI {
     /**
      * Provides logging for this class
      */
-    private static final Logger log = LoggerFactory.getLogger(PeercoinURI.class);
+    private static final Logger log = LoggerFactory.getLogger(PaycoinURI.class);
 
     // Not worth turning into an enum
     public static final String FIELD_MESSAGE = "message";
@@ -108,7 +108,7 @@ public class PeercoinURI {
      * @param uri The raw URI data to be parsed (see class comments for accepted formats)
      * @throws PeercoinURIParseException if the URI is not syntactically or semantically valid.
      */
-    public PeercoinURI(String uri) throws PeercoinURIParseException {
+    public PaycoinURI(String uri) throws PeercoinURIParseException {
         this(null, uri);
     }
 
@@ -121,7 +121,7 @@ public class PeercoinURI {
      *
      * @throws PeercoinURIParseException If the input fails Peercoin URI syntax and semantic checks.
      */
-    public PeercoinURI(@Nullable NetworkParameters params, String input) throws PeercoinURIParseException {
+    public PaycoinURI(@Nullable NetworkParameters params, String input) throws PeercoinURIParseException {
         checkNotNull(input);
         log.debug("Attempting to parse '{}' for {}", input, params == null ? "any" : params.getId());
 

@@ -3452,7 +3452,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
             }
 
             // Check size.
-            int size = req.tx.peercoinSerialize().length;
+            int size = req.tx.paycoinSerialize().length;
             if (size > Transaction.MAX_STANDARD_TX_SIZE)
                 throw new ExceededMaxTransactionSize();
 
@@ -3539,7 +3539,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
     private boolean adjustOutputDownwardsForFee(Transaction tx, CoinSelection coinSelection, Coin baseFee, Coin feePerKb) {
         TransactionOutput output = tx.getOutput(0);
         // Check if we need additional fee due to the transaction's size
-        int size = tx.peercoinSerialize().length;
+        int size = tx.paycoinSerialize().length;
         size += estimateBytesForSigning(coinSelection);
         
         // ppcoin: Always add required fee
@@ -3892,7 +3892,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
                     try {
                         if (isTxOutputBloomFilterable(out)) {
                             TransactionOutPoint outPoint = new TransactionOutPoint(params, i, tx);
-                            filter.insert(outPoint.peercoinSerialize());
+                            filter.insert(outPoint.paycoinSerialize());
                         }
                     } catch (ScriptException e) {
                         throw new RuntimeException(e); // If it is ours, we parsed the script correctly, so this shouldn't happen
@@ -4101,7 +4101,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
                 if (changeAddress == null)
                     changeAddress = getChangeAddress();
                 changeOutput = new TransactionOutput(params, req.tx, change, changeAddress);
-                size += changeOutput.peercoinSerialize().length + VarInt.sizeOf(req.tx.getOutputs().size()) - VarInt.sizeOf(req.tx.getOutputs().size() - 1);
+                size += changeOutput.paycoinSerialize().length + VarInt.sizeOf(req.tx.getOutputs().size()) - VarInt.sizeOf(req.tx.getOutputs().size() - 1);
                 additionalValueForNextCategory = null;
             }
 
@@ -4114,7 +4114,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
 
             // Estimate transaction size and loop again if we need more fee per kb. The serialized tx doesn't
             // include things we haven't added yet like input signatures/scripts or the change output.
-            size += req.tx.peercoinSerialize().length;
+            size += req.tx.paycoinSerialize().length;
             size += estimateBytesForSigning(selection);
             if (size/1000 > lastCalculatedSize/1000 && req.feePerKb.signum() > 0) {
                 lastCalculatedSize = size;
@@ -4439,7 +4439,7 @@ public class Wallet extends BaseTaggableObject implements Serializable, BlockCha
             if (sign)
                 signTransaction(req);
             // KeyTimeCoinSelector should never select enough inputs to push us oversize.
-            checkState(rekeyTx.peercoinSerialize().length < Transaction.MAX_STANDARD_TX_SIZE);
+            checkState(rekeyTx.paycoinSerialize().length < Transaction.MAX_STANDARD_TX_SIZE);
             return rekeyTx;
         } catch (VerificationException e) {
             throw new RuntimeException(e);  // Cannot happen.

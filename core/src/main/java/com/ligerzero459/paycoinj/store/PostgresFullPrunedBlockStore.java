@@ -484,7 +484,7 @@ public class PostgresFullPrunedBlockStore implements FullPrunedBlockStore {
                 bos.write((int) (0xFF & (numTxn >> 16)));
                 bos.write((int) (0xFF & (numTxn >> 24)));
                 for (Transaction tx : undoableBlock.getTransactions())
-                    tx.peercoinSerialize(bos);
+                    tx.paycoinSerialize(bos);
                 transactions = bos.toByteArray();
             }
             bos.close();

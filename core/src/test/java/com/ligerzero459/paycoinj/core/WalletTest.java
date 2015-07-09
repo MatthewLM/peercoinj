@@ -660,7 +660,7 @@ public class WalletTest extends TestWithWallet {
         // Send 0.10 to somebody else.
         Transaction send1 = wallet.createSend(new ECKey().toAddress(params), valueOf(0, 10));
         // Reserialize.
-        Transaction send2 = new Transaction(params, send1.peercoinSerialize());
+        Transaction send2 = new Transaction(params, send1.paycoinSerialize());
         assertEquals(nanos, send2.getValueSentFromMe(wallet));
         assertEquals(ZERO.subtract(valueOf(0, 11)), send2.getValue(wallet)); // ppcoin: Cent fee
     }
@@ -677,7 +677,7 @@ public class WalletTest extends TestWithWallet {
 
         assertTrue("Wallet is not consistent", wallet.isConsistent());
 
-        Transaction txClone = new Transaction(params, tx.peercoinSerialize());
+        Transaction txClone = new Transaction(params, tx.paycoinSerialize());
         try {
             wallet.receiveFromBlock(txClone, null, BlockChain.NewBlockType.BEST_CHAIN, 0);
             fail("Illegal argument not thrown when it should have been.");
@@ -775,7 +775,7 @@ public class WalletTest extends TestWithWallet {
         send1.params = MainNetParams.get();
         // Create a double spend of just the first one.
         Transaction send2 = wallet.createSend(new ECKey().toAddress(params), COIN);
-        send2 = new Transaction(params, send2.peercoinSerialize());
+        send2 = new Transaction(params, send2.paycoinSerialize());
         send2.params = MainNetParams.get();
         // Broadcast send1, it's now pending.
         wallet.commitTx(send1);
@@ -802,7 +802,7 @@ public class WalletTest extends TestWithWallet {
         final Address address = new ECKey().toAddress(params);
         Transaction send1 = checkNotNull(wallet.createSend(address, value2));
         Transaction send2 = checkNotNull(wallet.createSend(address, value2));
-        byte[] buf = send1.peercoinSerialize();
+        byte[] buf = send1.paycoinSerialize();
         buf[47] = 0;  // Break the signature: peercoinj won't check in SPV mode and this is easier than other mutations
         // ppcoin: we used 47 thus adding 4 for the timestamp
         send1 = new Transaction(params, buf);
@@ -870,7 +870,7 @@ public class WalletTest extends TestWithWallet {
         Transaction send1 = wallet.createSend(new ECKey().toAddress(params), valueOf(0, 50));
         // Create a double spend.
         Transaction send2 = wallet.createSend(new ECKey().toAddress(params), valueOf(0, 50));
-        send2 = new Transaction(params, send2.peercoinSerialize());
+        send2 = new Transaction(params, send2.paycoinSerialize());
         // Broadcast send1.
         wallet.commitTx(send1);
         assertEquals(send1, received.getOutput(0).getSpentBy().getParentTransaction());
@@ -952,7 +952,7 @@ public class WalletTest extends TestWithWallet {
         wallet.notifyNewBestBlock(createFakeBlock(blockStore).storedBlock);
         Threading.waitForUserCode();
         assertNull(reasons[0]);
-        final Transaction t1Copy = new Transaction(params, t1.peercoinSerialize());
+        final Transaction t1Copy = new Transaction(params, t1.paycoinSerialize());
         sendMoneyToWallet(t1Copy, AbstractBlockChain.NewBlockType.BEST_CHAIN);
         Threading.waitForUserCode();
         assertFalse(flags[0]);
@@ -1277,10 +1277,10 @@ public class WalletTest extends TestWithWallet {
         TransactionOutPoint outPoint = new TransactionOutPoint(params, 0, t1);
 
         // Note that this has a 1e-12 chance of failing this unit test due to a false positive
-        assertFalse(wallet.getBloomFilter(1e-12).contains(outPoint.peercoinSerialize()));
+        assertFalse(wallet.getBloomFilter(1e-12).contains(outPoint.paycoinSerialize()));
 
         wallet.receiveFromBlock(t1, b1, BlockChain.NewBlockType.BEST_CHAIN, 0);
-        assertTrue(wallet.getBloomFilter(1e-12).contains(outPoint.peercoinSerialize()));
+        assertTrue(wallet.getBloomFilter(1e-12).contains(outPoint.paycoinSerialize()));
     }
 
     @Test
@@ -1304,10 +1304,10 @@ public class WalletTest extends TestWithWallet {
 
         TransactionOutPoint outPoint = new TransactionOutPoint(params, 0, t1);
 
-        assertFalse(wallet.getBloomFilter(0.001).contains(outPoint.peercoinSerialize()));
+        assertFalse(wallet.getBloomFilter(0.001).contains(outPoint.paycoinSerialize()));
 
         wallet.receiveFromBlock(t1, b1, BlockChain.NewBlockType.BEST_CHAIN, 0);
-        assertTrue(wallet.getBloomFilter(0.001).contains(outPoint.peercoinSerialize()));
+        assertTrue(wallet.getBloomFilter(0.001).contains(outPoint.paycoinSerialize()));
     }
 
     @Test
@@ -1752,7 +1752,7 @@ public class WalletTest extends TestWithWallet {
         SendRequest request15 = SendRequest.to(notMyAddr, CENT);
         for (int i = 0; i < 29; i++)
             request15.tx.addOutput(CENT, notMyAddr);
-        assertTrue(request15.tx.peercoinSerialize().length > 1000);
+        assertTrue(request15.tx.paycoinSerialize().length > 1000);
         request15.feePerKb = SATOSHI;
         wallet.completeTx(request15);
         assertEquals(CENT.add(SATOSHI), request15.tx.getFee()); // ppcoin: Should add kb fee on top of required fee per extra kb
@@ -1767,7 +1767,7 @@ public class WalletTest extends TestWithWallet {
         request16.feePerKb = ZERO;
         for (int i = 0; i < 29; i++)
             request16.tx.addOutput(CENT, notMyAddr);
-        assertTrue(request16.tx.peercoinSerialize().length > 1000);
+        assertTrue(request16.tx.paycoinSerialize().length > 1000);
         wallet.completeTx(request16);
         assertEquals(CENT, request16.tx.getFee());
         Transaction spend16 = request16.tx;

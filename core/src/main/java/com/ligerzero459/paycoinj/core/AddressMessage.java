@@ -85,15 +85,15 @@ public class AddressMessage extends Message {
     }
 
     /* (non-Javadoc)
-      * @see Message#peercoinSerializeToStream(java.io.OutputStream)
+      * @see Message#paycoinSerializeToStream(java.io.OutputStream)
       */
     @Override
-    void peercoinSerializeToStream(OutputStream stream) throws IOException {
+    void paycoinSerializeToStream(OutputStream stream) throws IOException {
         if (addresses == null)
             return;
         stream.write(new VarInt(addresses.size()).encode());
         for (PeerAddress addr : addresses) {
-            addr.peercoinSerialize(stream);
+            addr.paycoinSerialize(stream);
         }
     }
 

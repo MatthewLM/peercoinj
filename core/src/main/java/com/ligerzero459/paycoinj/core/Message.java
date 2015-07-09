@@ -133,7 +133,7 @@ public abstract class Message implements Serializable {
             maybeParse();
             byte[] payloadBytes = new byte[cursor - offset];
             System.arraycopy(payload, offset, payloadBytes, 0, cursor - offset);
-            byte[] reserialized = peercoinSerialize();
+            byte[] reserialized = paycoinSerialize();
             if (!Arrays.equals(reserialized, payloadBytes))
                 throw new RuntimeException("Serialization is wrong: \n" +
                         Utils.HEX.encode(reserialized) + " vs \n" +
@@ -280,7 +280,7 @@ public abstract class Message implements Serializable {
      *
      * @return a freshly allocated serialized byte array
      */
-    public byte[] peercoinSerialize() {
+    public byte[] paycoinSerialize() {
         byte[] payload = unsafePeercoinSerialize();
         byte[] copy = new byte[payload.length];
         System.arraycopy(payload, 0, copy, 0, payload.length);
@@ -321,7 +321,7 @@ public abstract class Message implements Serializable {
         // No cached array available so serialize parts by stream.
         ByteArrayOutputStream stream = new UnsafeByteArrayOutputStream(length < 32 ? 32 : length + 32);
         try {
-            peercoinSerializeToStream(stream);
+            paycoinSerializeToStream(stream);
         } catch (IOException e) {
             // Cannot happen, we are serializing to a memory stream.
         }
@@ -333,7 +333,7 @@ public abstract class Message implements Serializable {
             // This give a dual benefit.  Releasing references to the larger byte array so that it
             // it is more likely to be GC'd.  And preventing double serializations.  E.g. calculating
             // merkle root calls this method.  It is will frequently happen prior to serializing the block
-            // which means another call to peercoinSerialize is coming.  If we didn't recache then internal
+            // which means another call to paycoinSerialize is coming.  If we didn't recache then internal
             // serialization would occur a 2nd time and every subsequent time the message is serialized.
             payload = stream.toByteArray();
             cursor = cursor - offset;
@@ -356,21 +356,21 @@ public abstract class Message implements Serializable {
      * @param stream
      * @throws IOException
      */
-    final public void peercoinSerialize(OutputStream stream) throws IOException {
+    final public void paycoinSerialize(OutputStream stream) throws IOException {
         // 1st check for cached payload.
         if (payload != null && length != UNKNOWN_LENGTH) {
             stream.write(payload, offset, length);
             return;
         }
 
-        peercoinSerializeToStream(stream);
+        paycoinSerializeToStream(stream);
     }
 
     /**
-     * Serializes this message to the provided stream. If you just want the raw payload use peercoinSerialize().
+     * Serializes this message to the provided stream. If you just want the raw payload use paycoinSerialize().
      */
-    void peercoinSerializeToStream(OutputStream stream) throws IOException {
-        log.error("Error: {} class has not implemented peercoinSerializeToStream method.  Generating message with no payload", getClass());
+    void paycoinSerializeToStream(OutputStream stream) throws IOException {
+        log.error("Error: {} class has not implemented paycoinSerializeToStream method.  Generating message with no payload", getClass());
     }
 
     /**

@@ -154,7 +154,7 @@ public class VersionMessage extends Message {
     }
 
     @Override
-    public void peercoinSerializeToStream(OutputStream buf) throws IOException {
+    public void paycoinSerializeToStream(OutputStream buf) throws IOException {
         Utils.uint32ToByteStreamLE(clientVersion, buf);
         Utils.uint32ToByteStreamLE(localServices, buf);
         Utils.uint32ToByteStreamLE(localServices >> 32, buf);
@@ -162,9 +162,9 @@ public class VersionMessage extends Message {
         Utils.uint32ToByteStreamLE(time >> 32, buf);
         try {
             // My address.
-            myAddr.peercoinSerialize(buf);
+            myAddr.paycoinSerialize(buf);
             // Their address.
-            theirAddr.peercoinSerialize(buf);
+            theirAddr.paycoinSerialize(buf);
         } catch (UnknownHostException e) {
             throw new RuntimeException(e);  // Can't happen.
         } catch (IOException e) {

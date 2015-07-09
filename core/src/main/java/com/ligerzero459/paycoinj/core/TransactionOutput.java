@@ -181,7 +181,7 @@ public class TransactionOutput extends ChildMessage implements Serializable {
     }
 
     @Override
-    protected void peercoinSerializeToStream(OutputStream stream) throws IOException {
+    protected void paycoinSerializeToStream(OutputStream stream) throws IOException {
         checkNotNull(scriptBytes);
         maybeParse();
         Utils.int64ToByteStreamLE(value, stream);

@@ -97,7 +97,7 @@ public class PartialMerkleTree extends Message {
     }
 
     @Override
-    public void peercoinSerializeToStream(OutputStream stream) throws IOException {
+    public void paycoinSerializeToStream(OutputStream stream) throws IOException {
         uint32ToByteStreamLE(transactionCount, stream);
 
         stream.write(new VarInt(hashes.size()).encode());

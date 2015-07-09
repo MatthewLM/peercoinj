@@ -40,11 +40,11 @@ import static com.ligerzero459.paycoinj.core.Utils.*;
  * <ul>
  * <li>The proper Class instance needs to be mapped to its message name in the names variable below</li>
  * <li>There needs to be a constructor matching: NetworkParameters params, byte[] payload</li>
- * <li>Message.peercoinSerializeToStream() needs to be properly subclassed</li>
+ * <li>Message.paycoinSerializeToStream() needs to be properly subclassed</li>
  * </ul>
  */
-public class PeercoinSerializer {
-    private static final Logger log = LoggerFactory.getLogger(PeercoinSerializer.class);
+public class PaycoinSerializer {
+    private static final Logger log = LoggerFactory.getLogger(PaycoinSerializer.class);
     private static final int COMMAND_LEN = 12;
 
     private NetworkParameters params;
@@ -78,7 +78,7 @@ public class PeercoinSerializer {
      *
      * @param params           networkParams used to create Messages instances and termining packetMagic
      */
-    public PeercoinSerializer(NetworkParameters params) {
+    public PaycoinSerializer(NetworkParameters params) {
         this(params, false, false);
     }
 
@@ -89,7 +89,7 @@ public class PeercoinSerializer {
      * @param parseLazy        deserialize messages in lazy mode.
      * @param parseRetain      retain the backing byte array of a message for fast reserialization.
      */
-    public PeercoinSerializer(NetworkParameters params, boolean parseLazy, boolean parseRetain) {
+    public PaycoinSerializer(NetworkParameters params, boolean parseLazy, boolean parseRetain) {
         this.params = params;
         this.parseLazy = parseLazy;
         this.parseRetain = parseRetain;
@@ -127,7 +127,7 @@ public class PeercoinSerializer {
         if (name == null) {
             throw new Error("PeercoinSerializer doesn't currently know how to serialize " + message.getClass());
         }
-        serialize(name, message.peercoinSerialize(), out);
+        serialize(name, message.paycoinSerialize(), out);
     }
 
     /**

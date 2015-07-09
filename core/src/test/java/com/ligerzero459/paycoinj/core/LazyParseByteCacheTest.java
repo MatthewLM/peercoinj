@@ -25,7 +25,7 @@ import com.ligerzero459.paycoinj.core.Block;
 import com.ligerzero459.paycoinj.core.ECKey;
 import com.ligerzero459.paycoinj.core.Message;
 import com.ligerzero459.paycoinj.core.NetworkParameters;
-import com.ligerzero459.paycoinj.core.PeercoinSerializer;
+import com.ligerzero459.paycoinj.core.PaycoinSerializer;
 import com.ligerzero459.paycoinj.core.Transaction;
 import com.ligerzero459.paycoinj.core.TransactionInput;
 import com.ligerzero459.paycoinj.core.TransactionOutput;
@@ -121,22 +121,22 @@ public class LazyParseByteCacheTest {
 
         Block b1 = createFakeBlock(blockStore, tx1, tx2).block;
 
-        PeercoinSerializer bs = new PeercoinSerializer(unitTestParams);
+        PaycoinSerializer bs = new PaycoinSerializer(unitTestParams);
         
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         bs.serialize(tx1, bos);
         tx1BytesWithHeader = bos.toByteArray();
-        tx1Bytes = tx1.peercoinSerialize();
+        tx1Bytes = tx1.paycoinSerialize();
         
         bos.reset();
         bs.serialize(tx2, bos);
         tx2BytesWithHeader = bos.toByteArray();
-        tx2Bytes = tx2.peercoinSerialize();
+        tx2Bytes = tx2.paycoinSerialize();
         
         bos.reset();
         bs.serialize(b1, bos);
         b1BytesWithHeader = bos.toByteArray();
-        b1Bytes = b1.peercoinSerialize();
+        b1Bytes = b1.paycoinSerialize();
     }
     
     @Test
@@ -193,16 +193,16 @@ public class LazyParseByteCacheTest {
     public void testBlock(byte[] blockBytes, boolean isChild, boolean lazy, boolean retain) throws Exception {
         //reference serializer to produce comparison serialization output after changes to
         //message structure.
-        PeercoinSerializer bsRef = new PeercoinSerializer(unitTestParams, false, false);
+        PaycoinSerializer bsRef = new PaycoinSerializer(unitTestParams, false, false);
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         
-        PeercoinSerializer bs = new PeercoinSerializer(unitTestParams, lazy, retain);
+        PaycoinSerializer bs = new PaycoinSerializer(unitTestParams, lazy, retain);
         Block b1;
         Block bRef;
         b1 = (Block) bs.deserialize(ByteBuffer.wrap(blockBytes));
         bRef = (Block) bsRef.deserialize(ByteBuffer.wrap(blockBytes));
         
-        //verify our reference PeercoinSerializer produces matching byte array.
+        //verify our reference PaycoinSerializer produces matching byte array.
         bos.reset();
         bsRef.serialize(bRef, bos);
         assertTrue(Arrays.equals(bos.toByteArray(), blockBytes));
@@ -429,16 +429,16 @@ public class LazyParseByteCacheTest {
 
         //reference serializer to produce comparison serialization output after changes to
         //message structure.
-        PeercoinSerializer bsRef = new PeercoinSerializer(params, false, false);
+        PaycoinSerializer bsRef = new PaycoinSerializer(params, false, false);
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         
-        PeercoinSerializer bs = new PeercoinSerializer(params, lazy, retain);
+        PaycoinSerializer bs = new PaycoinSerializer(params, lazy, retain);
         Transaction t1;
         Transaction tRef;
         t1 = (Transaction) bs.deserialize(ByteBuffer.wrap(txBytes));
         tRef = (Transaction) bsRef.deserialize(ByteBuffer.wrap(txBytes));
         
-        //verify our reference PeercoinSerializer produces matching byte array.
+        //verify our reference PaycoinSerializer produces matching byte array.
         bos.reset();
         bsRef.serialize(tRef, bos);
         assertTrue(Arrays.equals(bos.toByteArray(), txBytes));
@@ -497,7 +497,7 @@ public class LazyParseByteCacheTest {
         
     }
     
-    private void serDeser(PeercoinSerializer bs, Message message, byte[] sourceBytes, byte[] containedBytes, byte[] containingBytes) throws Exception {
+    private void serDeser(PaycoinSerializer bs, Message message, byte[] sourceBytes, byte[] containedBytes, byte[] containingBytes) throws Exception {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         bs.serialize(message, bos);
         byte[] b1 = bos.toByteArray();

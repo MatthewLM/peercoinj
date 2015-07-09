@@ -220,7 +220,7 @@ public class PaymentChannelClient implements IPaymentChannelClient {
 
         Protos.ProvideRefund.Builder provideRefundBuilder = Protos.ProvideRefund.newBuilder()
                 .setMultisigKey(ByteString.copyFrom(myKey.getPubKey()))
-                .setTx(ByteString.copyFrom(state.getIncompleteRefundTransaction().peercoinSerialize()));
+                .setTx(ByteString.copyFrom(state.getIncompleteRefundTransaction().paycoinSerialize()));
 
         conn.sendToServer(Protos.TwoWayChannelMessage.newBuilder()
                 .setProvideRefund(provideRefundBuilder)
@@ -242,7 +242,7 @@ public class PaymentChannelClient implements IPaymentChannelClient {
         state.storeChannelInWallet(serverId);
 
         Protos.ProvideContract.Builder contractMsg = Protos.ProvideContract.newBuilder()
-                .setTx(ByteString.copyFrom(state.getMultisigContract().peercoinSerialize()));
+                .setTx(ByteString.copyFrom(state.getMultisigContract().paycoinSerialize()));
         try {
             // Make an initial payment of the dust limit, and put it into the message as well. The size of the
             // server-requested dust limit was already sanity checked by this point.

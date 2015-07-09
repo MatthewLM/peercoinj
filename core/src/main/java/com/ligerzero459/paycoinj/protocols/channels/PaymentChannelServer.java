@@ -500,7 +500,7 @@ public class PaymentChannelServer {
                 if (result != null) {
                     // Result can be null on various error paths, like if we never actually opened
                     // properly and so on.
-                    msg.getSettlementBuilder().setTx(ByteString.copyFrom(result.peercoinSerialize()));
+                    msg.getSettlementBuilder().setTx(ByteString.copyFrom(result.paycoinSerialize()));
                     log.info("Sending CLOSE back with broadcast settlement tx.");
                 } else {
                     log.info("Sending CLOSE back without broadcast settlement tx.");

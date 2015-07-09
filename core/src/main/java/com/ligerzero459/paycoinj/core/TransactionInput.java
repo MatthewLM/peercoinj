@@ -144,8 +144,8 @@ public class TransactionInput extends ChildMessage implements Serializable {
     }
 
     @Override
-    protected void peercoinSerializeToStream(OutputStream stream) throws IOException {
-        outpoint.peercoinSerialize(stream);
+    protected void paycoinSerializeToStream(OutputStream stream) throws IOException {
+        outpoint.paycoinSerialize(stream);
         stream.write(new VarInt(scriptBytes.length).encode());
         stream.write(scriptBytes);
         Utils.uint32ToByteStreamLE(sequence, stream);
@@ -451,7 +451,7 @@ public class TransactionInput extends ChildMessage implements Serializable {
 
     /** Returns a copy of the input detached from its containing transaction, if need be. */
     public TransactionInput duplicateDetached() {
-        return new TransactionInput(params, null, peercoinSerialize(), 0);
+        return new TransactionInput(params, null, paycoinSerialize(), 0);
     }
 
     /**

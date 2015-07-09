@@ -91,7 +91,7 @@ public class BlockTest {
     public void testHeaderParse() throws Exception {
         Block block = new Block(params, blockBytes);
         Block header = block.cloneAsHeader();
-        Block reparsed = new Block(params, header.peercoinSerialize());
+        Block reparsed = new Block(params, header.paycoinSerialize());
         assertEquals(reparsed, header);
     }
 
@@ -103,7 +103,7 @@ public class BlockTest {
         // NB: This tests the PEERCOIN proprietary serialization protocol. A different test checks Java serialization
         // of transactions.
         Block block = new Block(params, blockBytes);
-        assertArrayEquals(blockBytes, block.peercoinSerialize());
+        assertArrayEquals(blockBytes, block.paycoinSerialize());
     }
 
     @Test
@@ -132,27 +132,27 @@ public class BlockTest {
     public void testUpdateLength() {
         NetworkParameters params = UnitTestParams.get();
         Block block = params.getGenesisBlock().createNextBlockWithCoinbase(new ECKey().getPubKey());
-        assertEquals(block.peercoinSerialize().length, block.length);
+        assertEquals(block.paycoinSerialize().length, block.length);
         final int origBlockLen = block.length;
         Transaction tx = new Transaction(params);
         // this is broken until the transaction has > 1 input + output (which is required anyway...)
-        //assertTrue(tx.length == tx.peercoinSerialize().length && tx.length == 8);
+        //assertTrue(tx.length == tx.paycoinSerialize().length && tx.length == 8);
         byte[] outputScript = new byte[10];
         Arrays.fill(outputScript, (byte) ScriptOpCodes.OP_FALSE);
         tx.addOutput(new TransactionOutput(params, null, Coin.SATOSHI, outputScript));
         tx.addInput(new TransactionInput(params, null, new byte[] {(byte) ScriptOpCodes.OP_FALSE},
                 new TransactionOutPoint(params, 0, Sha256Hash.create(new byte[] {1}))));
         int origTxLength = 8 + 2 + 8 + 1 + 10 + 40 + 1 + 1 + 4; //ppcoin: 4 for timestamp
-        assertEquals(tx.peercoinSerialize().length, tx.length);
+        assertEquals(tx.paycoinSerialize().length, tx.length);
         assertEquals(origTxLength, tx.length);
         block.addTransaction(tx);
-        assertEquals(block.peercoinSerialize().length, block.length);
+        assertEquals(block.paycoinSerialize().length, block.length);
         assertEquals(origBlockLen + tx.length, block.length);
         block.getTransactions().get(1).getInputs().get(0).setScriptBytes(new byte[] {(byte) ScriptOpCodes.OP_FALSE, (byte) ScriptOpCodes.OP_FALSE});
         assertEquals(block.length, origBlockLen + tx.length);
         assertEquals(tx.length, origTxLength + 1);
         block.getTransactions().get(1).getInputs().get(0).setScriptBytes(new byte[] {});
-        assertEquals(block.length, block.peercoinSerialize().length);
+        assertEquals(block.length, block.paycoinSerialize().length);
         assertEquals(block.length, origBlockLen + tx.length);
         assertEquals(tx.length, origTxLength - 1);
         block.getTransactions().get(1).addInput(new TransactionInput(params, null, new byte[] {(byte) ScriptOpCodes.OP_FALSE},

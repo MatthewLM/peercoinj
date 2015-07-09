@@ -42,7 +42,7 @@ public abstract class EmptyMessage extends Message {
     }
 
     @Override
-    final protected void peercoinSerializeToStream(OutputStream stream) throws IOException {
+    final protected void paycoinSerializeToStream(OutputStream stream) throws IOException {
     }
 
     @Override
@@ -74,10 +74,10 @@ public abstract class EmptyMessage extends Message {
     }
 
     /* (non-Javadoc)
-      * @see Message#peercoinSerialize()
+      * @see Message#paycoinSerialize()
       */
     @Override
-    public byte[] peercoinSerialize() {
+    public byte[] paycoinSerialize() {
         return new byte[0];
     }
 
