@@ -281,6 +281,7 @@ public abstract class Message implements Serializable {
      * @return a freshly allocated serialized byte array
      */
     public byte[] paycoinSerialize() {
+
         byte[] payload = unsafePaycoinSerialize();
         byte[] copy = new byte[payload.length];
         System.arraycopy(payload, 0, copy, 0, payload.length);
