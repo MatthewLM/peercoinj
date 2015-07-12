@@ -20,7 +20,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.ligerzero459</groupId>
+        <groupId>io.xpydev</groupId>
         <artifactId>paycoinj-parent</artifactId>
         <version>0.1.0</version>
     </parent>
@@ -256,7 +256,7 @@
                         <configuration>
                             <archive>
                                 <manifest>
-                                    <mainClass>com.ligerzero459.paycoinj.BitcoindComparisonTool</mainClass>
+                                    <mainClass>io.xpydev.paycoinj.BitcoindComparisonTool</mainClass>
                                     <addClasspath>false</addClasspath>
                                 </manifest>
                             </archive>
@@ -345,7 +345,7 @@
           <version>9.1-901.jdbc4</version>
         </dependency>
         <dependency>
-            <groupId>com.ligerzero459</groupId>
+            <groupId>io.xpydev</groupId>
             <artifactId>orchid</artifactId>
             <version>1.0</version>
         </dependency>

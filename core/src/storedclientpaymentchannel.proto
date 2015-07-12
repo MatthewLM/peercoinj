@@ -24,7 +24,7 @@
 
 package paymentchannels;
 
-option java_package = "com.ligerzero459.paycoinj.protocols.channels";
+option java_package = "io.xpydev.paycoinj.protocols.channels";
 option java_outer_classname = "ClientState";
 
 

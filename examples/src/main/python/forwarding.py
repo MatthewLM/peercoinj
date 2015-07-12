@@ -16,11 +16,11 @@ my_address_text = "mzEjmna15T7DXj4HC9MBEG2UJzgFfEYtFo"
 # if it has a confirmed balance in it, then you can set it to 0.
 confirm_wait = 1
 
-from com.ligerzero459.paycoinj.core import *
+from io.xpydev.paycoinj.core import *
 
-import com.ligerzero459.paycoinj.crypto.KeyCrypterException
-import com.ligerzero459.paycoinj.params.MainNetParams
-from com.ligerzero459.paycoinj.kits import WalletAppKit
+import io.xpydev.paycoinj.crypto.KeyCrypterException
+import io.xpydev.paycoinj.params.MainNetParams
+from io.xpydev.paycoinj.kits import WalletAppKit
 
 from com.google.common.util.concurrent import FutureCallback
 from com.google.common.util.concurrent import Futures

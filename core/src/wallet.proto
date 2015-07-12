@@ -24,7 +24,7 @@
 
 package wallet;
 
-option java_package = "com.ligerzero459.paycoinj.wallet";
+option java_package = "io.xpydev.paycoinj.wallet";
 option java_outer_classname = "Protos";
 
 message PeerAddress {
