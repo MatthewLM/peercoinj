@@ -1141,7 +1141,6 @@ public class Peer extends PeerSocketHandler {
                         // the duplicate check in blockChainDownloadLocked(). But the satoshi client may change in future so
                         // it's better to be safe here.
                         if (!pendingBlockDownloads.contains(item.hash)) {
-                            log.info("pending block: " + item.hash.toString());
                             if (useFilteredBlocks) {
                                 getdata.addFilteredBlock(item.hash);
                                 pingAfterGetData = true;
