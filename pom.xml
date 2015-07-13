@@ -2,9 +2,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.matthewmitchell</groupId>
-  <artifactId>peercoinj-parent</artifactId>
-  <version>0.12.3</version>
+  <groupId>io.xpydev</groupId>
+  <artifactId>paycoinj-parent</artifactId>
+  <version>0.1.0</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -20,9 +20,9 @@
     <version>7</version>
   </parent>
 
-  <name>peercoinj Parent</name>
-  <description>Provides the common configuration for the PeercoinJ modules</description>
-  <url>https://github.com/MatthewLM/peercoinj/</url>
+  <name>paycoinj Parent</name>
+  <description>Provides the common configuration for the PaycoinJ modules</description>
+  <url>https://github.com/xpydev/paycoinj/</url>
 
   <licenses>
     <license>
@@ -35,7 +35,7 @@
 
   <issueManagement>
     <system>Github Issues</system>
-    <url>https://github.com/MatthewLM/peercoinj/issues</url>
+    <url>https://github.com/xpydev/paycoinj/issues</url>
   </issueManagement>
 
 

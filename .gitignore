@@ -9,3 +9,6 @@ target
 *.wallet
 tags
 *.sw*
+nb-configuration.xml
+nbactions.xml
+
