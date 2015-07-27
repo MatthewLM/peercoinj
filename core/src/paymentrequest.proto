@@ -23,7 +23,7 @@
  */
 
 //
-// Simple Peercoin Payment Protocol messages
+// Simple Paycoin Payment Protocol messages
 //
 // Use fields 100+ for extensions;
 // to avoid conflicts, register extensions at:
@@ -31,7 +31,7 @@
 //
 
 package payments;
-option java_package = "com.matthewmitchell.peercoinj.protocols.payments";
+option java_package = "io.xpydev.paycoinj.protocols.payments";
 option java_outer_classname = "Protos";
 
 // Generalized form of "send payment to this/these peercoin addresses"

@@ -16,11 +16,11 @@ my_address_text = "mzEjmna15T7DXj4HC9MBEG2UJzgFfEYtFo"
 # if it has a confirmed balance in it, then you can set it to 0.
 confirm_wait = 1
 
-from com.matthewmitchell.peercoinj.core import *
+from io.xpydev.paycoinj.core import *
 
-import com.matthewmitchell.peercoinj.crypto.KeyCrypterException
-import com.matthewmitchell.peercoinj.params.MainNetParams
-from com.matthewmitchell.peercoinj.kits import WalletAppKit
+import io.xpydev.paycoinj.crypto.KeyCrypterException
+import io.xpydev.paycoinj.params.MainNetParams
+from io.xpydev.paycoinj.kits import WalletAppKit
 
 from com.google.common.util.concurrent import FutureCallback
 from com.google.common.util.concurrent import Futures
@@ -76,7 +76,7 @@ class SenderListener(AbstractWalletEventListener):
         Futures.addCallback(tx.getConfidence().getDepthFuture(confirm_wait), myFutureCallback())
 
 if __name__ == "__main__":
-    params = com.google.peercoin.params.TestNet3Params.get()
+    params = com.google.peercoin.params.MainNetParams.get()
     my_address = Address(params,my_address_text)
     filePrefix = "forwarding-service-testnet"
     f = java.io.File(".")
