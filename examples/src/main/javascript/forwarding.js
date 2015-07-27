@@ -3,7 +3,7 @@
 // This example shows how to implement the forwarding service demo from the Getting Started tutorial.
 
 var bcj = com.matthewmitchell.peercoinj;
-var params = bcj.params.TestNet3Params.get();
+var params = bcj.params.MainNetParams.get();
 
 // Address where we'll send received coins (minus the miner fee)
 var FORWARD_TO = "mfZCyhQUQXy2S91hnGepdaJxfaNjMg15AV";  // faucet.xeno-genesis.com

@@ -20,19 +20,19 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.matthewmitchell</groupId>
-        <artifactId>peercoinj-parent</artifactId>
-        <version>0.12.3</version>
+        <groupId>io.xpydev</groupId>
+        <artifactId>paycoinj-parent</artifactId>
+        <version>0.1.0</version>
     </parent>
 
-    <artifactId>peercoinj</artifactId>
+    <artifactId>paycoinj</artifactId>
 
-    <name>peercoinj</name>
-    <description>A Java Peercoin library</description>
+    <name>paycoinj</name>
+    <description>A Java Paycoin library</description>
 
     <packaging>jar</packaging>
 
-    <url>https://github.com/MatthewLM/peercoinj</url>
+    <url>https://github.com/ligerzero459/paycoinj</url>
 
     <licenses>
         <license>
@@ -138,7 +138,7 @@
                 </configuration>
             </plugin>
 
-            <!-- Verify the dependency chain: see https://github.com/gary-rowe/PeercoinjEnforcerRules for
+            <!-- Verify the dependency chain: see https://github.com/gary-rowe/PaycoinjEnforcerRules for
                more information on this.
             -->
             <plugin>
@@ -256,7 +256,7 @@
                         <configuration>
                             <archive>
                                 <manifest>
-                                    <mainClass>com.matthewmitchell.peercoinj.BitcoindComparisonTool</mainClass>
+                                    <mainClass>io.xpydev.paycoinj.BitcoindComparisonTool</mainClass>
                                     <addClasspath>false</addClasspath>
                                 </manifest>
                             </archive>
@@ -287,7 +287,7 @@
             <version>3.0</version>
             <scope>test</scope>
         </dependency>
-        <!-- peercoinj consumers are expected to provide their own SLF4J adapters
+        <!-- paycoinj consumers are expected to provide their own SLF4J adapters
              such as logback, slf4j-log4j12, slf4j-jcl and so on
              see http://www.slf4j.org/faq.html -->
         <dependency>
@@ -339,16 +339,13 @@
             <version>1.4.0</version>
         </dependency>
 
-        <!-- Add in to test/use Postgres blockstore -->
-        <!--
         <dependency>
           <groupId>postgresql</groupId>
           <artifactId>postgresql</artifactId>
           <version>9.1-901.jdbc4</version>
         </dependency>
-        -->
         <dependency>
-            <groupId>com.matthewmitchell</groupId>
+            <groupId>io.xpydev</groupId>
             <artifactId>orchid</artifactId>
             <version>1.0</version>
         </dependency>
