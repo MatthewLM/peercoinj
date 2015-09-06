@@ -32,6 +32,7 @@ import java.util.Map;
 
 import com.matthewmitchell.peercoinj.core.Coin;
 import com.matthewmitchell.peercoinj.core.Monetary;
+import com.matthewmitchell.peercoinj.shapeshift.ShapeShiftMonetary;
 
 /**
  * <p>
@@ -419,6 +420,19 @@ public final class MonetaryFormat {
      */
     public Fiat parseFiat(String currencyCode, String str) throws NumberFormatException {
         return Fiat.valueOf(currencyCode, parseValue(str, Fiat.SMALLEST_UNIT_EXPONENT));
+    }
+
+    /**
+     * Gets a {@link com.matthewmitchell.peercoinj.shapeshift.ShapeShiftMonetary} for a string formatted with the MonetaryFormat
+     *
+     * @params amount The string for the Shapeshift coin amount
+     * @params smallestUnitExponent The number of decimal places for the coin
+     *
+     * @throws NumberFormatException
+     *             if the string cannot be parsed for some reason
+     */
+    public ShapeShiftMonetary parseShapeShiftCoin(String amount, int smallestUnitExponent) throws NumberFormatException {
+        return new ShapeShiftMonetary(parseValue(amount, smallestUnitExponent), smallestUnitExponent);
     }
 
     private long parseValue(String str, int smallestUnitExponent) {

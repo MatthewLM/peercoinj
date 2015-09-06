@@ -9,3 +9,4 @@ target
 *.wallet
 tags
 *.sw*
+Session.vim

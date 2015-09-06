@@ -121,7 +121,7 @@ public class ScriptBuilder {
 
     /** Creates a scriptPubKey that encodes payment to the given address. */
     public static Script createOutputScript(Address to) {
-        if (to.isP2SHAddress()) {
+        if (to.isSelectedP2SHAddress()) {
             // OP_HASH160 <scriptHash> OP_EQUAL
             return new ScriptBuilder()
                 .op(OP_HASH160)

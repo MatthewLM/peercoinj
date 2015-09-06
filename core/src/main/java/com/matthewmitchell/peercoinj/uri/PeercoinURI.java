@@ -21,7 +21,9 @@ package com.matthewmitchell.peercoinj.uri;
 import com.matthewmitchell.peercoinj.core.Address;
 import com.matthewmitchell.peercoinj.core.AddressFormatException;
 import com.matthewmitchell.peercoinj.core.Coin;
+import com.matthewmitchell.peercoinj.core.Monetary;
 import com.matthewmitchell.peercoinj.core.NetworkParameters;
+import com.matthewmitchell.peercoinj.params.MainNetParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,19 +111,20 @@ public class PeercoinURI {
      * @throws PeercoinURIParseException if the URI is not syntactically or semantically valid.
      */
     public PeercoinURI(String uri) throws PeercoinURIParseException {
-        this(null, uri);
+        this(MainNetParams.get(), uri);
     }
 
     /**
-     * Constructs a new object by trying to parse the input as a valid Peercoin URI.
+     * Constructs a new object by trying to parse the input as a valid PeercoinURI object.
      *
-     * @param params The network parameters that determine which network the URI is from, or null if you don't have
-     *               any expectation about what network the URI is for and wish to check yourself.
-     * @param input The raw URI data to be parsed (see class comments for accepted formats)
+     * @params params The network parameters that determine which network the URI is from, or null if you don't have
+     *                any expectation about what network the URI is for and wish to check yourself.
+     * @params input The raw URI data to be parsed (see class comments for accepted formats)
+     * @params prefix The coin prefix to check for
      *
      * @throws PeercoinURIParseException If the input fails Peercoin URI syntax and semantic checks.
      */
-    public PeercoinURI(@Nullable NetworkParameters params, String input) throws PeercoinURIParseException {
+    public PeercoinURI(NetworkParameters params, String input, String prefix) throws PeercoinURIParseException {
         checkNotNull(input);
         log.debug("Attempting to parse '{}' for {}", input, params == null ? "any" : params.getId());
 
@@ -143,10 +146,10 @@ public class PeercoinURI {
         // the & (%26) in Tom and Jerry gets interpreted as a separator and the label then gets parsed
         // as 'Tom ' instead of 'Tom & Jerry')
         String schemeSpecificPart;
-        if (input.startsWith("ppcoin://")) {
-            schemeSpecificPart = input.substring("ppcoin://".length());
-        } else if (input.startsWith("ppcoin:")) {
-            schemeSpecificPart = input.substring("ppcoin:".length());
+        if (input.startsWith(prefix + "://")) {
+            schemeSpecificPart = input.substring((prefix + "://").length());
+        } else if (input.startsWith(prefix + ":")) {
+            schemeSpecificPart = input.substring((prefix + ":").length());
         } else {
             throw new PeercoinURIParseException("Unsupported URI scheme: " + uri.getScheme());
         }
@@ -154,7 +157,7 @@ public class PeercoinURI {
         // Split off the address from the rest of the query parameters.
         String[] addressSplitTokens = schemeSpecificPart.split("\\?", 2);
         if (addressSplitTokens.length == 0)
-            throw new PeercoinURIParseException("No data found after the peercoin: prefix");
+            throw new PeercoinURIParseException("No data found after the " + prefix + " prefix");
         String addressToken = addressSplitTokens[0];  // may be empty!
 
         String[] nameValuePairTokens;
@@ -185,6 +188,18 @@ public class PeercoinURI {
     }
 
     /**
+     * Constructs a new object by trying to parse the input as a valid Peercoin URI.
+     *
+     * @param params The network parameters that determine which network the URI is from.
+     * @param input The raw URI data to be parsed (see class comments for accepted formats)
+     *
+     * @throws PeercoinURIParseException If the input fails Peercoin URI syntax and semantic checks.
+     */
+    public PeercoinURI(NetworkParameters params, String input) throws PeercoinURIParseException {
+        this(params, input, PEERCOIN_SCHEME);
+    }
+
+    /**
      * @param params The network parameters or null
      * @param nameValuePairTokens The tokens representing the name value pairs (assumed to be
      *                            separated by '=' e.g. 'amount=0.2')
@@ -206,7 +221,7 @@ public class PeercoinURI {
             if (FIELD_AMOUNT.equals(nameToken)) {
                 // Decode the amount (contains an optional decimal component to 8dp).
                 try {
-                    Coin amount = Coin.parseCoin(valueToken);
+                    Monetary amount = params.parseCoin(valueToken);
                     if (amount.signum() < 0)
                         throw new ArithmeticException("Negative coins specified");
                     putWithValidation(FIELD_AMOUNT, amount);
@@ -222,7 +237,7 @@ public class PeercoinURI {
                 } else {
                     // Known fields and unknown parameters that are optional.
                     try {
-                        if (valueToken.length() > 0)
+                        if (valueToken.length() > 0 && (!params.isShapeShift() || !nameToken.equals(FIELD_PAYMENT_REQUEST_URL)))
                             putWithValidation(nameToken, URLDecoder.decode(valueToken, "UTF-8"));
                     } catch (UnsupportedEncodingException e) {
                         // Unreachable.
@@ -264,8 +279,8 @@ public class PeercoinURI {
      * @return The amount name encoded using a pure integer value based at
      *         10,000,000 units is 1 PPC. May be null if no amount is specified
      */
-    public Coin getAmount() {
-        return (Coin) parameterMap.get(FIELD_AMOUNT);
+    public Monetary getAmount() {
+        return (Monetary) parameterMap.get(FIELD_AMOUNT);
     }
 
     /**

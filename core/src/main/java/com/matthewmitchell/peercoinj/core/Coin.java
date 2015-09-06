@@ -129,6 +129,13 @@ public final class Coin implements Monetary, Comparable<Coin>, Serializable {
         return Coin.valueOf(new BigDecimal(str).movePointRight(SMALLEST_UNIT_EXPONENT).toBigIntegerExact().longValue());
     }
 
+    /**
+     * Similar to parseCoin, but allows for inexact representations to be rounded
+     */
+    public static Coin parseCoinInexact(final String str) {
+        return Coin.valueOf(new BigDecimal(str).movePointRight(SMALLEST_UNIT_EXPONENT).setScale(0, BigDecimal.ROUND_HALF_UP).toBigInteger().longValue());
+    }
+
     public Coin add(final Coin value) {
         return new Coin(LongMath.checkedAdd(this.value, value.value));
     }
@@ -271,5 +278,6 @@ public final class Coin implements Monetary, Comparable<Coin>, Serializable {
             return 0;
         return this.value > other.value ? 1 : -1;
     }
+
 }
 

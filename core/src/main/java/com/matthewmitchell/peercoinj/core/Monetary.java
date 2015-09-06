@@ -35,5 +35,8 @@ public interface Monetary extends Serializable {
     long getValue();
 
     int signum();
+
+    public String toPlainString();
+
 }
 

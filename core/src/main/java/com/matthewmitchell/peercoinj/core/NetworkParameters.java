@@ -190,6 +190,13 @@ public abstract class NetworkParameters implements Serializable {
     }
 
     /**
+     * Returns true if the NetworkParameters is for a ShapeShift coin. ie. not NuBits
+     */
+    public boolean isShapeShift() {
+        return false;
+    }
+
+    /**
      * Returns true if the block height is either not a checkpoint, or is a checkpoint and the hash matches.
      */
     public boolean passesCheckpoint(int height, Sha256Hash hash) {
@@ -298,4 +305,12 @@ public abstract class NetworkParameters implements Serializable {
     public byte[] getAlertSigningKey() {
         return alertSigningKey;
     }
+
+    /**
+     * Used to parse a coin string into a Monetary for this network.
+     */
+    public Monetary parseCoin(String str) {
+        return Coin.parseCoin(str);
+    }
+
 }

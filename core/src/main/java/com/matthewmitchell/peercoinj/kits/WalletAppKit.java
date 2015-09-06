@@ -43,6 +43,8 @@ import java.nio.channels.FileLock;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -93,6 +95,15 @@ public class WalletAppKit extends AbstractIdleService {
     protected String userAgent, version;
     protected WalletProtobufSerializer.WalletFactory walletFactory;
     @Nullable protected DeterministicSeed restoreFromSeed;
+
+    private static URL SERVER;
+
+    static {
+        try {
+            SERVER = new URL("https://peercoinexplorer.info/q/getvalidhashes");
+        } catch (MalformedURLException ex) {
+        }
+    }
 
     public WalletAppKit(NetworkParameters params, File directory, String filePrefix) {
         this.params = checkNotNull(params);
@@ -249,7 +260,24 @@ public class WalletAppKit extends AbstractIdleService {
             boolean shouldReplayWallet = (vWalletFile.exists() && !chainFileExists) || restoreFromSeed != null;
             vWallet = createOrLoadWallet(shouldReplayWallet);
 
-            validHashStore = new ValidHashStore(validHashFile);
+            validHashStore = new ValidHashStore(validHashFile, new ValidHashStore.TrustedServersInterface() {
+
+                @Override
+                public URL getNext(boolean didFail) {
+                    return SERVER;
+                }
+
+                @Override
+                public boolean invalidated() {
+                    return false;
+                }
+
+                @Override
+                public void markSuccess(boolean success) {
+                    // Do nothing
+                }
+
+            });
             
             vStore = new SPVBlockStore(params, chainFile);
             if ((!chainFileExists || restoreFromSeed != null) && checkpoints != null) {

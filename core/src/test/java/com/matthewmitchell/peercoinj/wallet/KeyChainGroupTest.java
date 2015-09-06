@@ -159,7 +159,7 @@ public class KeyChainGroupTest {
     public void currentP2SHAddress() throws Exception {
         group = createMarriedKeyChainGroup();
         Address a1 = group.currentAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS);
-        assertTrue(a1.isP2SHAddress());
+        assertTrue(a1.isSelectedP2SHAddress());
         Address a2 = group.currentAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS);
         assertEquals(a1, a2);
         Address a3 = group.currentAddress(KeyChain.KeyPurpose.CHANGE);
@@ -171,7 +171,7 @@ public class KeyChainGroupTest {
         group = createMarriedKeyChainGroup();
         Address a1 = group.freshAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS);
         Address a2 = group.freshAddress(KeyChain.KeyPurpose.RECEIVE_FUNDS);
-        assertTrue(a1.isP2SHAddress());
+        assertTrue(a1.isSelectedP2SHAddress());
         assertNotEquals(a1, a2);
         group.getBloomFilterElementCount();
         assertEquals(((group.getLookaheadSize() + group.getLookaheadThreshold()) * 2)   // * 2 because of internal/external

@@ -50,7 +50,10 @@ public class MainNetParams extends NetworkParameters {
         checkpoints.put(99999, new Sha256Hash("27fd5e1de16a4270eb8c68dee2754a64da6312c7c3a0e99a7e6776246be1ee3f"));
 
         dnsSeeds = new String[] {
-                "seed.ppcoin.net", "tnseed.ppcoin.net"
+            "ppcseed.ns.7server.net",
+                "seed.diandianbi.org",
+                "seed.ppcoin.net", 
+                "tnseed.ppcoin.net",
         };
     }
 
@@ -66,4 +69,10 @@ public class MainNetParams extends NetworkParameters {
     public String getPaymentProtocolId() {
         return PAYMENT_PROTOCOL_ID_MAINNET;
     }
+
+    @Override
+    public String toString() {
+        return "Peercoin";
+    }
+
 }

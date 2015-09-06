@@ -82,7 +82,7 @@ import static com.google.common.base.Preconditions.*;
  */
 public class PeerGroup extends AbstractExecutionThreadService implements TransactionBroadcaster {
     private static final Logger log = LoggerFactory.getLogger(PeerGroup.class);
-    private static final int DEFAULT_CONNECTIONS = 4;
+    private static final int DEFAULT_CONNECTIONS = 12;
     private static final int TOR_TIMEOUT_SECONDS = 60;
 
     protected final ReentrantLock lock = Threading.lock("peergroup");
@@ -286,7 +286,7 @@ public class PeerGroup extends AbstractExecutionThreadService implements Transac
     private FilterMerger bloomFilterMerger;
 
     /** The default timeout between when a connection attempt begins and version message exchange completes */
-    public static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 8000;
+    public static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 12000;
     private volatile int vConnectTimeoutMillis = DEFAULT_CONNECT_TIMEOUT_MILLIS;
 
     /**
@@ -692,9 +692,6 @@ public class PeerGroup extends AbstractExecutionThreadService implements Transac
 
         if (discoverers.isEmpty())
             throw new PeerDiscoveryException("No " + (backup ? "backup " : "") + "peer discoverers registered");
-
-        if (backup)
-        	backups.clear();
         
         long start = System.currentTimeMillis();
 
@@ -722,12 +719,6 @@ public class PeerGroup extends AbstractExecutionThreadService implements Transac
                 if (backup) addBackup(address); else addInactive(address);
         } finally {
             lock.unlock();
-        }
-        
-        if (backup) {
-        	if (backups.size() != 0)
-        		backupStart = new Random().nextInt(backups.size());
-        	backupCount = 0;
         }
 
         log.info("{}eer discovery took {}msec and returned {} items", backup ? "Backup p" : "P",
@@ -808,21 +799,36 @@ public class PeerGroup extends AbstractExecutionThreadService implements Transac
         try {
         	boolean tryNormal = true;
         	
-			if (groupBackoff.isMaxmimum() && peers.size() == 0) {
-				
-				if (backupCount == backups.size())
-					discoverPeers(true);
-				tryNormal = backups.size() == 0;
-				
-			}
-			
-			if (! tryNormal) {
-				
-				addr = backups.get((backupStart + backupCount++) % backups.size());
-				retryTime = 0;
-				backupConnect.add(addr);
-				
-			}else{
+            if (groupBackoff.isMaxmimum() && peers.size() < getMinBroadcastConnections()) {
+
+                if (backupCount == 0) {
+                    // Starting backup connections, therefore discover peers
+                    try {
+                        discoverPeers(true);
+                    } catch (PeerDiscoveryException ex) {
+                        // Swallow
+                    }
+                    if (backups.size() != 0)
+                        backupStart = new Random().nextInt(backups.size());
+                }else if (backupCount == backups.size()) {
+                    // Reset backup
+                    backupCount = 0;
+                    backups.clear();
+                    // Use normal again
+                    groupBackoff.trackSuccess();
+                }
+
+                tryNormal = backups.size() == 0;
+
+            }
+
+            if (! tryNormal) {
+
+                addr = backups.get((backupStart + backupCount++) % backups.size());
+                retryTime = 0;
+                backupConnect.add(addr);
+
+            }else{
 	
                 if (useLocalhostPeerWhenPossible && maybeCheckForLocalhostPeer()) {
                     log.info("Localhost peer detected, trying to use it instead of P2P discovery");

@@ -16,23 +16,33 @@
 
 package com.matthewmitchell.peercoinj.params;
 
-import com.matthewmitchell.peercoinj.core.NetworkParameters;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.matthewmitchell.peercoinj.core.NetworkParameters;
 
 import java.util.Collection;
-import java.util.Set;
+import java.util.List;
 
 /**
  * Utility class that holds all the registered NetworkParameters types used for Address auto discovery.
  * By default only MainNetParams is used. 
  */
 public class Networks {
-    /** Registered networks */
-    private static Set<NetworkParameters> networks = ImmutableSet.of((NetworkParameters)MainNetParams.get());
 
-    public static Set<NetworkParameters> get() {
+    /** Registered networks */
+    private static List<NetworkParameters> networks = Lists.newArrayList((NetworkParameters)MainNetParams.get());
+
+    public static List<NetworkParameters> get() {
         return networks;
+    }
+
+    public static NetworkParameters get(String id) {
+
+        for (NetworkParameters network: networks) {
+            if (network.getId().equals(id))
+                return network;
+        }
+        return null;
+
     }
 
     public static void register(NetworkParameters network) {
@@ -40,22 +50,12 @@ public class Networks {
     }
 
     public static void register(Collection<? extends NetworkParameters> networks) {
-        ImmutableSet.Builder<NetworkParameters> builder = ImmutableSet.builder();
-        builder.addAll(Networks.networks);
-        builder.addAll(networks);
-        Networks.networks = builder.build();
+        Networks.networks.addAll(networks);
     }
 
     public static void unregister(NetworkParameters network) {
-        if (networks.contains(network)) {
-            ImmutableSet.Builder<NetworkParameters> builder = ImmutableSet.builder();
-            for (NetworkParameters parameters : networks) {
-                if (parameters.equals(network))
-                    continue;
-                builder.add(parameters);
-            }
-            networks = builder.build();
-        }
+        networks.remove(network);
     }
+
 }
 
