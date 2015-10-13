@@ -11,7 +11,7 @@
     <module>orchid</module>
     <module>core</module>
     <!--    <module>examples</module> -->
-    <!--    <module>tools</module>    -->
+    <module>tools</module>
   </modules>
 
   <parent>

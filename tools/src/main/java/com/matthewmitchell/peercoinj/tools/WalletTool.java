@@ -25,8 +25,6 @@ import com.matthewmitchell.peercoinj.crypto.MnemonicCode;
 import com.matthewmitchell.peercoinj.crypto.MnemonicException;
 import com.matthewmitchell.peercoinj.net.discovery.DnsDiscovery;
 import com.matthewmitchell.peercoinj.params.MainNetParams;
-import com.matthewmitchell.peercoinj.params.RegTestParams;
-import com.matthewmitchell.peercoinj.params.TestNet3Params;
 import com.matthewmitchell.peercoinj.protocols.payments.PaymentProtocol;
 import com.matthewmitchell.peercoinj.protocols.payments.PaymentProtocolException;
 import com.matthewmitchell.peercoinj.protocols.payments.PaymentSession;
@@ -60,6 +58,8 @@ import java.io.*;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
@@ -88,13 +88,15 @@ public class WalletTool {
     private static NetworkParameters params;
     private static File walletFile;
     private static BlockStore store;
+    private static ValidHashStore validHashStore;
     private static AbstractBlockChain chain;
     private static PeerGroup peers;
     private static Wallet wallet;
     private static File chainFileName;
+    private static File validHashFile;
     private static ValidationMode mode;
     private static String password;
-    private static org.peercoin.protocols.payments.Protos.PaymentRequest paymentRequest;
+    private static com.matthewmitchell.peercoinj.protocols.payments.Protos.PaymentRequest paymentRequest;
     private static OptionSpec<Integer> lookaheadSize;
 
     public static class Condition {
@@ -184,7 +186,6 @@ public class WalletTool {
     }
 
     public enum ValidationMode {
-        FULL,
         SPV
     }
 
@@ -203,6 +204,7 @@ public class WalletTool {
         OptionSpec<ValidationMode> modeFlag = parser.accepts("mode").withRequiredArg().ofType(ValidationMode.class)
                 .defaultsTo(ValidationMode.SPV);
         OptionSpec<String> chainFlag = parser.accepts("chain").withRequiredArg();
+        OptionSpec<String> validHashFlag = parser.accepts("validhashes").withRequiredArg();
         // For addkey/delkey.
         parser.accepts("pubkey").withRequiredArg();
         parser.accepts("privkey").withRequiredArg();
@@ -256,14 +258,7 @@ public class WalletTool {
             case PROD:
                 params = MainNetParams.get();
                 chainFileName = new File("prodnet.chain");
-                break;
-            case TEST:
-                params = TestNet3Params.get();
-                chainFileName = new File("testnet.chain");
-                break;
-            case REGTEST:
-                params = RegTestParams.get();
-                chainFileName = new File("regtest.chain");
+                validHashFile = new File("validhashes.dat");
                 break;
             default:
                 throw new RuntimeException("Unreachable.");
@@ -273,6 +268,10 @@ public class WalletTool {
         // Allow the user to override the name of the chain used.
         if (options.has(chainFlag)) {
             chainFileName = new File(chainFlag.value(options));
+        }
+
+        if (options.has(validHashFlag)) {
+            validHashFile = new File(validHashFlag.value(options));
         }
 
         if (options.has("condition")) {
@@ -432,7 +431,7 @@ public class WalletTool {
         wallet.addFollowingAccountKeys(keys.build());
     }
 
-    private static void rotate() throws BlockStoreException {
+    private static void rotate() throws BlockStoreException, IOException {
         setup();
         peers.startAsync();
         peers.awaitRunning();
@@ -582,6 +581,8 @@ public class WalletTool {
                 peerList.get(0).ping().get();
         } catch (BlockStoreException e) {
             throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         } catch (KeyCrypterException e) {
             throw new RuntimeException(e);
         } catch (InterruptedException e) {
@@ -632,7 +633,7 @@ public class WalletTool {
                 System.exit(1);
             }
             try {
-                paymentRequest = org.peercoin.protocols.payments.Protos.PaymentRequest.newBuilder().mergeFrom(stream).build();
+                paymentRequest = com.matthewmitchell.peercoinj.protocols.payments.Protos.PaymentRequest.newBuilder().mergeFrom(stream).build();
             } catch(IOException e) {
                 System.err.println("Failed to parse payment request from file " + e.getMessage());
                 System.exit(1);
@@ -703,7 +704,7 @@ public class WalletTool {
         }
     }
 
-    private static void wait(WaitForEnum waitFor) throws BlockStoreException {
+    private static void wait(WaitForEnum waitFor) throws BlockStoreException, IOException {
         final CountDownLatch latch = new CountDownLatch(1);
         setup();
         switch (waitFor) {
@@ -785,7 +786,7 @@ public class WalletTool {
     }
 
     // Sets up all objects needed for network communication but does not bring up the peers.
-    private static void setup() throws BlockStoreException {
+    private static void setup() throws BlockStoreException, IOException {
         if (store != null) return;  // Already done.
         // Will create a fresh chain if one doesn't exist or there is an issue with this one.
         if (!chainFileName.exists() && wallet.getTransactions(true).size() > 0) {
@@ -794,12 +795,12 @@ public class WalletTool {
             reset();
         }
         if (mode == ValidationMode.SPV) {
+
             store = new SPVBlockStore(params, chainFileName);
-            chain = new BlockChain(params, wallet, store);
-        } else if (mode == ValidationMode.FULL) {
-            FullPrunedBlockStore s = new H2FullPrunedBlockStore(params, chainFileName.getAbsolutePath(), 5000);
-            store = s;
-            chain = new FullPrunedBlockChain(params, wallet, s);
+            validHashStore = new ValidHashStore(validHashFile);
+
+            chain = new BlockChain(params, wallet, store, validHashStore);
+
         }
         // This will ensure the wallet is saved when it changes.
         wallet.autosaveToFile(walletFile, 200, TimeUnit.MILLISECONDS, null);
@@ -858,6 +859,9 @@ public class WalletTool {
         } catch (BlockStoreException e) {
             System.err.println("Error reading block chain file " + chainFileName + ": " + e.getMessage());
             e.printStackTrace();
+        } catch (IOException e) {
+            System.err.println("Error reading valid hashes file " + validHashFile + ": " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -868,6 +872,7 @@ public class WalletTool {
             peers.awaitTerminated();
             saveWallet(walletFile);
             store.close();
+            validHashStore.close();
             wallet = null;
         } catch (BlockStoreException e) {
             throw new RuntimeException(e);
@@ -1057,10 +1062,10 @@ public class WalletTool {
         wallet.removeKey(key);
     }
 
-    private static void dumpWallet() throws BlockStoreException {
+    private static void dumpWallet() throws BlockStoreException, IOException {
         // Setup to get the chain height so we can estimate lock times, but don't wipe the transactions if it's not
         // there just for the dump case.
-        if (chainFileName.exists())
+        if (chainFileName.exists() && validHashFile.exists())
             setup();
         System.out.println(wallet.toString(options.has("dump-privkeys"), true, true, chain));
     }

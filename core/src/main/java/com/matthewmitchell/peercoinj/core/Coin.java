@@ -241,9 +241,9 @@ public final class Coin implements Monetary, Comparable<Coin>, Serializable {
 
     /**
      * <p>
-     * Returns the value as a plain string denominated in BTC.
+     * Returns the value as a plain string denominated in PPC.
      * The result is unformatted with no trailing zeroes.
-     * For instance, a value of 150000 satoshis gives an output string of "0.0015" BTC
+     * For instance, a value of 150000 satoshis gives an output string of "0.0015" PPC
      * </p>
      */
     public String toPlainString() {

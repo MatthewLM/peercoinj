@@ -96,15 +96,6 @@ public class WalletAppKit extends AbstractIdleService {
     protected WalletProtobufSerializer.WalletFactory walletFactory;
     @Nullable protected DeterministicSeed restoreFromSeed;
 
-    private static URL SERVER;
-
-    static {
-        try {
-            SERVER = new URL("https://peercoinexplorer.info/q/getvalidhashes");
-        } catch (MalformedURLException ex) {
-        }
-    }
-
     public WalletAppKit(NetworkParameters params, File directory, String filePrefix) {
         this.params = checkNotNull(params);
         this.directory = checkNotNull(directory);
@@ -259,25 +250,7 @@ public class WalletAppKit extends AbstractIdleService {
             vWalletFile = new File(directory, filePrefix + ".wallet");
             boolean shouldReplayWallet = (vWalletFile.exists() && !chainFileExists) || restoreFromSeed != null;
             vWallet = createOrLoadWallet(shouldReplayWallet);
-
-            validHashStore = new ValidHashStore(validHashFile, new ValidHashStore.TrustedServersInterface() {
-
-                @Override
-                public URL getNext(boolean didFail) {
-                    return SERVER;
-                }
-
-                @Override
-                public boolean invalidated() {
-                    return false;
-                }
-
-                @Override
-                public void markSuccess(boolean success) {
-                    // Do nothing
-                }
-
-            });
+            validHashStore = new ValidHashStore(validHashFile);
             
             vStore = new SPVBlockStore(params, chainFile);
             if ((!chainFileExists || restoreFromSeed != null) && checkpoints != null) {

@@ -54,7 +54,6 @@ public class TestFeeLevel {
 
         Wallet.SendRequest request = Wallet.SendRequest.to(address, kit.wallet().getBalance().subtract(feeToTest));
         request.feePerKb = feeToTest;
-        request.ensureMinRequiredFee = false;
         kit.wallet().completeTx(request);
         log.info("Fee paid is {}", request.fee);
         log.info("TX is {}", request.tx);

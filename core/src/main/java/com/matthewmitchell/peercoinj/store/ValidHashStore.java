@@ -32,6 +32,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -66,8 +67,43 @@ public class ValidHashStore {
          */
         public void markSuccess(boolean success);
     }
+    
+    private static URL SERVER;
+
+    static {
+        try {
+            SERVER = new URL("https://peercoinexplorer.info/q/getvalidhashes");
+        } catch (MalformedURLException ex) {
+        }
+    }
 
     private TrustedServersInterface servers;
+    
+    public ValidHashStore(File filePath) throws IOException {
+        
+        // Use hardcoded server only
+        
+        this(filePath, new ValidHashStore.TrustedServersInterface() {
+
+                @Override
+                public URL getNext(boolean didFail) {
+                    return SERVER;
+                }
+
+                @Override
+                public boolean invalidated() {
+                    return false;
+                }
+
+                @Override
+                public void markSuccess(boolean success) {
+                    // Do nothing
+                }
+
+            });
+        
+        
+    }
 
     public ValidHashStore(File filePath, TrustedServersInterface servers) throws IOException {
 

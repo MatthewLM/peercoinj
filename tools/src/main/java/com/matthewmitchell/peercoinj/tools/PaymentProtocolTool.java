@@ -22,7 +22,7 @@ import com.matthewmitchell.peercoinj.protocols.payments.PaymentProtocolException
 import com.matthewmitchell.peercoinj.protocols.payments.PaymentSession;
 import com.matthewmitchell.peercoinj.uri.PeercoinURI;
 import com.matthewmitchell.peercoinj.uri.PeercoinURIParseException;
-import org.peercoin.protocols.payments.Protos;
+import com.matthewmitchell.peercoinj.protocols.payments.Protos;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
