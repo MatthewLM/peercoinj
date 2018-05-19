@@ -73,7 +73,7 @@ public class VersionMessage extends Message {
     public boolean relayTxesBeforeFilter;
 
     /** The version of this library release, as a string. */
-    public static final String PEERCOINJ_VERSION = "0.13.0";
+    public static final String PEERCOINJ_VERSION = "0.13.1";
     /** The value that is prepended to the subVer field of this application. */
     public static final String LIBRARY_SUBVER = "/PeercoinJ:" + PEERCOINJ_VERSION + "/";
 
