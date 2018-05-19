@@ -8,7 +8,7 @@ The peercoinj library is a Java implementation of the Peercoin protocol, which a
 * [Maven 3+](http://maven.apache.org) - for building the project
 * [Orchid](https://github.com/subgraph/Orchid) - for secure communications over [TOR](https://www.torproject.org)
 * [Google Protocol Buffers](https://code.google.com/p/protobuf/) - for use with serialization and hardware communications
-* [PeercoinAbeExplorer](https://github.com/MatthewLM/PeercoinAbeExplorer) - server code which provides block hashes and acts as block explorer
+* [valid-hash-server](https://github.com/MatthewLM/valid-hash-server) - server code which provides block hashes
 
 ### Getting started
 
