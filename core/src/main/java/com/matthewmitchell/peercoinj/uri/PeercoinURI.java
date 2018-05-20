@@ -1,6 +1,6 @@
 /*
  * Copyright 2012, 2014 the original author or authors.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  */
 
 package com.matthewmitchell.peercoinj.uri;
@@ -75,7 +75,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * <li>{@code label} any URL encoded alphanumeric</li>
  * <li>{@code message} any URL encoded alphanumeric</li>
  * </ul>
- * 
+ *
  * @author Andreas Schildbach (initial code)
  * @author Jim Burton (enhancements for MultiBit)
  * @author Gary Rowe (BIP21 support)
@@ -94,10 +94,12 @@ public class PeercoinURI {
     public static final String FIELD_ADDRESS = "address";
     public static final String FIELD_PAYMENT_REQUEST_URL = "r";
 
-    public static final String PEERCOIN_SCHEME = "ppcoin";
     private static final String ENCODED_SPACE_CHARACTER = "%20";
     private static final String AMPERSAND_SEPARATOR = "&";
     private static final String QUESTION_MARK_SEPARATOR = "?";
+
+    public static final String[] PEERCOIN_SCHEMES = {"peercoin", "ppcoin"};
+    public static final String PREFERED_PEERCOIN_SCHEME = "peercoin";
 
     /**
      * Contains all the parameters in the order in which they were processed
@@ -120,11 +122,15 @@ public class PeercoinURI {
      * @params params The network parameters that determine which network the URI is from, or null if you don't have
      *                any expectation about what network the URI is for and wish to check yourself.
      * @params input The raw URI data to be parsed (see class comments for accepted formats)
-     * @params prefix The coin prefix to check for
+     * @params prefix The coin prefix to check for or null for the peercoin
+     * defaults
      *
      * @throws PeercoinURIParseException If the input fails Peercoin URI syntax and semantic checks.
      */
-    public PeercoinURI(NetworkParameters params, String input, String prefix) throws PeercoinURIParseException {
+    public PeercoinURI(
+        NetworkParameters params, String input, @Nullable String prefix
+    ) throws PeercoinURIParseException {
+
         checkNotNull(input);
         log.debug("Attempting to parse '{}' for {}", input, params == null ? "any" : params.getId());
 
@@ -139,19 +145,40 @@ public class PeercoinURI {
         // URI is formed as  peercoin:<address>?<query parameters>
         // blockchain.info generates URIs of non-BIP compliant form peercoin://address?....
         // We support both until Ben fixes his code.
-        
+
         // Remove the peercoin scheme.
         // (Note: getSchemeSpecificPart() is not used as it unescapes the label and parse then fails.
         // For instance with : peercoin:129mVqKUmJ9uwPxKJBnNdABbuaaNfho4Ha?amount=0.06&label=Tom%20%26%20Jerry
         // the & (%26) in Tom and Jerry gets interpreted as a separator and the label then gets parsed
         // as 'Tom ' instead of 'Tom & Jerry')
+
         String schemeSpecificPart;
-        if (input.startsWith(prefix + "://")) {
+
+        if (prefix == null) {
+
+            for (String p : PEERCOIN_SCHEMES) {
+                if (input.startsWith(p)) {
+                    prefix = p;
+                    break;
+                }
+            }
+
+            if (prefix == null) {
+                throw new PeercoinURIParseException(
+                    "Not a peercoin URI scheme: " + uri.getScheme()
+                );
+            }
+
+        }
+
+        if (input.startsWith(prefix + "://"))
             schemeSpecificPart = input.substring((prefix + "://").length());
-        } else if (input.startsWith(prefix + ":")) {
+        else if (input.startsWith(prefix + ":"))
             schemeSpecificPart = input.substring((prefix + ":").length());
-        } else {
-            throw new PeercoinURIParseException("Unsupported URI scheme: " + uri.getScheme());
+        else {
+            throw new PeercoinURIParseException(
+                "Unsupported URI scheme: " + uri.getScheme()
+            );
         }
 
         // Split off the address from the rest of the query parameters.
@@ -196,7 +223,7 @@ public class PeercoinURI {
      * @throws PeercoinURIParseException If the input fails Peercoin URI syntax and semantic checks.
      */
     public PeercoinURI(NetworkParameters params, String input) throws PeercoinURIParseException {
-        this(params, input, PEERCOIN_SCHEME);
+        this(params, input, null);
     }
 
     /**
@@ -253,7 +280,7 @@ public class PeercoinURI {
 
     /**
      * Put the value against the key in the map checking for duplication. This avoids address field overwrite etc.
-     * 
+     *
      * @param key The key for the map
      * @param value The value to store
      */
@@ -353,41 +380,43 @@ public class PeercoinURI {
 
     /**
      * Simple Peercoin URI builder using known good fields.
-     * 
+     *
      * @param address The Peercoin address
      * @param amount The amount
      * @param label A label
      * @param message A message
      * @return A String containing the Peercoin URI
      */
-    public static String convertToPeercoinURI(String address, @Nullable Coin amount, @Nullable String label,
-                                             @Nullable String message) {
+    public static String convertToPeercoinURI(
+        String address, @Nullable Coin amount, @Nullable String label,
+         @Nullable String message
+    ) {
+
         checkNotNull(address);
-        if (amount != null && amount.signum() < 0) {
+        if (amount != null && amount.signum() < 0)
             throw new IllegalArgumentException("Coin must be positive");
-        }
-        
+
         StringBuilder builder = new StringBuilder();
-        builder.append(PEERCOIN_SCHEME).append(":").append(address);
-        
+        builder.append(PREFERED_PEERCOIN_SCHEME).append(":").append(address);
+
         boolean questionMarkHasBeenOutput = false;
-        
+
         if (amount != null) {
             builder.append(QUESTION_MARK_SEPARATOR).append(FIELD_AMOUNT).append("=");
             builder.append(amount.toPlainString());
             questionMarkHasBeenOutput = true;
         }
-        
+
         if (label != null && !"".equals(label)) {
             if (questionMarkHasBeenOutput) {
                 builder.append(AMPERSAND_SEPARATOR);
             } else {
-                builder.append(QUESTION_MARK_SEPARATOR);                
+                builder.append(QUESTION_MARK_SEPARATOR);
                 questionMarkHasBeenOutput = true;
             }
             builder.append(FIELD_LABEL).append("=").append(encodeURLString(label));
         }
-        
+
         if (message != null && !"".equals(message)) {
             if (questionMarkHasBeenOutput) {
                 builder.append(AMPERSAND_SEPARATOR);
@@ -396,13 +425,13 @@ public class PeercoinURI {
             }
             builder.append(FIELD_MESSAGE).append("=").append(encodeURLString(message));
         }
-        
+
         return builder.toString();
     }
 
     /**
      * Encode a string using URL encoding
-     * 
+     *
      * @param stringToEncode The string to URL encode
      */
     static String encodeURLString(String stringToEncode) {
